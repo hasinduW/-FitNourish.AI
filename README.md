@@ -236,7 +236,6 @@ FitNourish.AI/
 - PostgreSQL installed and running
 
 ### Setup
-```bash
 cd backend
 python -m venv venv
 # Windows
@@ -255,7 +254,6 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 ✅ Test in browser:
 
-
 API Home: http://127.0.0.1:8000/
 Swagger Docs: http://127.0.0.1:8000/docs
 ### 2) Frontend (Expo / React Native)
@@ -264,7 +262,6 @@ Swagger Docs: http://127.0.0.1:8000/docs
 ### Prerequisites
 - Node.js (LTS)
 ### Setup
-```bash
 cd frontend/nutrition_mobile
 npm install
 npx expo start --web
@@ -276,7 +273,6 @@ because browser runs on the same PC.
 
 #### Option B — Android Emulator (More “real mobile”)
 
-```md
 ## 📱 Run Frontend (Android Emulator)
 
 ### Prerequisites
@@ -284,7 +280,6 @@ because browser runs on the same PC.
 - Android Studio (SDK + Emulator)
 
 ### Start
-```bash
 cd frontend/nutrition_mobile
 npm install
 npx expo start
@@ -302,7 +297,6 @@ because emulator maps your PC localhost to 10.0.2.2.
 
 1. Start PostgreSQL service
 2. Run backend:
-   ```bash
    cd backend
    uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
