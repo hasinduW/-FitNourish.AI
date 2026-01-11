@@ -13,6 +13,10 @@ This component of FitNourish.AI focuses on delivering personalized nutrition rec
 
 🔹 Interface Overview
 
+## 📱 Component 01 – Mobile Application Snapshot
+
+<img src="images/Component 01 snapshot.png" width="450" alt="Component 01 Mobile UI" />
+
 FitNourish.AI Nutrition Prediction Mobile Interface
 
 FitNourish.AI – Nutrition Profile Input & Prediction Result Interface
