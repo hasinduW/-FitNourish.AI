@@ -240,7 +240,7 @@ This component uses computer vision and AI to analyze meals and generate meal pl
 - **Machine Learning:** CNN (Convolutional Neural Network) for image analysis
 - **Optimization:** Integer Linear Programming (ILP) for meal plan generation
 
-4️⃣ Smart Health Monitoring, Alerts & Insights
+4️⃣ AI-Powered Predictive Health Alert and Progress Tracking System​
 
 <table>
 <tr>
