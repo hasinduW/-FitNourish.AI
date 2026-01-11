@@ -23,6 +23,138 @@ The platform also incorporates image processing to analyze food photos and sugge
 
 **Main Objective:** To help users manage health conditions and achieve fitness goals through personalized meal planning, health monitoring, and timely alerts
 
+📦 Dependencies
+
+FitNourish.AI is a mobile-first intelligent nutrition & wellness application built using a full-stack architecture consisting of a React Native mobile app, FastAPI backend, and Machine Learning models.
+
+📱 Mobile Application (Frontend)
+
+Built using Expo + React Native to support Android, iOS, and Web (for demo).
+
+Core Framework
+
+expo – Cross-platform mobile app framework
+
+react – Component-based UI library
+
+react-native – Native mobile UI framework
+
+Navigation
+
+expo-router – File-based routing for Expo apps
+
+@react-navigation/native – Navigation container
+
+@react-navigation/native-stack – Stack navigation
+
+@react-navigation/bottom-tabs – Bottom tab navigation
+
+@react-navigation/elements – Shared navigation UI components
+
+UI & Device Features
+
+@expo/vector-icons – Icons for mobile UI
+
+expo-font – Custom font loading
+
+expo-image – Optimized image handling
+
+expo-haptics – Haptic feedback
+
+expo-status-bar – Status bar control
+
+expo-splash-screen – App splash screen
+
+expo-system-ui – System UI customization
+
+expo-web-browser – In-app browser
+
+expo-linking – Deep linking support
+
+expo-constants – Access to device/system constants
+
+Mobile Performance & Interaction
+
+react-native-gesture-handler – Touch & gesture handling
+
+react-native-reanimated – High-performance animations
+
+react-native-safe-area-context – Safe area handling
+
+react-native-screens – Native screen optimization
+
+react-native-worklets – Background tasks & performance
+
+Web Support (Demo)
+
+react-dom
+
+react-native-web
+
+Development Tools
+
+typescript – Static typing
+
+@types/react – React type definitions
+
+eslint – Code linting
+
+eslint-config-expo – Expo ESLint rules
+
+⚙️ Backend (API Layer)
+
+The backend exposes REST APIs for nutrition prediction and data storage.
+
+FastAPI – High-performance Python REST API framework
+
+Uvicorn – ASGI server for FastAPI
+
+Pydantic – Data validation and schema enforcement
+
+SQLAlchemy – ORM for database interaction
+
+psycopg2 – PostgreSQL database driver
+
+python-dotenv – Environment variable management
+
+joblib – Model serialization & loading
+
+🧠 Machine Learning & Data Processing
+
+Used for training and predicting nutrition targets.
+
+scikit-learn – Machine learning algorithms
+
+RandomForestRegressor – Multi-output regression model
+
+MultiOutputRegressor – Predicts calories & macros together
+
+pandas – Dataset loading and preprocessing
+
+numpy – Numerical computations
+
+🗄️ Database
+
+PostgreSQL – Stores:
+
+User inputs
+
+Prediction history
+
+Nutrition targets
+
+✅ Technology Summary
+
+📱 Frontend: Expo + React Native (Mobile-first)
+
+⚙️ Backend: FastAPI (REST API)
+
+🧠 ML: Scikit-learn (Regression)
+
+🗄️ Database: PostgreSQL
+
+🔗 Architecture: Mobile → API → ML → Database
+
 🧩 Core System Components
 
 🧩 Component 1 – AI-Powered Multi-Disease Adaptive Nutrition & Personalized Health Optimization
