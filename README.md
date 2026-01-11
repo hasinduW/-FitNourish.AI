@@ -242,6 +242,15 @@ This component uses computer vision and AI to analyze meals and generate meal pl
 
 4️⃣ Smart Health Monitoring, Alerts & Insights
 
+<table>
+<tr>
+<td width="100%">
+  <img src="images/health-risk.jpg" alt="Meal Analysis Interface" />
+</td>
+
+</tr>
+</table>
+
 This component focuses on continuous health awareness and proactive guidance.
 
 Key Features
