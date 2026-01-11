@@ -27,9 +27,9 @@ The platform also incorporates image processing to analyze food photos and sugge
 
 FitNourish.AI is a mobile-first intelligent nutrition & wellness application built using a full-stack architecture consisting of a React Native mobile app, FastAPI backend, and Machine Learning models.
 
-────────────────────────────────────────────────────────
+
 📱 Mobile Application (Frontend)
-────────────────────────────────────────────────────────
+
 Built using Expo + React Native to support Android, iOS, and Web (demo).
 
 Core Framework
@@ -73,9 +73,9 @@ Development Tools
 - eslint               : Code linting
 - eslint-config-expo   : Expo ESLint rules
 
-────────────────────────────────────────────────────────
+
 ⚙️ Backend (API Layer)
-────────────────────────────────────────────────────────
+
 The backend exposes REST APIs for nutrition prediction and data storage.
 
 - FastAPI        : High-performance Python REST API framework
@@ -86,9 +86,9 @@ The backend exposes REST APIs for nutrition prediction and data storage.
 - python-dotenv  : Environment variable management
 - joblib         : Model serialization & loading
 
-────────────────────────────────────────────────────────
+
 🧠 Machine Learning & Data Processing
-────────────────────────────────────────────────────────
+
 Used for training and predicting nutrition targets.
 
 - scikit-learn          : Machine learning algorithms
@@ -97,17 +97,17 @@ Used for training and predicting nutrition targets.
 - pandas                : Dataset loading and preprocessing
 - numpy                 : Numerical computations
 
-────────────────────────────────────────────────────────
+
 🗄️ Database
-────────────────────────────────────────────────────────
+
 - PostgreSQL stores:
   - User inputs
   - Prediction history
   - Nutrition targets
 
-────────────────────────────────────────────────────────
+
 ✅ Technology Summary
-────────────────────────────────────────────────────────
+
 Frontend   : Expo + React Native (Mobile-first)
 Backend    : FastAPI (REST API)
 ML         : Scikit-learn (Regression)
@@ -118,146 +118,137 @@ Mobile App → FastAPI → ML Model → Database
 
 🧩 Core System Components
 
+
 🧩 Component 1 – AI-Powered Multi-Disease Adaptive Nutrition & Personalized Health Optimization
 
-This component of FitNourish.AI focuses on delivering personalized nutrition recommendations by combining user health profiles, lifestyle data, and machine-learning predictions. It is designed as a mobile-first interface suitable for real-world deployment and academic demonstration (PP1).
 
-🔹 Interface Overview
+This component of FitNourish.AI delivers personalized nutrition recommendations by combining user health profiles, lifestyle data, and machine-learning predictions. It is designed as a mobile-first interface suitable for real-world deployment and academic demonstration.
 
-## 📱 Component 01 – Mobile Application Snapshot
+
+📱 Component 01 – Mobile Application Snapshot
+
 
 <img src="images/Component 01 snapshot.png" width="450" alt="Component 01 Mobile UI" />
 
-FitNourish.AI Nutrition Prediction Mobile Interface
-
 FitNourish.AI – Nutrition Profile Input & Prediction Result Interface
+
+
 📱 Mobile Interface Overview
+
 
 The FitNourish.AI mobile application consists of two primary screens:
 
-Nutrition Profile Input Interface
-
-Nutrition Prediction Result Interface
+1. Nutrition Profile Input Interface  
+2. Nutrition Prediction Result Interface  
 
 These screens guide users through a simple and intuitive workflow — from entering personal health data to receiving AI-generated nutrition insights.
 
+
 🧑‍⚕️ Nutrition Profile Input Interface
+
 
 This interface collects essential health, lifestyle, and activity data required for accurate nutrition prediction.
 
 📋 User Inputs
 
 Personal Information
-
-Age
-
-Gender (Male / Female)
-
-Height (cm)
-
-Weight (kg)
+- Age
+- Gender (Male / Female)
+- Height (cm)
+- Weight (kg)
 
 Nutrition Goal
-
-Maintain weight
-
-Lose weight
-
-Gain weight
+- Maintain weight
+- Lose weight
+- Gain weight
 
 Health Conditions
-
-Diabetes (Yes / No)
-
-Hypertension (Yes / No)
+- Diabetes (Yes / No)
+- Hypertension (Yes / No)
 
 Daily Activity Metrics
+- Steps per day
+- Active minutes
+- Calories burned during activity
 
-Steps per day
-
-Active minutes
-
-Calories burned during activity
 
 🎨 Smart Validation & User Experience (UX)
 
-Input validation ensures realistic and medically meaningful values (e.g., step count limits, numeric constraints)
 
-Toggle buttons and dropdowns replace free-text inputs to reduce errors
+- Input validation ensures realistic and medically meaningful values
+  (e.g., step count limits, numeric constraints)
+- Toggle buttons and dropdowns reduce user input errors
+- Green-themed UI aligns with the FitNourish.AI brand identity
+- Mobile-friendly layout improves clarity, accessibility, and usability
 
-Green-themed UI aligns with the FitNourish.AI brand identity
-
-Mobile-friendly layout improves clarity, accessibility, and usability
 
 ⌚ Smartwatch Data Integration (Demo Logic)
 
-During first-time setup, users manually enter activity data
 
-In real-world deployment, this data is designed to be:
+- During initial use, users manually enter activity data
+- System is designed for future enhancement to:
+  - Automatically fetch data from smartwatch / fitness APIs
+  - Periodically sync activity metrics
+  - Keep nutrition recommendations continuously updated
 
-Automatically fetched from smartwatch or fitness-tracker APIs
-
-Periodically updated to keep nutrition recommendations current
 
 📊 Nutrition Prediction Result Interface
 
-After clicking “Predict & Save”, the validated input data is sent to the backend AI system for processing.
+
+After clicking “Predict & Save”, validated input data is sent to the backend AI system for processing.
 
 🤖 AI-Generated Outputs
+- Daily calorie requirement (kcal/day)
+- Protein requirement (g/day)
+- Carbohydrate requirement (g/day)
+- Fat requirement (g/day)
 
-Daily calorie requirement (kcal/day)
-
-Protein requirement (g/day)
-
-Carbohydrate requirement (g/day)
-
-Fat requirement (g/day)
 
 ⚙️ Model & Backend
 
-Backend Framework: FastAPI (REST API)
 
-Machine Learning Model: Trained Random Forest Regression Model
+- Backend Framework : FastAPI (REST API)
+- Machine Learning  : Random Forest Regression (Multi-output)
+- Database          : PostgreSQL
 
-Database: PostgreSQL
+Database Stores:
+- Prediction history
+- User-specific nutrition records
 
-Stores prediction history
-
-Stores user-specific nutrition records
 
 ⭐ Key Highlights
 
-Results displayed using a clear, card-based layout
 
-Macro-nutrients visually separated for easy interpretation
+- Clear, card-based result presentation
+- Macro-nutrients visually separated for readability
+- Prediction history stored and retrievable
+- Architecture designed for scalability
+- Ready for future wearable & health-data integrations
 
-Prediction results can be saved and retrieved via the History section
-
-Designed for scalability with future health-data integrations
 
 🔁 End-to-End Workflow
 
-User opens the FitNourish.AI mobile application
 
-Health and activity data are entered or synced from a smartwatch
+1. User opens the FitNourish.AI mobile application
+2. Health and activity data are entered or synced
+3. Frontend validates the input data
+4. Backend AI model processes the data
+5. Personalized nutrition targets are generated
+6. Results are displayed and stored for future reference
 
-Data is validated on the frontend
-
-Backend AI model processes the input
-
-Personalized nutrition targets are generated
-
-Results are displayed and stored for future reference
 
 🎯 Purpose of This Component
 
-AI-driven personalization in healthcare and nutrition
 
-Seamless integration of frontend, backend, machine learning, and database layers
+- AI-driven personalization in healthcare and nutrition
+- Seamless integration of:
+  - Mobile frontend
+  - Backend API
+  - Machine learning models
+  - Database layer
+- Professional, user-centric mobile application design
+- Readiness for real-world smartwatch integration
 
-Readiness for real-world wearable device integration
-
-Professional, user-centric mobile application design
 
 2️⃣ Smart Grocery Price Optimization & Store Recommendation
 
