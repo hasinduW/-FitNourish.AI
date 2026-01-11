@@ -249,25 +249,6 @@ Database Stores:
 - Professional, user-centric mobile application design
 - Readiness for real-world smartwatch integration
 
-
-2️⃣ Smart Grocery Price Optimization & Store Recommendation
-
-This component assists users in making budget-friendly grocery decisions without compromising nutritional value.
-
-Key Features
-
-Real-time grocery price comparison across supermarkets (e.g., Keells, Cargills)
-
-Nutrition-equivalent food substitution (cheaper alternatives with similar nutrients)
-
-Location-aware nearby store recommendations
-
-Price + distance optimization to minimize overall cost
-
-Structured product taxonomy and category-based analysis
-
-Designed specifically for Sri Lankan grocery context
-
 ## 📱 Component 03 – Meal Image Analysis & Intelligent Meal Planning
 
 <img src="images/Component 03 snapshot.png" width="450" alt="Component 03 Meal Image Analysis UI" />
