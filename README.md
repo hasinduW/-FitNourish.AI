@@ -119,13 +119,13 @@ Mobile App → FastAPI → ML Model → Database
 🧩 Core System Components
 
 
-🧩 Component 1 – AI-Powered Multi-Disease Adaptive Nutrition & Personalized Health Optimization
+📲[ Component 1 – AI-Powered Multi-Disease Adaptive Nutrition & Personalized Health Optimization ]
 
 
 This component of FitNourish.AI delivers personalized nutrition recommendations by combining user health profiles, lifestyle data, and machine-learning predictions. It is designed as a mobile-first interface suitable for real-world deployment and academic demonstration.
 
 
-##📱 Component 01 – Mobile Application Snapshot
+📱 Component 01 – Mobile Application Snapshot
 
 
 <img src="images/Component 01 snapshot.png" width="100%" alt="Component 01 Snapshot" />
