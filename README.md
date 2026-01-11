@@ -284,7 +284,14 @@ Card-based result display for clarity and readability
 
 ## 📱 Component 04 – AI-powered Smart Grocery List Optimization and Nearest Store Recommendation.
 
-<img src="images/Component 04 Snapshot.png" width="450" alt="Component 04 Smart Grocery List Optimization UI" />
+<table>
+<tr>
+<td width="100%">
+  <img src="images/Component 04 Snapshot.png" alt="Component 04 Smart Grocery List Optimization UI" />
+</td>
+
+</tr>
+</table>
 
 #### Cheapest & Nearest Store Recommendation
 
