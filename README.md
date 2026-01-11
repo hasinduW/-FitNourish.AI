@@ -193,20 +193,22 @@ This component uses computer vision and AI to analyze meals and generate meal pl
 
 #### Meal Analysis
 
-1. Click on the upload area in the left panel
-2. Select a meal image from your device
-3. Click "Analyze Meal" button
-4. View the results:
+1. Click on the Food Analyzer button from user dashboard.
+2. Click on the upload area
+3. Select a meal image from your device
+4. Click "Proceed" button
+5. View the results:
    - **Ingredients:** List of detected ingredients with ML confidence scores
    - **Nutrients:** Nutritional breakdown with amounts and percentages
    - **Calories:** Calorie content per 100g
 
 #### Meal Suggestions
 
-1. Enter your daily calorie target (e.g., 2000 calories)
-2. Select the number of meals per day (2, 3, or 4)
+1. Click on the Meal Plan Generator button from user dashboard.
+2. At the top of the UI , user will be able to see the Daily Calorie Target (eg: 2000 kcal/day)
 3. Optionally customize settings:
    - Click the settings icon (⚙️) to adjust:
+     - Select the number of meals per day (2, 3, or 4)
      - Calorie distribution ratios across meals
      - Target macro ratios (carbohydrates, proteins, fats)
 4. Click "Get Meal Suggestions"
