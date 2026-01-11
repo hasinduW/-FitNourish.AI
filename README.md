@@ -125,7 +125,7 @@ Mobile App → FastAPI → ML Model → Database
 This component of FitNourish.AI delivers personalized nutrition recommendations by combining user health profiles, lifestyle data, and machine-learning predictions. It is designed as a mobile-first interface suitable for real-world deployment and academic demonstration.
 
 
-📱 Component 01 – Mobile Application Snapshot
+##📱 Component 01 – Mobile Application Snapshot
 
 
 <img src="images/Component 01 snapshot.png" width="100%" alt="Component 01 Snapshot" />
@@ -249,7 +249,7 @@ Database Stores:
 - Professional, user-centric mobile application design
 - Readiness for real-world smartwatch integration
 
-## 📱 Component 03 – Meal Image Analysis & Intelligent Meal Planning
+## 📱 Component 02 – Meal Image Analysis & Intelligent Meal Planning
 
 <img src="images/Component 03 snapshot.png" width="450" alt="Component 03 Meal Image Analysis UI" />
 
@@ -307,7 +307,7 @@ This component uses computer vision and AI to analyze meals and generate meal pl
 - **Machine Learning:** CNN (Convolutional Neural Network) for image analysis
 - **Optimization:** Integer Linear Programming (ILP) for meal plan generation
 
-4️⃣ AI-Powered Predictive Health Alert and Progress Tracking System​
+##📲 Component 03 - AI-Powered Predictive Health Alert and Progress Tracking System​
 
 <table>
 <tr>
