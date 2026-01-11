@@ -284,7 +284,7 @@ Data Sources: User input, wearable signals, meal images, grocery price data
 
 The system architecture of FitNourish AI is illustrated below:
 
-![Architecture Diagram](images/architecture.jpeg)
+![Architecture Diagram](images/architecture.png)
 
 ## 🚀 Key Strengths
 
