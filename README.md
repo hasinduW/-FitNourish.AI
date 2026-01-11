@@ -6,6 +6,8 @@ FitNourish.AI is a mobile-first, AI-powered health and nutrition assistant desig
 To provide users with personalized nutrition targets, health insights, and cost-effective food recommendations by intelligently analyzing health data, activity patterns, meal images, and grocery prices.
 
 🧩 Core System Components
+
+
 1️⃣ AI-Powered Personalized Nutrition & Health Optimization
 
 This component predicts individualized daily nutrition requirements based on user profile, activity, and health conditions.
