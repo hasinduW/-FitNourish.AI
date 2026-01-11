@@ -23,7 +23,7 @@ The platform also incorporates image processing to analyze food photos and sugge
 
 **Main Objective:** To help users manage health conditions and achieve fitness goals through personalized meal planning, health monitoring, and timely alerts
 
-📦 All-in-One Dependencies
+📦Dependencies
 
 FitNourish.AI is a mobile-first intelligent nutrition & wellness application built using a full-stack architecture consisting of a React Native mobile app, FastAPI backend, and Machine Learning models.
 
