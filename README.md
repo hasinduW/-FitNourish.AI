@@ -1,9 +1,27 @@
 # -FitNourish.AI
 FitNourish.AI is a mobile-first, AI-powered health and nutrition assistant designed to provide personalized nutrition targets, health insights, and cost-aware food decisions. The system integrates Machine Learning, mobile applications, wearable data concepts, computer vision, and grocery intelligence into
 
-🎯 Project Objective
+## 🎯 Project Objective
 
 To provide users with personalized nutrition targets, health insights, and cost-effective food recommendations by intelligently analyzing health data, activity patterns, meal images, and grocery prices.
+
+## 🎯 Project Overview
+
+FitNourish AI is an intelligent, AI-powered nutrition assistant designed to address poor dietary habits and the lack of personalized nutrition guidance in existing health applications. Many current diet and fitness apps rely on static recommendations and fail to adapt to users' real-time health data, leading to ineffective diet planning and long-term health issues.
+
+To overcome these limitations, FitNourish AI integrates machine learning, computer vision, and real-time wellness monitoring to deliver personalized, dynamic, and data-driven dietary advice. The system analyzes user profiles, health goals, dietary preferences, and smartwatch biometrics to generate customized meal plans and proactive health alerts.
+
+The platform also incorporates image processing to analyze food photos and suggest suitable meal options, as well as a smart grocery optimizer that creates cost-effective shopping lists aligned with the user's diet plan. By continuously monitoring lifestyle habits and health indicators, FitNourish AI adapts recommendations in real time, ensuring a holistic and user-centric nutrition solution.
+
+### Project Summary
+
+**Problem Addressed:** Poor dietary habits and lack of personalized, real-time nutrition advice in existing applications
+
+**Research Gap:** Absence of intelligent, adaptive, and holistic nutrition systems that utilize real-time health data
+
+**Proposed Solution:** An AI-driven nutrition assistant that dynamically personalizes diet plans and health recommendations
+
+**Main Objective:** To help users manage health conditions and achieve fitness goals through personalized meal planning, health monitoring, and timely alerts
 
 🧩 Core System Components
 
@@ -166,37 +184,61 @@ Structured product taxonomy and category-based analysis
 
 Designed specifically for Sri Lankan grocery context
 
-3️⃣ Meal Image Analysis & Intelligent Meal Planning
+## 📱 Component 03 – Meal Image Analysis & Intelligent Meal Planning
+
+<img src="images/Component 03 snapshot.png" width="450" alt="Component 03 Meal Image Analysis UI" />
 
 This component uses computer vision and AI to analyze meals and generate meal plans.
 
-Key Features
 
-Meal image upload and analysis
+#### Meal Analysis
 
-Ingredient detection with ML confidence scores
+1. Click on the upload area in the left panel
+2. Select a meal image from your device
+3. Click "Analyze Meal" button
+4. View the results:
+   - **Ingredients:** List of detected ingredients with ML confidence scores
+   - **Nutrients:** Nutritional breakdown with amounts and percentages
+   - **Calories:** Calorie content per 100g
 
-Nutrient estimation:
+#### Meal Suggestions
 
-Calories
+1. Enter your daily calorie target (e.g., 2000 calories)
+2. Select the number of meals per day (2, 3, or 4)
+3. Optionally customize settings:
+   - Click the settings icon (⚙️) to adjust:
+     - Calorie distribution ratios across meals
+     - Target macro ratios (carbohydrates, proteins, fats)
+4. Click "Get Meal Suggestions"
+5. Browse through the suggested meals with:
+   - Meal images
+   - Ingredient lists
+   - Nutritional information
+   - Calorie content
+  
+### Key Features
 
-Proteins
+- Meal image upload and analysis
+- Ingredient detection with ML confidence scores
+- Nutrient estimation:
+  - Calories
+  - Proteins
+  - Carbohydrates
+  - Fats
+- Daily calorie target input
+- Meal plan generation based on:
+  - Number of meals per day
+  - Calorie distribution
+  - Macronutrient preferences
+- Adjustable macro and calorie ratios for flexibility
 
-Carbohydrates
+### Technologies
 
-Fats
-
-Daily calorie target input
-
-Meal plan generation based on:
-
-Number of meals per day
-
-Calorie distribution
-
-Macronutrient preferences
-
-Adjustable macro and calorie ratios for flexibility
+- **Frontend:** React Native
+- **Backend:** FastAPI (REST API)
+- **Database:** PostgreSQL
+- **Machine Learning:** CNN (Convolutional Neural Network) for image analysis
+- **Optimization:** Integer Linear Programming (ILP) for meal plan generation
 
 4️⃣ Smart Health Monitoring, Alerts & Insights
 
@@ -228,7 +270,7 @@ Input validation for realistic and medically meaningful values
 
 Card-based result display for clarity and readability
 
-⚙️ System Architecture
+## ⚙️ System Architecture
 
 Frontend: React Native (Expo Web)
 
@@ -240,7 +282,11 @@ Database: PostgreSQL
 
 Data Sources: User input, wearable signals, meal images, grocery price data
 
-🚀 Key Strengths
+The system architecture of FitNourish AI is illustrated below:
+
+![Architecture Diagram](images/architecture.png)
+
+## 🚀 Key Strengths
 
 AI-driven personalization in nutrition and healthcare
 
@@ -254,7 +300,7 @@ Localized for Sri Lankan users and grocery ecosystem
 
 Practical, cost-aware, and health-focused solution
 
-📌 Project Status
+## 📌 Project Status
 
 Core ML model trained and evaluated (Overall R² ≈ 0.89)
 
