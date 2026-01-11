@@ -1,4 +1,5 @@
 nutrition_backend/__pycache__/app.cpython-314.pyc
 nutrition_backend/__pycache__/db.cpython-314.pyc
 nutrition_backend/__pycache__/models.cpython-314.pyc
+nutrition_backend/sri_lanka_dataset_1000_inputs_outputs_only.csv
 nutrition_backend/artifacts/nutrition_model.pkl
