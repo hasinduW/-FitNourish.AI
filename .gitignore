@@ -5,3 +5,4 @@ nutrition_backend/sri_lanka_dataset_1000_inputs_outputs_only.csv
 nutrition_backend/artifacts/nutrition_model.pkl
 nutrition_frontend/.vscode/extensions.json
 nutrition_frontend/.vscode/settings.json
+.DS_Store
