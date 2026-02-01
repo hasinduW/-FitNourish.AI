@@ -9,6 +9,9 @@ import pandas as pd
 from pathlib import Path
 import logging
 
+from db import SessionLocal
+from database_models import MealPlan, MealPlanMeal
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -91,7 +94,55 @@ def select_dish_for_meal(target_calories, available_dishes, target_macro_profile
     return selected_dish_row, selected_dish_id
 
 
-def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distribution_ratios=None, target_macro_ratios=None) -> list:
+def save_meal_plan_to_db(
+    full_meal_plan_details: list,
+    daily_calorie_target: float,
+    num_meals: int,
+    calorie_distribution_ratios: list,
+    target_macro_ratios: dict,
+) -> int:
+    """
+    Save a meal plan to PostgreSQL. Returns the meal_plan_id.
+    """
+    db = SessionLocal()
+    try:
+        meal_plan = MealPlan(
+            daily_calorie_target=daily_calorie_target,
+            num_meals=num_meals,
+            calorie_distribution_ratios=calorie_distribution_ratios,
+            target_macro_ratios=target_macro_ratios,
+        )
+        db.add(meal_plan)
+        db.flush()  # Get meal_plan.id before adding meals
+
+        for i, meal in enumerate(full_meal_plan_details):
+            ingredients_list = meal.get("ingredients_list", [])
+            ingredients_str = ", ".join(str(x) for x in ingredients_list) if ingredients_list else None
+            meal_plan_meal = MealPlanMeal(
+                meal_plan_id=meal_plan.id,
+                meal_order=i + 1,
+                dish_id=str(meal.get("dish", "")),
+                total_calories=float(meal.get("total_calories", 0)),
+                total_fat=float(meal.get("total_fat", 0)),
+                total_carb=float(meal.get("total_carb", 0)),
+                total_protein=float(meal.get("total_protein", 0)),
+                total_mass=float(meal["total_mass"]) if meal.get("total_mass") is not None else None,
+                ingredients=ingredients_str,
+            )
+            db.add(meal_plan_meal)
+
+        db.commit()
+        logger.info(f"Meal plan saved to database (id={meal_plan.id})")
+        return meal_plan.id
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to save meal plan: {e}")
+        raise
+    finally:
+        db.close()
+
+
+def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distribution_ratios=None, target_macro_ratios=None, save_to_db: bool = True) -> list:
     daily_calorie_target = total_calories
     num_meals = meals_per_day
     
@@ -214,5 +265,18 @@ def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distri
     print(f"  Fat: Target {target_macro_ratios['fat']*100:.1f}% | Actual {actual_fat_pc:.1f}% ({total_plan_fat:.1f}g)")
     print(f"  Carbs: Target {target_macro_ratios['carb']*100:.1f}% | Actual {actual_carb_pc:.1f}% ({total_plan_carb:.1f}g)")
     print(f"  Protein: Target {target_macro_ratios['protein']*100:.1f}% | Actual {actual_protein_pc:.1f}% ({total_plan_protein:.1f}g)")
+
+    if save_to_db:
+        try:
+            meal_plan_id = save_meal_plan_to_db(
+                full_meal_plan_details=full_meal_plan_details,
+                daily_calorie_target=daily_calorie_target,
+                num_meals=num_meals,
+                calorie_distribution_ratios=calorie_distribution_ratios,
+                target_macro_ratios=target_macro_ratios,
+            )
+            print(f"\n✅ Meal plan saved to database (id={meal_plan_id})")
+        except Exception as e:
+            logger.warning(f"Could not save meal plan to database: {e}")
 
     return full_meal_plan_details
