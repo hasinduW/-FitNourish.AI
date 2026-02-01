@@ -344,22 +344,38 @@ Edit paths to match your repo name, but here is a clean structure that matches w
 
 ```bash
 FitNourish.AI/
-├─ backend/                          # FastAPI backend + ML model + DB
-│  ├─ app.py                         # API endpoints (predict, predict-and-save, history)
-│  ├─ db.py                          # SQLAlchemy DB session
-│  ├─ models.py                      # Prediction table model
-│  ├─ artifacts/
-│  │  └─ nutrition_model.pkl         # Trained ML model
-│  ├─ train.py                       # Training script (RandomForest MultiOutput)
+├─ nutrition_backend/                 # FastAPI backend + ML models + DB
+│  ├─ app.py                         # Main API endpoints
+│  ├─ db.py                          # SQLAlchemy database session
+│  ├─ database_models.py              # Database table models (predictions, meal_plans, meal_plan_meals)
+│  ├─ init_db.py                     # Database initialization script
+│  ├─ train.py                       # Nutrition ML model training script
 │  ├─ requirements.txt               # Backend dependencies
-│  └─ README.md (optional)
+│  ├─ pytest.ini                     # Pytest configuration
+│  ├─ models/                        # Pydantic/data models
+│  │  ├─ meal_models.py              # Meal-related request/response models
+│  │  └─ nutrition_models.py        # Nutrition prediction models
+│  ├─ services/                      # Business logic services
+│  │  ├─ ingredient_predictor.py     # Ingredient detection from images
+│  │  ├─ meal_plan_predictor.py      # Meal plan generation
+│  │  └─ nutrients_predictor.py     # Nutrient prediction from images
+│  ├─ tests/                         # Test suite
+│  │  ├─ api/                        # API endpoint tests
+│  │  │  ├─ test_nutrition.py
+│  │  │  └─ test_meal_analysis.py
+│  │  ├─ services/                   # Service tests
+│  │  │  └─ test_predictors.py
+│  │  └─ conftest.py                 # Pytest fixtures
+│  ├─ artifacts/                     # Trained ML models (nutrition_model.pkl)
+│  ├─ dataset/                       # Training datasets (dishes, ingredients)
+│  └─ README.md                      # Backend documentation
 │
 ├─ frontend/                         # Expo / React Native (Web + Mobile)
 │  └─ nutrition_mobile/
 │     ├─ app/
 │     │  ├─ (tabs)/
 │     │  │  ├─ index.tsx             # Splash -> Login -> Home -> Form flow (UI)
-│     │  │  ├─ history.tsx           # History screen
+│     │  │  ├─ history.tsx            # History screen
 │     │  │  └─ _layout.tsx           # Tab layout
 │     │  └─ _layout.tsx
 │     ├─ src/
