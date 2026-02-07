@@ -1,9 +1,22 @@
-nutrition_backend/__pycache__/app.cpython-314.pyc
-nutrition_backend/__pycache__/db.cpython-314.pyc
-nutrition_backend/__pycache__/models.cpython-314.pyc
-nutrition_backend/sri_lanka_dataset_1000_inputs_outputs_only.csv
-nutrition_backend/artifacts/nutrition_model.pkl
-nutrition_backend/run.sh
-nutrition_frontend/.vscode/extensions.json
-nutrition_frontend/.vscode/settings.json
+# OS
 .DS_Store
+*.DS_Store
+
+# Backend (Python / FastAPI)
+nutrition_backend/__pycache__/
+nutrition_backend/**/__pycache__/
+nutrition_backend/sri_lanka_dataset_1000_inputs_outputs_only.csv
+nutrition_backend/artifacts/
+nutrition_backend/run.sh
+nutrition_backend/venv/
+nutrition_backend/.env
+nutrition_backend/.env.local
+
+# Frontend (Expo / Node)
+nutrition_frontend/node_modules/
+nutrition_frontend/.expo/
+nutrition_frontend/.vscode/
+nutrition_frontend/dist/
+nutrition_frontend/web-build/
+nutrition_frontend/.env
+nutrition_frontend/.env.local
