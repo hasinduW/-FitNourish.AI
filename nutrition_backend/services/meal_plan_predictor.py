@@ -3,11 +3,18 @@ Meal Plan Predictor Service
 
 This module handles the generation of personalized meal plans based on
 daily calorie goals and meal frequency preferences.
+Dataset is loaded once and cached in memory for fast subsequent requests.
+
+At runtime only dish_metadata (parquet or pkl) is used; dish_images.pkl is never loaded.
+Create metadata and per-dish images by running: python scripts/split_dish_images.py
+Then the cache loads dish_metadata and reads images on demand per request.
 """
 
+import pickle
 import pandas as pd
 from pathlib import Path
 import logging
+import numpy as np
 
 from db import SessionLocal
 from database_models import MealPlan, MealPlanMeal
@@ -16,42 +23,156 @@ from database_models import MealPlan, MealPlanMeal
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
-def data_preparation(daily_calorie_target, num_meals, calorie_distribution_ratios, target_macro_ratios):
+# In-memory cache: loaded once, reused for all suggest-meals requests
+_dataset_cache = None
 
-    # Use relative path from project root
+# Column name for image bytes in the original pickle (dropped when using metadata-only)
+IMAGE_COLUMN = 'rgb_image'
+
+
+def _image_to_bytes(val):
+    """Convert image value (bytes or numpy array) to bytes for API response."""
+    if val is None or (isinstance(val, float) and np.isnan(val)):
+        return b''
+    if isinstance(val, bytes):
+        return val
+    if hasattr(val, 'tobytes'):
+        return val.tobytes()
+    return b''
+
+
+def _load_image_for_dish(dish_id, images_dir: Path) -> bytes:
+    """Load image bytes for a single dish from dataset/images/<dish_id>.pkl. Used when dish_metadata.pkl is in use."""
+    path = images_dir / f"{dish_id}.pkl"
+    if not path.exists():
+        return b''
+    try:
+        with open(path, 'rb') as f:
+            val = pickle.load(f)
+        return _image_to_bytes(val)
+    except Exception as e:
+        logger.warning("Could not load image for dish %s: %s", dish_id, e)
+        return b''
+
+
+def _load_dataset_cache():
+    """Load dataset from disk. Uses only dish_metadata (parquet or pkl) + dataset/images/; dish_images.pkl is never loaded."""
+    global _dataset_cache
     base_path = Path(__file__).parent.parent
     save_path = base_path / 'dataset'
-    
-    # Verify dataset directory exists
     if not save_path.exists():
         raise FileNotFoundError(f"Dataset directory not found at: {save_path}")
-    
-    image_df = pd.read_pickle(save_path / 'dish_images.pkl')
+
+    metadata_parquet = save_path / 'dish_metadata.parquet'
+    metadata_pkl = save_path / 'dish_metadata.pkl'
+    image_df = None
+    images_dir = save_path / 'images'
+
+    if metadata_parquet.exists():
+        try:
+            logger.info("Loading meal plan dataset from dish_metadata.parquet (images on demand)...")
+            image_df = pd.read_parquet(metadata_parquet)
+        except Exception as e:
+            logger.warning("Could not load dish_metadata.parquet (%s), trying .pkl", e)
+    if image_df is None and metadata_pkl.exists():
+        logger.info("Loading meal plan dataset from dish_metadata.pkl (images on demand)...")
+        image_df = pd.read_pickle(metadata_pkl)
+    if image_df is None:
+        raise FileNotFoundError(
+            "Meal plan metadata not found. Create it by running: python scripts/split_dish_images.py "
+            "(requires dataset/dish_images.pkl). Do not use dish_images.pkl at runtime."
+        )
+
     dishes = pd.read_excel(save_path / 'dishes.xlsx')
     dish_ingredients = pd.read_excel(save_path / 'dish_ingredients.xlsx')
     ingredients = pd.read_excel(save_path / 'ingredients.xlsx')
 
     image_df = pd.merge(image_df, dishes, left_on='dish', right_on='dish_id', how='left').drop('dish_id', axis=1)
-
-    # Calculate meal calorie targets based on distribution ratios
-    meal_calorie_targets = []
-    for ratio in calorie_distribution_ratios:
-        meal_calories = ratio * daily_calorie_target
-        meal_calorie_targets.append(meal_calories)
     image_df['calories_from_fat'] = image_df['total_fat'] * 9
     image_df['calories_from_carb'] = image_df['total_carb'] * 4
     image_df['calories_from_protein'] = image_df['total_protein'] * 4
-
-    # Calculate percentage of calories from each macronutrient, handling division by zero
     image_df['fat_pc'] = (image_df['calories_from_fat'] / image_df['total_calories']).fillna(0) * 100
     image_df['carb_pc'] = (image_df['calories_from_carb'] / image_df['total_calories']).fillna(0) * 100
     image_df['protein_pc'] = (image_df['calories_from_protein'] / image_df['total_calories']).fillna(0) * 100
-
-    # Replace any inf values (if total_calories was zero and macro calories were non-zero) with 0
     image_df.replace([float('inf'), -float('inf')], 0, inplace=True)
-
     available_dishes = image_df[image_df['total_calories'] > 0].copy()
-    return {'available_dishes': available_dishes, 'dish_ingredients': dish_ingredients, 'ingredients': ingredients, 'meal_calorie_targets': meal_calorie_targets}
+    dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, ingredients)
+
+    _dataset_cache = {
+        'available_dishes': available_dishes,
+        'dish_ingredients': dish_ingredients,
+        'ingredients': ingredients,
+        'dish_ingr_names': dish_ingr_names,
+    }
+    if images_dir is not None and images_dir.exists():
+        _dataset_cache['_images_dir'] = images_dir
+    logger.info("Meal plan dataset cached in memory.")
+    return _dataset_cache
+
+
+def get_dataset_cache():
+    """Return cached dataset; load from disk on first call."""
+    global _dataset_cache
+    if _dataset_cache is None:
+        _load_dataset_cache()
+    return _dataset_cache
+
+
+def data_preparation(daily_calorie_target, num_meals, calorie_distribution_ratios, target_macro_ratios):
+    """Build request data: use cached dataset and only compute meal_calorie_targets per request."""
+    try:
+        cache = get_dataset_cache()
+    except FileNotFoundError:
+        cache = None
+
+    if cache is not None:
+        meal_calorie_targets = [ratio * daily_calorie_target for ratio in calorie_distribution_ratios]
+        return {**cache, 'meal_calorie_targets': meal_calorie_targets}
+
+    # Fallback: load from disk (e.g. if cache was not loaded at startup)
+    base_path = Path(__file__).parent.parent
+    save_path = base_path / 'dataset'
+    if not save_path.exists():
+        raise FileNotFoundError(f"Dataset directory not found at: {save_path}")
+
+    metadata_parquet = save_path / 'dish_metadata.parquet'
+    metadata_pkl = save_path / 'dish_metadata.pkl'
+    if metadata_parquet.exists():
+        try:
+            image_df = pd.read_parquet(metadata_parquet)
+        except Exception:
+            image_df = pd.read_pickle(metadata_pkl) if metadata_pkl.exists() else None
+    else:
+        image_df = pd.read_pickle(metadata_pkl) if metadata_pkl.exists() else None
+    if image_df is None:
+        raise FileNotFoundError(
+            "Meal plan metadata not found. Run: python scripts/split_dish_images.py"
+        )
+
+    dishes = pd.read_excel(save_path / 'dishes.xlsx')
+    dish_ingredients = pd.read_excel(save_path / 'dish_ingredients.xlsx')
+    ingredients = pd.read_excel(save_path / 'ingredients.xlsx')
+    image_df = pd.merge(image_df, dishes, left_on='dish', right_on='dish_id', how='left').drop('dish_id', axis=1)
+    meal_calorie_targets = [ratio * daily_calorie_target for ratio in calorie_distribution_ratios]
+    image_df['calories_from_fat'] = image_df['total_fat'] * 9
+    image_df['calories_from_carb'] = image_df['total_carb'] * 4
+    image_df['calories_from_protein'] = image_df['total_protein'] * 4
+    image_df['fat_pc'] = (image_df['calories_from_fat'] / image_df['total_calories']).fillna(0) * 100
+    image_df['carb_pc'] = (image_df['calories_from_carb'] / image_df['total_calories']).fillna(0) * 100
+    image_df['protein_pc'] = (image_df['calories_from_protein'] / image_df['total_calories']).fillna(0) * 100
+    image_df.replace([float('inf'), -float('inf')], 0, inplace=True)
+    available_dishes = image_df[image_df['total_calories'] > 0].copy()
+    dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, ingredients)
+    result = {
+        'available_dishes': available_dishes,
+        'dish_ingredients': dish_ingredients,
+        'ingredients': ingredients,
+        'dish_ingr_names': dish_ingr_names,
+        'meal_calorie_targets': meal_calorie_targets,
+    }
+    if (save_path / 'images').exists():
+        result['_images_dir'] = save_path / 'images'
+    return result
 
 def _get_ingredient_names_for_dishes(dish_ingredients, ingredients_df=None):
     """
@@ -101,7 +222,7 @@ def _get_ingredient_names_for_dishes(dish_ingredients, ingredients_df=None):
 
 
 def select_dish_for_meal(target_calories, available_dishes, target_macro_profile,
-                         dish_ingredients=None, preferred_ingredients=None, ingredients_df=None):
+                         dish_ingredients=None, preferred_ingredients=None, ingredients_df=None, dish_ingr_names=None):
     """
     Selects a dish that best matches the target calorie count and macronutrient profile.
     Optionally favors dishes that contain any of the preferred ingredients.
@@ -113,10 +234,14 @@ def select_dish_for_meal(target_calories, available_dishes, target_macro_profile
         dish_ingredients (pd.DataFrame, optional): DataFrame with dish_id and ingr_name or ingr.
         preferred_ingredients (list, optional): List of ingredient names to favor (any case).
         ingredients_df (pd.DataFrame, optional): Ingredients table to resolve ingr id -> name if needed.
+        dish_ingr_names (dict, optional): Precomputed dish_id -> list of ingredient names; used when provided.
 
     Returns:
         tuple: (selected_dish_row, selected_dish_id).
     """
+    if dish_ingr_names is None and dish_ingredients is not None:
+        dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, ingredients_df)
+
     # 2. Calculate the absolute difference between each dish's total_calories and the target_calories
     available_dishes = available_dishes.copy()
     available_dishes['calorie_deviation'] = abs(available_dishes['total_calories'] - target_calories)
@@ -128,9 +253,8 @@ def select_dish_for_meal(target_calories, available_dishes, target_macro_profile
         available_dishes['macro_deviation'] += abs(available_dishes[f'{macro}_pc'] - target_percentage)
 
     # 4. Optional: bonus for dishes containing preferred ingredients (lower score = better)
-    if preferred_ingredients and dish_ingredients is not None and len(preferred_ingredients) > 0:
+    if preferred_ingredients and dish_ingr_names is not None and len(preferred_ingredients) > 0:
         preferred_set = {str(s).strip().lower() for s in preferred_ingredients if s}
-        dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, ingredients_df)
         bonus_map = {}
         for did in available_dishes['dish'].unique():
             ingr_names = dish_ingr_names.get(did, [])
@@ -153,9 +277,8 @@ def select_dish_for_meal(target_calories, available_dishes, target_macro_profile
     selected_dish_id = selected_dish_row['dish']
     # Which preferred ingredients (if any) matched this dish (for response/logging)
     matched_preferred = []
-    if preferred_ingredients and dish_ingredients is not None and len(preferred_ingredients) > 0:
+    if preferred_ingredients and dish_ingr_names is not None and len(preferred_ingredients) > 0:
         preferred_set = {str(s).strip().lower() for s in preferred_ingredients if s}
-        dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, ingredients_df)
         ingr_names = dish_ingr_names.get(selected_dish_id, [])
         for pref in preferred_ingredients:
             p = str(pref).strip().lower()
@@ -280,6 +403,7 @@ def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distri
             dish_ingredients=dish_ingredients,
             preferred_ingredients=preferred_ingredients,
             ingredients_df=data['ingredients'],
+            dish_ingr_names=data.get('dish_ingr_names'),
         )
 
         # Store the selected dish details and whether it came from preferred list
@@ -306,8 +430,10 @@ def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distri
         available_dishes = available_dishes[available_dishes['dish'] != selected_dish_id].copy()
         print(f"Remaining available dishes: {available_dishes.shape[0]}")
 
-    # Build full meal plan details with ingredients (use same resolution as preferred matching)
-    dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, data['ingredients'])
+    # Build full meal plan details with ingredients (use cached map when available)
+    dish_ingr_names = data.get('dish_ingr_names')
+    if dish_ingr_names is None:
+        dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, data['ingredients'])
     full_meal_plan_details = []
 
     for meal in meal_plan:
@@ -323,6 +449,14 @@ def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distri
                 raw_names = subset['ingr'].dropna().astype(str).str.strip().tolist()
         meal['ingredients_list'] = [n.title() for n in raw_names] if raw_names else []
         full_meal_plan_details.append(meal)
+
+    # Attach image bytes: on-demand from dataset/images/ when using dish_metadata.pkl, else already in meal dict
+    images_dir = data.get('_images_dir')
+    for meal in full_meal_plan_details:
+        if images_dir is not None:
+            meal['rgb_image'] = _load_image_for_dish(meal['dish'], images_dir)
+        else:
+            meal['rgb_image'] = _image_to_bytes(meal.get(IMAGE_COLUMN))
 
     # Calculate daily totals
     total_plan_calories = sum(meal['total_calories'] for meal in full_meal_plan_details)
