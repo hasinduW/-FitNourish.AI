@@ -23,6 +23,8 @@ const GRAY_TEXT = "#6B6B6B";
 const MAX_WIDTH_WEB = 520;
 const DEFAULT_DAILY_CALORIE_TARGET = 2500;
 const DEFAULT_MEALS_PER_DAY = 3;
+const MAX_INGREDIENTS = 10;
+const INGREDIENTS_PER_COLUMN = 5;
 
 // Placeholder when API returns no image
 const PLACEHOLDER_IMAGE =
@@ -52,7 +54,7 @@ function mapApiMealToItem(api: {
   return {
     mealName: api.meal_name,
     imageUri: api.image && api.image.startsWith("data:") ? api.image : PLACEHOLDER_IMAGE,
-    ingredients: api.ingredients ?? [],
+    ingredients: (api.ingredients ?? []).slice(0, MAX_INGREDIENTS),
     nutrients: { fat, protein, carbs },
     totalCalories: api.calories ?? 0,
   };
@@ -177,15 +179,27 @@ export function MealPlanGeneratorScreen({
             </ImageBackground>
           </View>
 
-          {/* Ingredients list */}
+          {/* Ingredients list: max 10, 2 columns of 5 */}
           <View style={styles.ingredientsSection}>
             <Text style={styles.ingredientsLabel}>Ingredients</Text>
-            {meal.ingredients.map((ing, i) => (
-              <View key={i} style={styles.bulletRow}>
-                <Text style={styles.bullet}>•</Text>
-                <Text style={styles.bulletText}>{ing}</Text>
+            <View style={styles.ingredientsTwoCol}>
+              <View style={styles.ingredientsColumn}>
+                {meal.ingredients.slice(0, INGREDIENTS_PER_COLUMN).map((ing, i) => (
+                  <View key={i} style={styles.bulletRow}>
+                    <Text style={styles.bullet}>•</Text>
+                    <Text style={styles.bulletText}>{ing}</Text>
+                  </View>
+                ))}
               </View>
-            ))}
+              <View style={styles.ingredientsColumn}>
+                {meal.ingredients.slice(INGREDIENTS_PER_COLUMN, MAX_INGREDIENTS).map((ing, i) => (
+                  <View key={INGREDIENTS_PER_COLUMN + i} style={styles.bulletRow}>
+                    <Text style={styles.bullet}>•</Text>
+                    <Text style={styles.bulletText}>{ing}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
           </View>
 
           {/* Nutrients grid: Fat, Protein, Carbs */}
@@ -356,6 +370,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
     marginBottom: 10,
+  },
+  ingredientsTwoCol: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  ingredientsColumn: {
+    flex: 1,
+    maxWidth: "50%",
   },
   bulletRow: {
     flexDirection: "row",
