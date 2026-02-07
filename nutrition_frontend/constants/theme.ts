@@ -5,6 +5,9 @@
 
 import { Platform } from 'react-native';
 
+/** Primary green for new UIs - #2EA37A */
+export const PrimaryGreen = '#2EA37A';
+
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 
