@@ -6,6 +6,7 @@ export type MealPlanSettings = {
   mealsPerDay: number;
   calorieDistributionRatios: number[];
   targetMacroRatios: { fat: number; carb: number; protein: number };
+  preferredIngredients: string[];
 };
 
 const DEFAULT_SETTINGS: MealPlanSettings = {
@@ -13,6 +14,7 @@ const DEFAULT_SETTINGS: MealPlanSettings = {
   mealsPerDay: 3,
   calorieDistributionRatios: [0.25, 0.4, 0.35],
   targetMacroRatios: { fat: 0.3, carb: 0.45, protein: 0.25 },
+  preferredIngredients: [],
 };
 
 const MealPlanSettingsContext = createContext<{

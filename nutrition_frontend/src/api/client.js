@@ -1,4 +1,7 @@
-export const BASE_URL = "http://127.0.0.1:8000";
+// Use EXPO_PUBLIC_API_URL for physical device (your laptop's LAN IP, e.g. http://192.168.1.5:8000)
+export const BASE_URL =
+  (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
+  "http://127.0.0.1:8000";
 
 /**
  * Analyze meal image via POST /api/analyze-meal.
@@ -42,7 +45,7 @@ export async function analyzeMeal(imageUri) {
  * Get meal suggestions from POST /api/suggest-meals.
  * @param {number} total_calories - Daily calorie target (default 2500)
  * @param {number} meals_per_day - Number of meals (default 3)
- * @param {{ calorie_distribution_ratios?: number[], target_macro_ratios?: { fat?: number, carb?: number, protein?: number } }} options - Optional
+ * @param {{ calorie_distribution_ratios?: number[], target_macro_ratios?: { fat?: number, carb?: number, protein?: number }, preferred_ingredients?: string[] }} options - Optional
  * @returns {Promise<Array<{ meal_name, calories, time, description, image, ingredients, nutrients, mass }>>}
  */
 export async function suggestMeals(total_calories = 2500, meals_per_day = 3, options = {}) {
@@ -54,6 +57,9 @@ export async function suggestMeals(total_calories = 2500, meals_per_day = 3, opt
     }),
     ...(options.target_macro_ratios && {
       target_macro_ratios: options.target_macro_ratios,
+    }),
+    ...(options.preferred_ingredients && options.preferred_ingredients.length > 0 && {
+      preferred_ingredients: options.preferred_ingredients.map((s) => String(s).toLowerCase()),
     }),
   };
   const res = await fetch(`${BASE_URL}/api/suggest-meals`, {
@@ -81,6 +87,16 @@ export async function predictAndSave(payload) {
 
 export async function getHistory(userId) {
   const res = await fetch(`${BASE_URL}/history/${userId}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+/**
+ * Get list of ingredients from GET /api/get-ingredients (for meal plan preferences).
+ * @returns {Promise<{ ingredients: string[] }>}
+ */
+export async function getIngredients() {
+  const res = await fetch(`${BASE_URL}/api/get-ingredients`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

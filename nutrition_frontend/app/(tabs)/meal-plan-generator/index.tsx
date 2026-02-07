@@ -20,6 +20,7 @@ export default function MealPlanGeneratorTab() {
         mealsPerDay={settings.mealsPerDay}
         calorieDistributionRatios={settings.calorieDistributionRatios}
         targetMacroRatios={settings.targetMacroRatios}
+        preferredIngredients={settings.preferredIngredients}
       />
     </SafeAreaView>
   );
