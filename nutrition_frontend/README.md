@@ -26,8 +26,8 @@ You can start developing by editing the files inside the **app** directory. This
 
 To use the app on your phone while the API runs on your laptop:
 
-1. **Same Wi‑Fi**  
-   Connect your phone and laptop to the same Wi‑Fi network.
+1. **Same network**  
+   Either: connect both phone and laptop to the same Wi‑Fi, **or** turn on **mobile hotspot on your phone** and connect the laptop to that hotspot. Both setups work the same way; in the hotspot case, use the laptop’s IP on the hotspot network (e.g. `192.168.43.2`) for `EXPO_PUBLIC_API_URL`.
 
 2. **Backend on laptop (listens on all interfaces)**  
    In `nutrition_backend/`:
