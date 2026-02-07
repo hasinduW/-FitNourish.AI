@@ -1,3 +1,6 @@
+from pathlib import Path
+import json
+
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -54,6 +57,17 @@ except FileNotFoundError:
 @app.get("/")
 def home():
     return {"status": "OK", "message": "Nutrition Model API running. Visit /docs"}
+
+
+@app.get("/api/get-ingredients")
+def get_ingredients():
+    """Return the ingredient list from services/data/ingredient_list.json as JSON."""
+    path = Path(__file__).parent / "services" / "data" / "ingredient_list.json"
+    if not path.exists():
+        raise HTTPException(status_code=503, detail="Ingredient list not available")
+    with open(path, encoding="utf-8") as f:
+        ingredients = json.load(f)
+    return {"ingredients": ingredients}
 
 
 @app.post("/predict")
@@ -315,8 +329,12 @@ async def suggest_meals(request: MealSuggestionRequest):
         calorie_distribution_ratios = request.calorie_distribution_ratios
         target_macro_ratios = request.target_macro_ratios
         
-        # Get meal plan from ML model
-        meal_plan_data = generate_meal_plan(total_calories, meals_per_day, calorie_distribution_ratios, target_macro_ratios)
+        # Get meal plan from ML model (optionally favor preferred ingredients)
+        preferred_ingredients = getattr(request, 'preferred_ingredients', None) or []
+        meal_plan_data = generate_meal_plan(
+            total_calories, meals_per_day, calorie_distribution_ratios, target_macro_ratios,
+            preferred_ingredients=preferred_ingredients if preferred_ingredients else None,
+        )
         
         # Get meal names and times
         meal_info = meal_templates.get(meals_per_day, meal_templates[2])
@@ -362,6 +380,9 @@ async def suggest_meals(request: MealSuggestionRequest):
             ingredients_str = ', '.join(ingredients_list[:5])  # First 5 ingredients
             description = f"Ingredients {ingredients_str}" if ingredients_str else dish_name
             
+            # Backend visibility: which preferred ingredients (if any) this meal was selected for
+            matched_preferred = meal_detail.get('matched_preferred_ingredients') or []
+
             suggestions.append({
                 "meal_name": meal_template["meal_name"],
                 "calories": round(meal_detail.get('total_calories', 0), 1),
@@ -370,7 +391,8 @@ async def suggest_meals(request: MealSuggestionRequest):
                 "image": image_data_url,
                 "ingredients": ingredients_list,
                 "nutrients": nutrients,
-                "mass": round(meal_detail.get('total_mass', 0), 1)
+                "mass": round(meal_detail.get('total_mass', 0), 1),
+                "matched_preferred_ingredients": matched_preferred,
             })
         
         return suggestions

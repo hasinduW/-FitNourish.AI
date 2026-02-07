@@ -16,6 +16,10 @@ class MealSuggestionRequest(BaseModel):
         default=None,
         description="Optional target macronutrient ratios"
     )
+    preferred_ingredients: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of ingredient names to favor when suggesting meals"
+    )
     
     @field_validator('calorie_distribution_ratios')
     @classmethod
@@ -77,3 +81,4 @@ class MealSuggestion(BaseModel):
     ingredients: List[str]
     nutrients: List[MealNutrient]
     mass: float  # Total mass in grams
+    matched_preferred_ingredients: Optional[List[str]] = None  # Preferred ingredients that matched this meal (for debugging/visibility)
