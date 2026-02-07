@@ -1,4 +1,5 @@
 from pathlib import Path
+import asyncio
 import json
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -330,9 +331,14 @@ async def suggest_meals(request: MealSuggestionRequest):
         target_macro_ratios = request.target_macro_ratios
         
         # Get meal plan from ML model (optionally favor preferred ingredients)
+        # Run in thread pool so the async event loop is not blocked
         preferred_ingredients = getattr(request, 'preferred_ingredients', None) or []
-        meal_plan_data = generate_meal_plan(
-            total_calories, meals_per_day, calorie_distribution_ratios, target_macro_ratios,
+        meal_plan_data = await asyncio.to_thread(
+            generate_meal_plan,
+            total_calories,
+            meals_per_day,
+            calorie_distribution_ratios,
+            target_macro_ratios,
             preferred_ingredients=preferred_ingredients if preferred_ingredients else None,
         )
         
