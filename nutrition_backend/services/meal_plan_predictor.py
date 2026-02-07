@@ -53,45 +53,119 @@ def data_preparation(daily_calorie_target, num_meals, calorie_distribution_ratio
     available_dishes = image_df[image_df['total_calories'] > 0].copy()
     return {'available_dishes': available_dishes, 'dish_ingredients': dish_ingredients, 'ingredients': ingredients, 'meal_calorie_targets': meal_calorie_targets}
 
-def select_dish_for_meal(target_calories, available_dishes, target_macro_profile):
+def _get_ingredient_names_for_dishes(dish_ingredients, ingredients_df=None):
+    """
+    Resolve ingredient names per dish from dish_ingredients.
+    Supports dish_ingredients with 'ingr_name' or 'ingr' (name), or 'ingr' as id resolved via ingredients_df.
+    Returns dict: dish_id -> list of lowercase ingredient name strings.
+    """
+    if dish_ingredients is None or dish_ingredients.empty:
+        return {}
+    di = dish_ingredients.copy()
+    # Require a column that identifies the dish (dish_id or dish)
+    dish_col = 'dish_id' if 'dish_id' in di.columns else 'dish' if 'dish' in di.columns else None
+    if dish_col is None:
+        return {}
+    # Prefer ingr_name column; else try ingr (might be name or id)
+    if 'ingr_name' in di.columns:
+        di['_ingr_name'] = di['ingr_name'].dropna().astype(str).str.strip().str.lower()
+    elif 'ingr' in di.columns:
+        sample = di['ingr'].dropna().head(50)
+        try:
+            numeric = pd.to_numeric(sample, errors='coerce')
+            mostly_numeric = numeric.notna().sum() >= min(20, len(sample))
+        except Exception:
+            mostly_numeric = False
+        if mostly_numeric and ingredients_df is not None and not ingredients_df.empty and 'ingr' in ingredients_df.columns:
+            # Build id -> name lookup from ingredients
+            if 'id' in ingredients_df.columns:
+                ing_lookup = ingredients_df.set_index('id')['ingr'].dropna().astype(str).str.strip().str.lower().to_dict()
+            else:
+                ing_lookup = dict(zip(range(len(ingredients_df)), ingredients_df['ingr'].dropna().astype(str).str.strip().str.lower()))
+            def resolve(v):
+                try:
+                    key = int(float(v)) if isinstance(v, (int, float)) else v
+                    return ing_lookup.get(key, str(v).strip().lower())
+                except (ValueError, TypeError):
+                    return str(v).strip().lower()
+            di['_ingr_name'] = di['ingr'].map(resolve)
+        else:
+            di['_ingr_name'] = di['ingr'].dropna().astype(str).str.strip().str.lower()
+    else:
+        return {}
+    out = {}
+    for did in di[dish_col].dropna().unique():
+        names = di[di[dish_col] == did]['_ingr_name'].dropna().tolist()
+        out[did] = [n for n in names if n]
+    return out
+
+
+def select_dish_for_meal(target_calories, available_dishes, target_macro_profile,
+                         dish_ingredients=None, preferred_ingredients=None, ingredients_df=None):
     """
     Selects a dish that best matches the target calorie count and macronutrient profile.
+    Optionally favors dishes that contain any of the preferred ingredients.
 
     Args:
         target_calories (float): The desired calorie count for the meal.
-        available_dishes (pd.DataFrame): DataFrame containing dish information,
-                                       including 'total_calories', 'fat_pc', 'carb_pc', 'protein_pc'.
+        available_dishes (pd.DataFrame): DataFrame containing dish information.
         target_macro_profile (dict): Dictionary with target ratios for 'fat', 'carb', 'protein'.
+        dish_ingredients (pd.DataFrame, optional): DataFrame with dish_id and ingr_name or ingr.
+        preferred_ingredients (list, optional): List of ingredient names to favor (any case).
+        ingredients_df (pd.DataFrame, optional): Ingredients table to resolve ingr id -> name if needed.
 
     Returns:
-        tuple: A tuple containing:
-               - pd.Series: The selected dish (full row from available_dishes).
-               - str: The dish ID of the selected dish.
+        tuple: (selected_dish_row, selected_dish_id).
     """
-
     # 2. Calculate the absolute difference between each dish's total_calories and the target_calories
+    available_dishes = available_dishes.copy()
     available_dishes['calorie_deviation'] = abs(available_dishes['total_calories'] - target_calories)
 
     # 3. Calculate a 'macronutrient deviation score' for each dish
-    # Initialize macro deviation score
     available_dishes['macro_deviation'] = 0.0
-
-    # Calculate deviation for each macronutrient
     for macro, target_ratio in target_macro_profile.items():
-        # Multiply target ratio by 100 to compare with percentage columns (e.g., fat_pc)
         target_percentage = target_ratio * 100
         available_dishes['macro_deviation'] += abs(available_dishes[f'{macro}_pc'] - target_percentage)
 
-    # 4. Combine these two deviation measures into a single score
-    # Using equal weights for now, can be adjusted if needed
-    available_dishes['combined_score'] = available_dishes['calorie_deviation'] + available_dishes['macro_deviation']
+    # 4. Optional: bonus for dishes containing preferred ingredients (lower score = better)
+    if preferred_ingredients and dish_ingredients is not None and len(preferred_ingredients) > 0:
+        preferred_set = {str(s).strip().lower() for s in preferred_ingredients if s}
+        dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, ingredients_df)
+        bonus_map = {}
+        for did in available_dishes['dish'].unique():
+            ingr_names = dish_ingr_names.get(did, [])
+            # Match: exact (ing in preferred_set) or partial (preferred substring of dish ingredient)
+            has_match = any(ing in preferred_set for ing in ingr_names) or any(
+                any(pref in ing for ing in ingr_names) for pref in preferred_set
+            )
+            bonus_map[did] = -50.0 if has_match else 0.0
+        available_dishes['preferred_bonus'] = available_dishes['dish'].map(bonus_map).fillna(0)
+    else:
+        available_dishes['preferred_bonus'] = 0.0
 
-    # 5. Identify the dish with the lowest combined score
+    # 5. Combined score: lower is better
+    available_dishes['combined_score'] = (
+        available_dishes['calorie_deviation'] + available_dishes['macro_deviation'] + available_dishes['preferred_bonus']
+    )
+
+    # 6. Select dish with lowest combined score
     selected_dish_row = available_dishes.loc[available_dishes['combined_score'].idxmin()]
     selected_dish_id = selected_dish_row['dish']
-
-    # 6. Return the selected dish as a pandas Series and its dish ID
-    return selected_dish_row, selected_dish_id
+    # Which preferred ingredients (if any) matched this dish (for response/logging)
+    matched_preferred = []
+    if preferred_ingredients and dish_ingredients is not None and len(preferred_ingredients) > 0:
+        preferred_set = {str(s).strip().lower() for s in preferred_ingredients if s}
+        dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, ingredients_df)
+        ingr_names = dish_ingr_names.get(selected_dish_id, [])
+        for pref in preferred_ingredients:
+            p = str(pref).strip().lower()
+            if not p:
+                continue
+            if p in ingr_names or any(p in ing for ing in ingr_names) or any(ing in p for ing in ingr_names):
+                matched_preferred.append(pref)
+        if matched_preferred:
+            logger.info(f"  [Preferred] Dish {selected_dish_id} matched: {matched_preferred}")
+    return selected_dish_row, selected_dish_id, matched_preferred
 
 
 def save_meal_plan_to_db(
@@ -142,7 +216,7 @@ def save_meal_plan_to_db(
         db.close()
 
 
-def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distribution_ratios=None, target_macro_ratios=None, save_to_db: bool = True) -> list:
+def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distribution_ratios=None, target_macro_ratios=None, preferred_ingredients=None, save_to_db: bool = True) -> list:
     daily_calorie_target = total_calories
     num_meals = meals_per_day
     
@@ -182,6 +256,8 @@ def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distri
     # Use provided macro ratios or defaults
     if target_macro_ratios is None:
         target_macro_ratios = {'fat': 0.30, 'carb': 0.45, 'protein': 0.25}
+    if preferred_ingredients:
+        logger.info(f"Meal plan requested with preferred_ingredients: {preferred_ingredients}")
     data = data_preparation(daily_calorie_target, num_meals, calorie_distribution_ratios, target_macro_ratios)
     available_dishes = data['available_dishes']
     dish_ingredients = data['dish_ingredients']
@@ -197,14 +273,19 @@ def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distri
     for i, target_calorie in enumerate(meal_calorie_targets):
         print(f"\n--- Planning for Meal {i+1} with target calories: {target_calorie:.1f} kcal ---")
 
-        selected_dish_row, selected_dish_id = select_dish_for_meal(
+        selected_dish_row, selected_dish_id, matched_preferred = select_dish_for_meal(
             target_calorie,
             available_dishes,
-            target_macro_ratios
+            target_macro_ratios,
+            dish_ingredients=dish_ingredients,
+            preferred_ingredients=preferred_ingredients,
+            ingredients_df=data['ingredients'],
         )
 
-        # Store the selected dish details
-        meal_plan.append(selected_dish_row.to_dict())
+        # Store the selected dish details and whether it came from preferred list
+        meal_dict = selected_dish_row.to_dict()
+        meal_dict['matched_preferred_ingredients'] = matched_preferred
+        meal_plan.append(meal_dict)
 
         print(f"Selected dish for Meal {i+1}: {selected_dish_id} with {selected_dish_row['total_calories']:.1f} kcal")
         
@@ -225,19 +306,22 @@ def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distri
         available_dishes = available_dishes[available_dishes['dish'] != selected_dish_id].copy()
         print(f"Remaining available dishes: {available_dishes.shape[0]}")
 
-    # Build full meal plan details with ingredients
+    # Build full meal plan details with ingredients (use same resolution as preferred matching)
+    dish_ingr_names = _get_ingredient_names_for_dishes(dish_ingredients, data['ingredients'])
     full_meal_plan_details = []
 
     for meal in meal_plan:
         dish_id = meal['dish']
-
-        # Filter dish_ingredients for the current dish_id
-        ingredients_for_dish = dish_ingredients[dish_ingredients['dish_id'] == dish_id]['ingr_name'].tolist()
-
-        # Add the list of ingredients to the meal dictionary
-        meal['ingredients_list'] = ingredients_for_dish
-
-        # Append the updated meal dictionary to the full_meal_plan_details list
+        # Get names (title case for display); fallback to raw column if helper returned empty
+        raw_names = dish_ingr_names.get(dish_id, [])
+        if not raw_names and not dish_ingredients.empty:
+            dish_col = 'dish_id' if 'dish_id' in dish_ingredients.columns else 'dish'
+            subset = dish_ingredients[dish_ingredients[dish_col] == dish_id]
+            if 'ingr_name' in subset.columns:
+                raw_names = subset['ingr_name'].dropna().astype(str).str.strip().tolist()
+            elif 'ingr' in subset.columns:
+                raw_names = subset['ingr'].dropna().astype(str).str.strip().tolist()
+        meal['ingredients_list'] = [n.title() for n in raw_names] if raw_names else []
         full_meal_plan_details.append(meal)
 
     # Calculate daily totals

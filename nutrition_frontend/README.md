@@ -22,6 +22,39 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Run on a physical Android phone (with backend on your laptop)
+
+To use the app on your phone while the API runs on your laptop:
+
+1. **Same Wi‑Fi**  
+   Connect your phone and laptop to the same Wi‑Fi network.
+
+2. **Backend on laptop (listens on all interfaces)**  
+   In `nutrition_backend/`:
+   ```bash
+   python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000
+   ```
+   Or if your backend is started from `app.py`, ensure it uses `host="0.0.0.0"` (it already does).
+
+3. **Your laptop’s IP**  
+   On macOS/Linux: `ifconfig | grep "inet "` or `ip addr`. On Windows: `ipconfig`.  
+   Use the LAN address (e.g. `192.168.1.5`), not `127.0.0.1`.
+
+4. **Point the app at that IP**  
+   Create a `.env` in this folder (or set when running):
+   ```bash
+   EXPO_PUBLIC_API_URL=http://YOUR_LAPTOP_IP:8000
+   ```
+   Example: `EXPO_PUBLIC_API_URL=http://192.168.1.5:8000`
+
+5. **Start Expo and open on device**  
+   ```bash
+   npx expo start
+   ```  
+   Scan the QR code with Expo Go (Android) or run the build on your device. The app will use the URL from `EXPO_PUBLIC_API_URL` to talk to your laptop.
+
+**Firewall:** If the phone can’t reach the backend, allow inbound TCP port 8000 on your laptop (e.g. macOS: System Settings → Network → Firewall).
+
 ## Get a fresh project
 
 When you're ready, run:

@@ -1,6 +1,9 @@
 import { Fonts } from "@/constants/theme";
-import React, { useState } from "react";
+import { getIngredients } from "@/src/api/client";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -32,10 +35,12 @@ type Props = {
   initialMealsPerDay?: number;
   initialCalorieRatios?: number[];
   initialMacroRatios?: { fat: number; carb: number; protein: number };
+  initialPreferredIngredients?: string[];
   onSave?: (settings: {
     mealsPerDay: number;
     calorieDistributionRatios: number[];
     targetMacroRatios: { fat: number; carb: number; protein: number };
+    preferredIngredients: string[];
   }) => void;
 };
 
@@ -43,6 +48,7 @@ export function MealPlanSettingsScreen({
   initialMealsPerDay = DEFAULT_MEALS_PER_DAY,
   initialCalorieRatios = DEFAULT_CALORIE_RATIOS,
   initialMacroRatios = DEFAULT_MACRO_RATIOS,
+  initialPreferredIngredients = [],
   onSave,
 }: Props) {
   const [mealsPerDay, setMealsPerDay] = useState(String(initialMealsPerDay));
@@ -52,6 +58,38 @@ export function MealPlanSettingsScreen({
   const [fat, setFat] = useState(String(initialMacroRatios.fat));
   const [carb, setCarb] = useState(String(initialMacroRatios.carb));
   const [protein, setProtein] = useState(String(initialMacroRatios.protein));
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>(
+    initialPreferredIngredients
+  );
+  const [ingredientSearch, setIngredientSearch] = useState("");
+  const [allIngredients, setAllIngredients] = useState<string[]>([]);
+  const [loadingIngredients, setLoadingIngredients] = useState(true);
+  const [ingredientDropdownVisible, setIngredientDropdownVisible] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getIngredients()
+      .then((data) => {
+        if (!cancelled) setAllIngredients(data.ingredients ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setAllIngredients([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingIngredients(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const filteredIngredients = useMemo(() => {
+    const q = ingredientSearch.trim().toLowerCase();
+    if (!q) return allIngredients.slice(0, 50);
+    return allIngredients
+      .filter((name) => name.toLowerCase().includes(q))
+      .slice(0, 50);
+  }, [allIngredients, ingredientSearch]);
 
   const mealsPerDayNum = Math.max(1, Math.min(10, parseInt(mealsPerDay, 10) || 1));
   const calorieInputsCount = Math.max(1, Math.min(10, mealsPerDayNum));
@@ -81,6 +119,22 @@ export function MealPlanSettingsScreen({
     setProtein(String(DEFAULT_MACRO_RATIOS.protein));
   }
 
+  function handleResetPreferredIngredients() {
+    setSelectedIngredients([]);
+  }
+
+  function addIngredient(name: string) {
+    if (name && !selectedIngredients.includes(name)) {
+      setSelectedIngredients((prev) => [...prev, name].sort());
+    }
+    setIngredientSearch("");
+    setIngredientDropdownVisible(false);
+  }
+
+  function removeIngredient(name: string) {
+    setSelectedIngredients((prev) => prev.filter((x) => x !== name));
+  }
+
   function setCalorieRatioAt(index: number, value: string) {
     const next = [...calorieRatios];
     while (next.length <= index) next.push("0");
@@ -102,6 +156,7 @@ export function MealPlanSettingsScreen({
         carb: macroSum > 0 ? carbNum / macroSum : carbNum,
         protein: macroSum > 0 ? proteinNum / macroSum : proteinNum,
       },
+      preferredIngredients: selectedIngredients,
     });
   }
 
@@ -229,6 +284,93 @@ export function MealPlanSettingsScreen({
         >
           <Text style={styles.resetBtnText}>Reset to Defaults</Text>
         </Pressable>
+
+        {/* Section 4: Preferred ingredients for meal plan */}
+        <Text style={styles.sectionLabel}>Preferred Ingredients</Text>
+        <Text style={styles.sublabel}>
+          Search and select ingredients you want the meal plan to favor. Suggestions will prioritize meals containing these.
+        </Text>
+        <View style={styles.ingredientInputRow}>
+          <TextInput
+            style={[styles.input, styles.ingredientSearchInput]}
+            value={ingredientSearch}
+            onChangeText={(t) => {
+              setIngredientSearch(t);
+              setIngredientDropdownVisible(true);
+            }}
+            onFocus={() => setIngredientDropdownVisible(true)}
+            onBlur={() => setTimeout(() => setIngredientDropdownVisible(false), 200)}
+            placeholder="Search ingredients..."
+            placeholderTextColor={GRAY_TEXT}
+          />
+          {loadingIngredients ? (
+            <ActivityIndicator size="small" color={SAGE_GREEN} style={styles.ingredientLoader} />
+          ) : null}
+        </View>
+        {ingredientDropdownVisible && filteredIngredients.length > 0 ? (
+          <View style={styles.dropdownContainer}>
+            <FlatList
+              data={filteredIngredients}
+              keyExtractor={(item) => item}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              style={styles.dropdownList}
+              renderItem={({ item }) => {
+                const selected = selectedIngredients.includes(item);
+                return (
+                  <Pressable
+                    onPress={() => addIngredient(item)}
+                    style={({ pressed }) => [
+                      styles.dropdownItem,
+                      selected && styles.dropdownItemSelected,
+                      pressed && styles.dropdownItemPressed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        selected && styles.dropdownItemTextSelected,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item}
+                    </Text>
+                  </Pressable>
+                );
+              }}
+            />
+          </View>
+        ) : null}
+        {selectedIngredients.length > 0 ? (
+          <>
+            <View style={styles.chipRow}>
+              {selectedIngredients.map((name) => (
+                <View key={name} style={styles.chip}>
+                  <Text style={styles.chipText} numberOfLines={1}>
+                    {name}
+                  </Text>
+                  <Pressable
+                    onPress={() => removeIngredient(name)}
+                    hitSlop={8}
+                    style={styles.chipRemove}
+                  >
+                    <Text style={styles.chipRemoveText}>×</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+            <Pressable
+              onPress={handleResetPreferredIngredients}
+              style={({ pressed }) => [
+                styles.resetBtn,
+                pressed && styles.resetBtnPressed,
+                styles.resetBtnPreferred,
+              ]}
+            >
+              <Text style={styles.resetBtnText}>Clear preferred ingredients</Text>
+            </Pressable>
+          </>
+        ) : null}
 
         <View style={styles.footerSpacer} />
       </ScrollView>
@@ -387,5 +529,83 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+  ingredientInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 8,
+  },
+  ingredientSearchInput: {
+    flex: 1,
+  },
+  ingredientLoader: {
+    position: "absolute",
+    right: 14,
+  },
+  dropdownContainer: {
+    maxHeight: 220,
+    borderWidth: 1,
+    borderColor: GRAY_BORDER,
+    borderRadius: 10,
+    marginBottom: 14,
+    backgroundColor: "#fff",
+  },
+  dropdownList: {
+    maxHeight: 218,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: GRAY_LIGHT,
+  },
+  dropdownItemSelected: {
+    backgroundColor: "rgba(46, 163, 122, 0.12)",
+  },
+  dropdownItemPressed: {
+    backgroundColor: GRAY_LIGHT,
+  },
+  dropdownItemText: {
+    fontSize: 15,
+    color: "#333",
+  },
+  dropdownItemTextSelected: {
+    color: SAGE_GREEN,
+    fontWeight: "500",
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 14,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(46, 163, 122, 0.15)",
+    paddingVertical: 6,
+    paddingLeft: 12,
+    paddingRight: 6,
+    borderRadius: 20,
+    maxWidth: "100%",
+  },
+  chipText: {
+    fontSize: 14,
+    color: SAGE_DARK,
+    marginRight: 4,
+    maxWidth: 140,
+  },
+  chipRemove: {
+    padding: 2,
+  },
+  chipRemoveText: {
+    fontSize: 18,
+    color: SAGE_DARK,
+    fontWeight: "600",
+    lineHeight: 20,
+  },
+  resetBtnPreferred: {
+    marginBottom: 28,
   },
 });

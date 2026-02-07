@@ -12,12 +12,14 @@ export default function MealPlanSettingsRoute() {
     mealsPerDay: number;
     calorieDistributionRatios: number[];
     targetMacroRatios: { fat: number; carb: number; protein: number };
+    preferredIngredients: string[];
   }) {
     setSettings({
       dailyCalorieTarget: settings.dailyCalorieTarget,
       mealsPerDay: payload.mealsPerDay,
       calorieDistributionRatios: payload.calorieDistributionRatios,
       targetMacroRatios: payload.targetMacroRatios,
+      preferredIngredients: payload.preferredIngredients,
     });
     router.back();
   }
@@ -28,6 +30,7 @@ export default function MealPlanSettingsRoute() {
         initialMealsPerDay={settings.mealsPerDay}
         initialCalorieRatios={settings.calorieDistributionRatios}
         initialMacroRatios={settings.targetMacroRatios}
+        initialPreferredIngredients={settings.preferredIngredients}
         onSave={handleSave}
       />
     </SafeAreaView>

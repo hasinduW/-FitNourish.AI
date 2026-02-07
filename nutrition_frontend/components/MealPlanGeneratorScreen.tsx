@@ -26,6 +26,26 @@ const DEFAULT_MEALS_PER_DAY = 3;
 const MAX_INGREDIENTS = 10;
 const INGREDIENTS_PER_COLUMN = 5;
 
+/** Order ingredients so preferred ones come first, then take max 10. Case-insensitive + substring match. */
+function orderIngredientsWithPreferredFirst(
+  ingredients: string[],
+  preferred: string[] | undefined
+): string[] {
+  if (!preferred?.length) return ingredients.slice(0, MAX_INGREDIENTS);
+  const preferredSet = new Set(preferred.map((p) => p.trim().toLowerCase()));
+  const isPreferred = (ing: string) => {
+    const lower = ing.trim().toLowerCase();
+    if (preferredSet.has(lower)) return true;
+    return [...preferredSet].some((p) => lower.includes(p) || p.includes(lower));
+  };
+  const preferredFirst = [...ingredients].sort((a, b) => {
+    const aPref = isPreferred(a) ? 1 : 0;
+    const bPref = isPreferred(b) ? 1 : 0;
+    return bPref - aPref; // preferred (1) before non-preferred (0)
+  });
+  return preferredFirst.slice(0, MAX_INGREDIENTS);
+}
+
 // Placeholder when API returns no image
 const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
@@ -54,7 +74,7 @@ function mapApiMealToItem(api: {
   return {
     mealName: api.meal_name,
     imageUri: api.image && api.image.startsWith("data:") ? api.image : PLACEHOLDER_IMAGE,
-    ingredients: (api.ingredients ?? []).slice(0, MAX_INGREDIENTS),
+    ingredients: api.ingredients ?? [],
     nutrients: { fat, protein, carbs },
     totalCalories: api.calories ?? 0,
   };
@@ -66,6 +86,7 @@ type Props = {
   mealsPerDay?: number;
   calorieDistributionRatios?: number[];
   targetMacroRatios?: { fat: number; carb: number; protein: number };
+  preferredIngredients?: string[];
 };
 
 export function MealPlanGeneratorScreen({
@@ -74,6 +95,7 @@ export function MealPlanGeneratorScreen({
   mealsPerDay = DEFAULT_MEALS_PER_DAY,
   calorieDistributionRatios,
   targetMacroRatios,
+  preferredIngredients,
 }: Props) {
   const [mealPlan, setMealPlan] = useState<MealPlanItem[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,6 +108,7 @@ export function MealPlanGeneratorScreen({
       const suggestions = await suggestMeals(dailyCalorieTarget, mealsPerDay, {
         calorie_distribution_ratios: calorieDistributionRatios,
         target_macro_ratios: targetMacroRatios,
+        preferred_ingredients: preferredIngredients?.length ? preferredIngredients : undefined,
       });
       setMealPlan(suggestions.map(mapApiMealToItem));
     } catch (e) {
@@ -94,7 +117,7 @@ export function MealPlanGeneratorScreen({
     } finally {
       setLoading(false);
     }
-  }, [dailyCalorieTarget, mealsPerDay, calorieDistributionRatios, targetMacroRatios]);
+  }, [dailyCalorieTarget, mealsPerDay, calorieDistributionRatios, targetMacroRatios, preferredIngredients]);
 
   useEffect(() => {
     fetchMealPlan();
@@ -179,26 +202,35 @@ export function MealPlanGeneratorScreen({
             </ImageBackground>
           </View>
 
-          {/* Ingredients list: max 10, 2 columns of 5 */}
+          {/* Ingredients list: max 10, preferred first, 2 columns of 5 */}
           <View style={styles.ingredientsSection}>
             <Text style={styles.ingredientsLabel}>Ingredients</Text>
             <View style={styles.ingredientsTwoCol}>
-              <View style={styles.ingredientsColumn}>
-                {meal.ingredients.slice(0, INGREDIENTS_PER_COLUMN).map((ing, i) => (
-                  <View key={i} style={styles.bulletRow}>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.bulletText}>{ing}</Text>
-                  </View>
-                ))}
-              </View>
-              <View style={styles.ingredientsColumn}>
-                {meal.ingredients.slice(INGREDIENTS_PER_COLUMN, MAX_INGREDIENTS).map((ing, i) => (
-                  <View key={INGREDIENTS_PER_COLUMN + i} style={styles.bulletRow}>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.bulletText}>{ing}</Text>
-                  </View>
-                ))}
-              </View>
+              {(() => {
+                const displayed = orderIngredientsWithPreferredFirst(meal.ingredients, preferredIngredients);
+                const col1 = displayed.slice(0, INGREDIENTS_PER_COLUMN);
+                const col2 = displayed.slice(INGREDIENTS_PER_COLUMN, MAX_INGREDIENTS);
+                return (
+                  <>
+                    <View style={styles.ingredientsColumn}>
+                      {col1.map((ing, i) => (
+                        <View key={i} style={styles.bulletRow}>
+                          <Text style={styles.bullet}>•</Text>
+                          <Text style={styles.bulletText}>{ing}</Text>
+                        </View>
+                      ))}
+                    </View>
+                    <View style={styles.ingredientsColumn}>
+                      {col2.map((ing, i) => (
+                        <View key={INGREDIENTS_PER_COLUMN + i} style={styles.bulletRow}>
+                          <Text style={styles.bullet}>•</Text>
+                          <Text style={styles.bulletText}>{ing}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                );
+              })()}
             </View>
           </View>
 
