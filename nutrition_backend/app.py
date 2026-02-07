@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 import asyncio
 import json
@@ -28,7 +29,20 @@ from models import (  # Pydantic models
     MealSuggestion,
 )
 
-app = FastAPI(title="Nutrition & Meal Prediction API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: warm meal plan dataset cache so first request is fast."""
+    try:
+        from services.meal_plan_predictor import get_dataset_cache
+        get_dataset_cache()
+    except FileNotFoundError as e:
+        print(f"Meal plan dataset not loaded at startup: {e}")
+    yield
+    # Shutdown: nothing to release
+
+
+app = FastAPI(title="Nutrition & Meal Prediction API", lifespan=lifespan)
 
 # CORS Middleware - Combined origins from both files
 app.add_middleware(
