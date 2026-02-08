@@ -481,13 +481,18 @@ FitNourish.AI/
 │  ├─ train.py                       # Nutrition ML model training script
 │  ├─ requirements.txt               # Backend dependencies
 │  ├─ pytest.ini                     # Pytest configuration
-│  ├─ models/                        # Pydantic/data models
-│  │  ├─ meal_models.py              # Meal-related request/response models
-│  │  └─ nutrition_models.py        # Nutrition prediction models
+│  ├─ models/                        # Pydantic request/response models
+│  │  ├─ meal_models.py              # Meal suggestion request/response
+│  │  └─ nutrition_models.py         # Nutrition prediction models
 │  ├─ services/                      # Business logic services
-│  │  ├─ ingredient_predictor.py     # Ingredient detection from images
-│  │  ├─ meal_plan_predictor.py      # Meal plan generation
-│  │  └─ nutrients_predictor.py     # Nutrient prediction from images
+│  │  ├─ ingredient_predictor.py    # Ingredient detection from images
+│  │  ├─ meal_plan_predictor.py      # Meal plan generation (dataset cache)
+│  │  ├─ nutrients_predictor.py     # Nutrient prediction from images
+│  │  ├─ build_ingredient_list.py   # Build ingredient_list.json from Excel
+│  │  └─ data/
+│  │     └─ ingredient_list.json     # Ingredient list for meal plan preferences
+│  ├─ scripts/
+│  │  └─ split_dish_images.py        # Split dish_images.pkl → metadata + per-dish images
 │  ├─ tests/                         # Test suite
 │  │  ├─ api/                        # API endpoint tests
 │  │  │  ├─ test_nutrition.py
@@ -495,24 +500,36 @@ FitNourish.AI/
 │  │  ├─ services/                   # Service tests
 │  │  │  └─ test_predictors.py
 │  │  └─ conftest.py                 # Pytest fixtures
-│  ├─ artifacts/                     # Trained ML models (nutrition_model.pkl)
-│  ├─ dataset/                       # Training datasets (dishes, ingredients)
+│  ├─ artifacts/                     # Trained ML models (e.g. nutrition_model.pkl)
+│  ├─ dataset/                       # dish_metadata, dishes, ingredients, images/
 │  └─ README.md                      # Backend documentation
 │
-├─ frontend/                         # Expo / React Native (Web + Mobile)
-│  └─ nutrition_mobile/
-│     ├─ app/
-│     │  ├─ (tabs)/
-│     │  │  ├─ index.tsx             # Splash -> Login -> Home -> Form flow (UI)
-│     │  │  ├─ history.tsx            # History screen
-│     │  │  └─ _layout.tsx           # Tab layout
-│     │  └─ _layout.tsx
-│     ├─ src/
-│     │  └─ api/
-│     │     └─ client.js             # API calls (predict-and-save, history)
-│     ├─ assets/
-│     ├─ package.json
-│     └─ README.md (optional)
+├─ nutrition_frontend/               # Expo / React Native (Web + Mobile)
+│  ├─ app/                           # Expo Router (file-based routing)
+│  │  ├─ _layout.tsx                 # Root layout
+│  │  ├─ (tabs)/
+│  │  │  ├─ _layout.tsx              # Tab bar (Home, Food Analyzer, Meal Plan, Profile)
+│  │  │  ├─ index.tsx                # Home / dashboard
+│  │  │  ├─ food-analyzer/           # Food Analyzer tab
+│  │  │  │  ├─ index.tsx             # Upload meal image
+│  │  │  │  └─ results.tsx          # Analysis results
+│  │  │  ├─ meal-plan-generator/    # Meal Plan tab
+│  │  │  │  ├─ index.tsx             # Meal suggestions
+│  │  │  │  └─ settings.tsx        # Calorie/macro preferences
+│  │  │  └─ profile.tsx             # Profile tab
+│  │  └─ modal.tsx
+│  ├─ components/                    # Shared UI (FoodAnalyzer, MealPlan*, themed-*)
+│  ├─ constants/
+│  │  └─ theme.ts                    # Colors, fonts
+│  ├─ hooks/                         # useColorScheme, useThemeColor
+│  ├─ src/
+│  │  ├─ api/
+│  │  │  └─ client.js                # API client (analyzeMeal, suggestMeals, getIngredients)
+│  │  ├─ navigation/
+│  │  └─ screens/
+│  ├─ assets/                        # Icons, splash
+│  ├─ app.json, package.json, tsconfig.json
+│  └─ README.md
 │
 ├─ images/                           # Screenshots for README
 │  ├─ component01_input.png
