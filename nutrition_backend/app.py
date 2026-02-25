@@ -29,13 +29,27 @@ from models import (  # Pydantic models
     MealSuggestion,
 )
 
+#Diet wrapper eka 
+from health_risk.core.model_loader import load_models, DietModelWrapper
+import sys
+sys.modules['__main__'].DietModelWrapper = DietModelWrapper
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: warm meal plan dataset cache so first request is fast."""
+    from db import init_db
+    init_db()
+
+    #run the risk models
+    load_models()
+    
     try:
         from services.meal_plan_predictor import get_dataset_cache
         get_dataset_cache()
+
+        
     except FileNotFoundError as e:
         print(f"Meal plan dataset not loaded at startup: {e}")
     yield
@@ -59,6 +73,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+#health risk eke routers register kala
+from health_risk.api.health import router as health_router
+from health_risk.api.analytics import router as analytics_router
+from health_risk.api.patient_routes import router as patient_router
+from health_risk.api.diet_principles import router as diet_principles_router
+
+app.include_router(health_router)
+app.include_router(analytics_router)
+app.include_router(patient_router)
+app.include_router(diet_principles_router)
+
 
 # Load nutrition model once when server starts (if exists)
 try:
@@ -340,7 +366,7 @@ async def suggest_meals(request: MealSuggestionRequest):
             ]
         }
         
-        # Use provided ratios or default
+        # Use provided ratios or defaults
         calorie_distribution_ratios = request.calorie_distribution_ratios
         target_macro_ratios = request.target_macro_ratios
         
