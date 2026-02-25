@@ -32,16 +32,16 @@ venv.bak/
 
 # Dataset files
 dataset/
-*.pkl
-*.xlsx
-*.csv
+
+
+
 
 # ML Models
 ml-models/
 model/
 models/*.keras
-models/*.h5
-models/*.pkl
+
+
 models/*.joblib
 artifacts/
 

@@ -340,7 +340,7 @@ async def suggest_meals(request: MealSuggestionRequest):
             ]
         }
         
-        # Use provided ratios or defaults
+        # Use provided ratios or default
         calorie_distribution_ratios = request.calorie_distribution_ratios
         target_macro_ratios = request.target_macro_ratios
         
