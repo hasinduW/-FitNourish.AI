@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextStyle,
   View,
 } from "react-native";
 
@@ -155,7 +156,7 @@ export function MealPlanGeneratorScreen({
         </Text>
         <Pressable
           onPress={onSettingsPress}
-          style={({ pressed }) => [
+          style={({ pressed }: { pressed: boolean }) => [
             styles.settingsBtn,
             pressed && styles.settingsBtnPressed,
           ]}
@@ -188,7 +189,7 @@ export function MealPlanGeneratorScreen({
       ) : null}
 
       {/* Meal cards */}
-      {(mealPlan ?? []).map((meal, index) => (
+      {(mealPlan ?? []).map((meal: MealPlanItem, index: number) => (
         <View key={index} style={styles.card}>
           {/* Card header: background image + meal name overlay */}
           <View style={styles.cardImageWrapper}>
@@ -364,10 +365,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: "hidden",
     marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
     elevation: 2,
   },
   cardImageWrapper: {
@@ -389,10 +387,8 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: "#fff",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
+    textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+  } as TextStyle,
   ingredientsSection: {
     padding: 18,
     paddingBottom: 12,

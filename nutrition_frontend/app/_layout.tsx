@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import type { ComponentType, ReactNode } from "react";
 import {
   DarkTheme,
   DefaultTheme,
-  ThemeProvider,
+  ThemeProvider as NavThemeProviderBase,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -11,6 +12,11 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider } from "@/contexts/AuthContext";
+
+// ThemeProvider from @react-navigation requires `children` in its type; allow implicit JSX children
+const ThemeProvider = NavThemeProviderBase as ComponentType<
+  { value: typeof DefaultTheme; children?: ReactNode }
+>;
 
 export const unstable_settings = {
   anchor: "(tabs)",
