@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   DarkTheme,
   DefaultTheme,
@@ -5,6 +6,7 @@ import {
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { View, Platform } from "react-native";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -16,6 +18,16 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Defer navigation tree until client mount to avoid useLayoutEffect SSR warning (web).
+  if (!mounted && Platform.OS === "web") {
+    return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
+  }
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

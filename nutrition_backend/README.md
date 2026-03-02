@@ -13,8 +13,18 @@ FastAPI backend for nutrition prediction and meal planning.
 ### 1. Setup Environment
 
 ```bash
+# Create virtual environment (from project root)
+python -m venv venv
+
 # Activate virtual environment
+# macOS / Linux:
 source venv/bin/activate
+
+# Windows (Command Prompt):
+venv\Scripts\activate.bat
+
+# Windows (PowerShell):
+venv\Scripts\Activate.ps1
 
 # Install dependencies
 pip install -r requirements.txt
