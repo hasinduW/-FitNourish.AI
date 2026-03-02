@@ -69,15 +69,11 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(secu
     return payload["sub"]
 
 
-@router.get("/me", response_model=UserResponse)
-def me(credentials: HTTPAuthorizationCredentials = Depends(security), db=Depends(get_db)):
-    """Return current user from JWT (optional: use for session check)."""
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    payload = decode_token(credentials.credentials)
-    if not payload or "sub" not in payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    user_id = payload["sub"]
+def get_current_user(
+    user_id: str = Depends(get_current_user_id),
+    db=Depends(get_db),
+) -> UserResponse:
+    """Dependency: require valid JWT and return the current user. Use when route needs full user."""
     coll = db[USERS]
     doc = coll.find_one(
         {"_id": ObjectId(user_id)},
@@ -91,3 +87,9 @@ def me(credentials: HTTPAuthorizationCredentials = Depends(security), db=Depends
         first_name=doc.get("first_name"),
         last_name=doc.get("last_name"),
     )
+
+
+@router.get("/me", response_model=UserResponse)
+def me(current_user: UserResponse = Depends(get_current_user)):
+    """Return current user from JWT."""
+    return current_user
