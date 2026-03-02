@@ -1,32 +1,55 @@
-import os
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+"""
+MongoDB connection for FitNourish.AI backend.
+Uses MongoDB Atlas. For production, move the connection string to an env variable.
+"""
+from pymongo import MongoClient
+from pymongo.database import Database
 
-load_dotenv()
+# MongoDB Atlas connection string (use env in production)
+MONGODB_URI = (
+    "mongodb+srv://root:RwCFOMO855XlnMuu@cluster0.s3lzr7.mongodb.net/fitnourish-ai"
+    "?retryWrites=true&w=majority"
+)
+DB_NAME = "fitnourish-ai"
 
-# CHANGE these:
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
+_client: MongoClient | None = None
 
-DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-engine = create_engine(DATABASE_URL, echo=False)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+def get_client() -> MongoClient:
+    global _client
+    if _client is None:
+        _client = MongoClient(MONGODB_URI)
+    return _client
+
+
+def get_database() -> Database:
+    return get_client()[DB_NAME]
 
 
 def get_db():
-    db = SessionLocal()
+    """Yield the MongoDB database for dependency injection (FastAPI Depends(get_db))."""
+    db = get_database()
     try:
         yield db
     finally:
-        db.close()
+        pass  # Connection is managed by the client; no per-request close needed
+
 
 def init_db():
-
-    from models.patient_profile import PatientProfile
-    Base.metadata.create_all(bind=engine)
+    """Create indexes for MongoDB collections. Collections are created on first insert."""
+    from database_models import (
+        PREDICTIONS,
+        MEAL_PLANS,
+        PATIENT_PROFILES,
+        DIET_PRINCIPLES,
+        HEALTH_ASSESSMENTS,
+        USERS,
+    )
+    db = get_database()
+    db[PREDICTIONS].create_index([("user_id", 1), ("created_at", -1)])
+    db[MEAL_PLANS].create_index([("created_at", -1)])
+    db[PATIENT_PROFILES].create_index("user_id", unique=True)
+    db[DIET_PRINCIPLES].create_index([("user_id", 1), ("date", -1)])
+    db[HEALTH_ASSESSMENTS].create_index([("user_id", 1), ("date", 1)], unique=True)
+    db[USERS].create_index("username_lower", unique=True)
+    print("MongoDB indexes ensured.")

@@ -13,9 +13,12 @@ import uvicorn
 from io import BytesIO
 import base64
 
-from db import SessionLocal
-from database_models import Prediction  # SQLAlchemy model
-from sqlalchemy import desc, func
+from datetime import datetime
+from fastapi import Depends
+
+from api.auth import get_current_user_id
+from db import get_db, get_database
+from database_models import PREDICTIONS
 from services.nutrients_predictor import predict_nutrients_from_image
 from services.ingredient_predictor import predict_ingredients_from_image
 from services.meal_plan_predictor import generate_meal_plan
@@ -79,11 +82,13 @@ from health_risk.api.health import router as health_router
 from health_risk.api.analytics import router as analytics_router
 from health_risk.api.patient_routes import router as patient_router
 from health_risk.api.diet_principles import router as diet_principles_router
+from api.auth import router as auth_router
 
 app.include_router(health_router)
 app.include_router(analytics_router)
 app.include_router(patient_router)
 app.include_router(diet_principles_router)
+app.include_router(auth_router)
 
 
 # Load nutrition model once when server starts (if exists)
@@ -101,8 +106,8 @@ def home():
 
 
 @app.get("/api/get-ingredients")
-def get_ingredients():
-    """Return the ingredient list from services/data/ingredient_list.json as JSON."""
+def get_ingredients(user_id: str = Depends(get_current_user_id)):
+    """Return the ingredient list from services/data/ingredient_list.json as JSON. Requires JWT."""
     path = Path(__file__).parent / "services" / "data" / "ingredient_list.json"
     if not path.exists():
         raise HTTPException(status_code=503, detail="Ingredient list not available")
@@ -128,10 +133,10 @@ def predict(data: UserInput):
 
 
 @app.post("/predict-and-save")
-def predict_and_save(data: UserInput):
+def predict_and_save(data: UserInput, db=Depends(get_db), user_id: str = Depends(get_current_user_id)):
     if model is None:
         raise HTTPException(status_code=503, detail="Nutrition model not available")
-    
+
     X = pd.DataFrame([data.model_dump()])
     pred = model.predict(X)[0]
 
@@ -142,54 +147,42 @@ def predict_and_save(data: UserInput):
         "fat_g_per_day": float(round(pred[3], 1)),
     }
 
-    db = SessionLocal()
-    try:
-        # ✅ AUTO user_id generation (user_000001, user_000002...)
-        last_id = db.query(func.max(Prediction.id)).scalar()
-        next_num = (last_id or 0) + 1
-        auto_user_id = f"user_{next_num:06d}"
-
-        row = Prediction(
-            user_id=auto_user_id,   # ✅ now automatic
-            **data.model_dump(),
-            **result
-        )
-
-        db.add(row)
-        db.commit()
-        db.refresh(row)
-
-        return {"saved_id": row.id, "user_id": row.user_id, **result}  # ✅ return user_id too
-    finally:
-        db.close()
+    coll = db[PREDICTIONS]
+    doc = {
+        "user_id": user_id,
+        **data.model_dump(),
+        **result,
+        "created_at": datetime.utcnow(),
+    }
+    ins = coll.insert_one(doc)
+    return {"saved_id": str(ins.inserted_id), "user_id": user_id, **result}
 
 
 @app.get("/history/{user_id}")
-def get_history(user_id: str):
-    db = SessionLocal()
-    try:
-        rows = (
-            db.query(Prediction)
-            .filter(Prediction.user_id == user_id)
-            .order_by(desc(Prediction.created_at))
-            .limit(20)
-            .all()
-        )
-
-        return [
-            {
-                "id": r.id,
-                "user_id": r.user_id,
-                "created_at": r.created_at,
-                "daily_kcal_need": r.daily_kcal_need,
-                "protein_g_per_day": r.protein_g_per_day,
-                "carbs_g_per_day": r.carbs_g_per_day,
-                "fat_g_per_day": r.fat_g_per_day,
-            }
-            for r in rows
-        ]
-    finally:
-        db.close()
+def get_history(user_id: str, db=Depends(get_db), current_user_id: str = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="Cannot access another user's history")
+    coll = db[PREDICTIONS]
+    rows = list(
+        coll.find({"user_id": user_id})
+        .sort("created_at", -1)
+        .limit(20)
+    )
+    out = []
+    for r in rows:
+        created = r.get("created_at")
+        if created and hasattr(created, "isoformat"):
+            created = created.isoformat()
+        out.append({
+            "id": str(r["_id"]),
+            "user_id": r["user_id"],
+            "created_at": created,
+            "daily_kcal_need": r.get("daily_kcal_need"),
+            "protein_g_per_day": r.get("protein_g_per_day"),
+            "carbs_g_per_day": r.get("carbs_g_per_day"),
+            "fat_g_per_day": r.get("fat_g_per_day"),
+        })
+    return out
 
 
 # ============================================================================
@@ -197,7 +190,7 @@ def get_history(user_id: str):
 # ============================================================================
 
 @app.post("/api/analyze-meal", response_model=MealAnalysisResponse)
-async def analyze_meal(image: UploadFile = File(...)):
+async def analyze_meal(image: UploadFile = File(...), user_id: str = Depends(get_current_user_id)):
     """
     Analyze uploaded meal image and return ingredients, nutrients, and calories.
     Uses ML models to predict both ingredients and nutrients from the image.
@@ -338,7 +331,7 @@ async def analyze_meal(image: UploadFile = File(...)):
 
 
 @app.post("/api/suggest-meals", response_model=List[MealSuggestion])
-async def suggest_meals(request: MealSuggestionRequest):
+async def suggest_meals(request: MealSuggestionRequest, user_id: str = Depends(get_current_user_id)):
     """
     Suggest meals based on total daily calories and number of meals per day.
     Uses ML model to generate personalized meal plans.

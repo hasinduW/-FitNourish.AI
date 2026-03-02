@@ -1,7 +1,17 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const TOKEN_KEY = "@fitnourish_token";
+
 // Use EXPO_PUBLIC_API_URL for physical device (your laptop's LAN IP, e.g. http://192.168.1.5:8000)
 export const BASE_URL =
   (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
   "http://127.0.0.1:8000";
+
+/** Get auth headers (Bearer token) for authenticated requests. Call before each API request. */
+export async function getAuthHeaders() {
+  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 /**
  * Analyze meal image via POST /api/analyze-meal.
@@ -30,8 +40,10 @@ export async function analyzeMeal(imageUri) {
     });
   }
 
+  const auth = await getAuthHeaders();
   const res = await fetch(`${BASE_URL}/api/analyze-meal`, {
     method: "POST",
+    headers: { ...auth },
     body: formData,
   });
   if (!res.ok) {
@@ -62,9 +74,10 @@ export async function suggestMeals(total_calories = 2500, meals_per_day = 3, opt
       preferred_ingredients: options.preferred_ingredients.map((s) => String(s).toLowerCase()),
     }),
   };
+  const auth = await getAuthHeaders();
   const res = await fetch(`${BASE_URL}/api/suggest-meals`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...auth },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -75,9 +88,10 @@ export async function suggestMeals(total_calories = 2500, meals_per_day = 3, opt
 }
 
 export async function predictAndSave(payload) {
+  const auth = await getAuthHeaders();
   const res = await fetch(`${BASE_URL}/predict-and-save`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...auth },
     body: JSON.stringify(payload),
   });
 
@@ -86,7 +100,8 @@ export async function predictAndSave(payload) {
 }
 
 export async function getHistory(userId) {
-  const res = await fetch(`${BASE_URL}/history/${userId}`);
+  const auth = await getAuthHeaders();
+  const res = await fetch(`${BASE_URL}/history/${userId}`, { headers: { ...auth } });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -96,7 +111,65 @@ export async function getHistory(userId) {
  * @returns {Promise<{ ingredients: string[] }>}
  */
 export async function getIngredients() {
-  const res = await fetch(`${BASE_URL}/api/get-ingredients`);
+  const auth = await getAuthHeaders();
+  const res = await fetch(`${BASE_URL}/api/get-ingredients`, { headers: { ...auth } });
   if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// --- Auth (JWT) ---
+
+/**
+ * Login with username and password.
+ * @returns {Promise<{ access_token, token_type, user_id, username }>}
+ */
+export async function login(username, password) {
+  const res = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Login failed");
+  }
+  return res.json();
+}
+
+/**
+ * Sign up with first name, last name, username and password.
+ * @returns {Promise<{ access_token, token_type, user_id, username, first_name?, last_name? }>}
+ */
+export async function signup(firstName, lastName, username, password) {
+  const res = await fetch(`${BASE_URL}/api/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      first_name: firstName,
+      last_name: lastName,
+      username,
+      password,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Signup failed");
+  }
+  return res.json();
+}
+
+/** Get Authorization header value when you already have the token (e.g. from context). */
+export function authHeader(token) {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+/**
+ * Get current user from GET /api/auth/me (requires JWT).
+ * @returns {Promise<{ id, username, first_name?, last_name? }>}
+ */
+export async function getMe() {
+  const auth = await getAuthHeaders();
+  const res = await fetch(`${BASE_URL}/api/auth/me`, { headers: { ...auth } });
+  if (!res.ok) throw new Error(res.status === 401 ? "Not authenticated" : (await res.text()));
   return res.json();
 }

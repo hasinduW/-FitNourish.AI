@@ -1,18 +1,17 @@
 from fastapi import APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
 from datetime import date, timedelta
-from sqlalchemy.orm import Session
 import traceback
 
 from db import get_db
-from models.healthinfo import HealthAssessment
+from database_models import HEALTH_ASSESSMENTS
 from health_risk.services.calculateHealthStatus import get_bp_status, get_cholesterol_status, get_glucose_status
 
 router = APIRouter(prefix="/api/analytics")
 
 
 @router.get("/{user_id}")
-def get_health_analytics(user_id: int, period: str = Query(default="month"), db: Session = Depends(get_db)):
+def get_health_analytics(user_id: int, period: str = Query(default="month"), db=Depends(get_db)):
     try:
         end_date = date.today()
         period_map = {
@@ -22,12 +21,11 @@ def get_health_analytics(user_id: int, period: str = Query(default="month"), db:
         }
         start_date = end_date - period_map.get(period, timedelta(days=30)) if period in period_map else date(2000, 1, 1)
 
-        # FastAPI style 
-        assessments = db.query(HealthAssessment).filter(
-            HealthAssessment.user_id == user_id,
-            HealthAssessment.date >= start_date,
-            HealthAssessment.date <= end_date,
-        ).order_by(HealthAssessment.date.asc()).all()
+        coll = db[HEALTH_ASSESSMENTS]
+        assessments = list(coll.find({
+            "user_id": user_id,
+            "date": {"$gte": start_date, "$lte": end_date},
+        }).sort("date", 1))
 
         if not assessments:
             return JSONResponse(status_code=404, content={"success": False, "error": "No data found"})
@@ -35,24 +33,33 @@ def get_health_analytics(user_id: int, period: str = Query(default="month"), db:
         weight_data, bp_data, calories_data, glucose_data, cholesterol_data, risk_data = [], [], [], [], [], []
 
         for a in assessments:
-            date_str = a.date.strftime("%Y-%m-%d")
-            if a.weight:         weight_data.append({"date": date_str, "value": a.weight, "bmi": a.bmi})
-            if a.blood_pressure: bp_data.append({"date": date_str, "value": a.blood_pressure})
-            if a.daily_calories: calories_data.append({"date": date_str, "value": a.daily_calories})
-            if a.glucose:        glucose_data.append({"date": date_str, "value": a.glucose})
-            if a.cholesterol:    cholesterol_data.append({"date": date_str, "value": a.cholesterol})
-            if a.risk_level:     risk_data.append({"date": date_str, "level": a.risk_level, "score": a.risk_score or 0})
+            d = a.get("date")
+            date_str = d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)
+            if a.get("weight") is not None:
+                weight_data.append({"date": date_str, "value": a["weight"], "bmi": a.get("bmi")})
+            if a.get("blood_pressure") is not None:
+                bp_data.append({"date": date_str, "value": a["blood_pressure"]})
+            if a.get("daily_calories") is not None:
+                calories_data.append({"date": date_str, "value": a["daily_calories"]})
+            if a.get("glucose") is not None:
+                glucose_data.append({"date": date_str, "value": a["glucose"]})
+            if a.get("cholesterol") is not None:
+                cholesterol_data.append({"date": date_str, "value": a["cholesterol"]})
+            if a.get("risk_level"):
+                risk_data.append({"date": date_str, "level": a["risk_level"], "score": a.get("risk_score") or 0})
 
         latest, first = assessments[-1], assessments[0]
+        latest_date = latest.get("date")
+        first_date = first.get("date")
 
         return {
             "success": True, "period": period, "userId": user_id,
             "dateRange": {"start": start_date.isoformat(), "end": end_date.isoformat()},
             "statistics": {
-                "weight_change": round(latest.weight - first.weight, 1) if latest.weight and first.weight else 0,
-                "avg_glucose": round(sum(a.glucose for a in assessments if a.glucose) / len([a for a in assessments if a.glucose]), 1) if any(a.glucose for a in assessments) else 0,
-                "avg_cholesterol": round(sum(a.cholesterol for a in assessments if a.cholesterol) / len([a for a in assessments if a.cholesterol]), 1) if any(a.cholesterol for a in assessments) else 0,
-                "current_risk": latest.risk_level or "Unknown",
+                "weight_change": round(latest.get("weight", 0) - first.get("weight", 0), 1) if latest.get("weight") and first.get("weight") else 0,
+                "avg_glucose": round(sum(a["glucose"] for a in assessments if a.get("glucose")) / len([a for a in assessments if a.get("glucose")]), 1) if any(a.get("glucose") for a in assessments) else 0,
+                "avg_cholesterol": round(sum(a["cholesterol"] for a in assessments if a.get("cholesterol")) / len([a for a in assessments if a.get("cholesterol")]), 1) if any(a.get("cholesterol") for a in assessments) else 0,
+                "current_risk": latest.get("risk_level") or "Unknown",
                 "total_records": len(assessments),
             },
             "graphs": {
@@ -61,45 +68,45 @@ def get_health_analytics(user_id: int, period: str = Query(default="month"), db:
                 "cholesterol": cholesterol_data, "riskLevel": risk_data,
             }
         }
-
     except Exception as e:
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 
 @router.get("/{user_id}/summary")
-def get_health_summary(user_id: int, db: Session = Depends(get_db)):
+def get_health_summary(user_id: int, db=Depends(get_db)):
     try:
         thirty_days_ago = date.today() - timedelta(days=30)
+        coll = db[HEALTH_ASSESSMENTS]
 
-        # apply fast api :(
-        recent = db.query(HealthAssessment).filter(
-            HealthAssessment.user_id == user_id,
-            HealthAssessment.date >= thirty_days_ago,
-        ).order_by(HealthAssessment.date.desc()).all()
+        recent = list(coll.find({
+            "user_id": user_id,
+            "date": {"$gte": thirty_days_ago},
+        }).sort("date", -1))
 
         if not recent:
             return JSONResponse(status_code=404, content={"success": False, "error": "No recent data found"})
 
         latest = recent[0]
+        week_ago = date.today() - timedelta(days=7)
+        week_old = coll.find_one({
+            "user_id": user_id,
+            "date": {"$lte": week_ago},
+        }, sort=[("date", -1)])
 
-        week_old = db.query(HealthAssessment).filter(
-            HealthAssessment.user_id == user_id,
-            HealthAssessment.date <= date.today() - timedelta(days=7),
-        ).order_by(HealthAssessment.date.desc()).first()
-
+        latest_date = latest.get("date")
+        latest_date_str = latest_date.isoformat() if (latest_date and hasattr(latest_date, "isoformat")) else (str(latest_date) if latest_date is not None else None)
         return {
             "success": True,
             "summary": {
-                "latest_date": latest.date.isoformat(),
-                "weight": {"current": latest.weight, "bmi": latest.bmi, "trend": round(latest.weight - week_old.weight, 1) if week_old and week_old.weight else 0},
-                "blood_pressure": {"current": latest.blood_pressure, "status": get_bp_status(latest.blood_pressure) if latest.blood_pressure else "Unknown"},
-                "glucose": {"current": latest.glucose, "trend": round(latest.glucose - week_old.glucose, 1) if week_old and week_old.glucose and latest.glucose else 0, "status": get_glucose_status(latest.glucose) if latest.glucose else "Unknown"},
-                "cholesterol": {"current": latest.cholesterol, "trend": round(latest.cholesterol - week_old.cholesterol, 1) if week_old and week_old.cholesterol and latest.cholesterol else 0, "status": get_cholesterol_status(latest.cholesterol) if latest.cholesterol else "Unknown"},
-                "risk_level": {"current": latest.risk_level, "recommended_diet": latest.recommended_diet},
-                "lifestyle": {"exercise_hours": latest.exercise_hours, "sleep_hours": latest.sleep_hours, "daily_calories": latest.daily_calories},
+                "latest_date": latest_date_str,
+                "weight": {"current": latest.get("weight"), "bmi": latest.get("bmi"), "trend": round(latest.get("weight", 0) - (week_old.get("weight") or 0), 1) if week_old and week_old.get("weight") else 0},
+                "blood_pressure": {"current": latest.get("blood_pressure"), "status": get_bp_status(latest.get("blood_pressure")) if latest.get("blood_pressure") else "Unknown"},
+                "glucose": {"current": latest.get("glucose"), "trend": round((latest.get("glucose") or 0) - (week_old.get("glucose") or 0), 1) if week_old and latest.get("glucose") else 0, "status": get_glucose_status(latest.get("glucose")) if latest.get("glucose") else "Unknown"},
+                "cholesterol": {"current": latest.get("cholesterol"), "trend": round((latest.get("cholesterol") or 0) - (week_old.get("cholesterol") or 0), 1) if week_old and latest.get("cholesterol") else 0, "status": get_cholesterol_status(latest.get("cholesterol")) if latest.get("cholesterol") else "Unknown"},
+                "risk_level": {"current": latest.get("risk_level"), "recommended_diet": latest.get("recommended_diet")},
+                "lifestyle": {"exercise_hours": latest.get("exercise_hours"), "sleep_hours": latest.get("sleep_hours"), "daily_calories": latest.get("daily_calories")},
             }
         }
-
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})

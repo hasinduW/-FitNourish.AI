@@ -1,5 +1,4 @@
-from db import engine, Base
-import database_models  # Import to register the models
+"""Create MongoDB indexes. Collections are created on first insert."""
+from db import init_db
 
-Base.metadata.create_all(bind=engine)
-print("✅ Tables created successfully!")
+init_db()

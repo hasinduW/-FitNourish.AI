@@ -8,17 +8,29 @@ import {
   StatusBar,
 } from "react-native";
 import { router } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
+  const { user, logout } = useAuth();
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#065f46" />
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Good day! 👋</Text>
-        <Text style={styles.headerTitle}>FitNourish.AI</Text>
-        <Text style={styles.headerSub}>Your personal health companion</Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.greeting}>Good day! 👋</Text>
+            <Text style={styles.headerTitle}>FitNourish.AI</Text>
+            <Text style={styles.headerSub}>
+              {user ? (user.first_name ? `${user.first_name}` : user.username) : "Your personal health companion"}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={logout} hitSlop={12}>
+            <Text style={styles.logoutText}>Log out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -113,6 +125,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
+  },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  logoutText: {
+    color: "#a7f3d0",
+    fontSize: 14,
+    fontWeight: "600",
   },
   greeting: {
     fontSize: 14,
