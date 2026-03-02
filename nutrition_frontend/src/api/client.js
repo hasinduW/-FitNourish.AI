@@ -100,3 +100,49 @@ export async function getIngredients() {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+// --- Auth (JWT) ---
+
+/**
+ * Login with username and password.
+ * @returns {Promise<{ access_token, token_type, user_id, username }>}
+ */
+export async function login(username, password) {
+  const res = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Login failed");
+  }
+  return res.json();
+}
+
+/**
+ * Sign up with first name, last name, username and password.
+ * @returns {Promise<{ access_token, token_type, user_id, username, first_name?, last_name? }>}
+ */
+export async function signup(firstName, lastName, username, password) {
+  const res = await fetch(`${BASE_URL}/api/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      first_name: firstName,
+      last_name: lastName,
+      username,
+      password,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Signup failed");
+  }
+  return res.json();
+}
+
+/** Get Authorization header value for authenticated requests. */
+export function authHeader(token) {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
