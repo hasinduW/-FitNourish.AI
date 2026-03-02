@@ -10,38 +10,25 @@ import {
   View,
   Switch,
 } from "react-native";
+import { router } from "expo-router";
+import { useAuth } from "../../contexts/AuthContext";
 import { predictAndSave } from "../../src/api/client";
 
-type Screen = "splash" | "login" | "home" | "form";
+type Screen = "splash" | "home" | "form";
 
 export default function PredictTab() {
   const [screen, setScreen] = useState<Screen>("splash");
+  const { logout } = useAuth();
 
-  // ---- Fake login state (hardcoded) ----
-  const [username, setUsername] = useState("demo");
-  const [password, setPassword] = useState("1234");
-  const [loginError, setLoginError] = useState("");
-
-  // Auto move splash -> login
+  // Auto move splash -> home
   useEffect(() => {
-    const t = setTimeout(() => setScreen("login"), 1400);
+    const t = setTimeout(() => setScreen("home"), 1400);
     return () => clearTimeout(t);
   }, []);
 
-  function onLogin() {
-    setLoginError("");
-    if (username.trim() === "demo" && password === "1234") {
-      setScreen("home"); // ✅ go to HOME first
-      return;
-    }
-    setLoginError("Invalid username or password (Try demo / 1234)");
-  }
-
-  function onLogout() {
-    setScreen("login");
-    setLoginError("");
-    setUsername("demo");
-    setPassword("1234");
+  async function onLogout() {
+    await logout();
+    router.replace("/Login");
   }
 
   // ---- Form state ----
@@ -209,76 +196,7 @@ export default function PredictTab() {
     );
   }
 
-  // ✅ LOGIN (no PP1)
-  if (screen === "login") {
-    return (
-      <View style={[styles.full, styles.loginBg]}>
-        <View style={styles.loginCard}>
-          <View style={styles.loginHeader}>
-            <View style={styles.brandIcon}>
-              <Text style={styles.brandIconText}>F</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.brandTitle}>FitNourish.AI</Text>
-              <Text style={styles.brandSubtitle}>Secure Sign In</Text>
-            </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>AI</Text>
-            </View>
-          </View>
-
-          <Text style={styles.pageTitle}>Sign In</Text>
-          <Text style={styles.pageDesc}>Access personalized nutrition predictions.</Text>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Username</Text>
-            <TextInput
-              value={username}
-              onChangeText={setUsername}
-              style={styles.input}
-              autoCapitalize="none"
-              placeholder="demo"
-              placeholderTextColor="#7A8A86"
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              style={styles.input}
-              autoCapitalize="none"
-              secureTextEntry
-              placeholder="1234"
-              placeholderTextColor="#7A8A86"
-            />
-          </View>
-
-          {loginError ? <Text style={styles.errorText}>{loginError}</Text> : null}
-
-          <Pressable
-            onPress={onLogin}
-            style={({ pressed }) => [
-              styles.button,
-              pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
-            ]}
-          >
-            <Text style={styles.buttonText}>Login</Text>
-            <Text style={styles.buttonSub}>Use demo / 1234</Text>
-          </Pressable>
-
-          <View style={styles.loginFooter}>
-            <Text style={styles.footerNoteText}>
-              Backend: FastAPI • DB: PostgreSQL • ML: RandomForest
-            </Text>
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  // ✅ HOME (fake fitness dashboard)
+  // ✅ HOME (dashboard)
   if (screen === "home") {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
