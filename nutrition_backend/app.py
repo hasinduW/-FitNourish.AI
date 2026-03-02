@@ -13,9 +13,11 @@ import uvicorn
 from io import BytesIO
 import base64
 
-from db import SessionLocal
-from database_models import Prediction  # SQLAlchemy model
-from sqlalchemy import desc, func
+from datetime import datetime
+from fastapi import Depends
+
+from db import get_db, get_database
+from database_models import PREDICTIONS
 from services.nutrients_predictor import predict_nutrients_from_image
 from services.ingredient_predictor import predict_ingredients_from_image
 from services.meal_plan_predictor import generate_meal_plan
@@ -128,10 +130,10 @@ def predict(data: UserInput):
 
 
 @app.post("/predict-and-save")
-def predict_and_save(data: UserInput):
+def predict_and_save(data: UserInput, db=Depends(get_db)):
     if model is None:
         raise HTTPException(status_code=503, detail="Nutrition model not available")
-    
+
     X = pd.DataFrame([data.model_dump()])
     pred = model.predict(X)[0]
 
@@ -142,54 +144,43 @@ def predict_and_save(data: UserInput):
         "fat_g_per_day": float(round(pred[3], 1)),
     }
 
-    db = SessionLocal()
-    try:
-        # ✅ AUTO user_id generation (user_000001, user_000002...)
-        last_id = db.query(func.max(Prediction.id)).scalar()
-        next_num = (last_id or 0) + 1
-        auto_user_id = f"user_{next_num:06d}"
+    coll = db[PREDICTIONS]
+    next_num = coll.count_documents({}) + 1
+    auto_user_id = f"user_{next_num:06d}"
 
-        row = Prediction(
-            user_id=auto_user_id,   # ✅ now automatic
-            **data.model_dump(),
-            **result
-        )
-
-        db.add(row)
-        db.commit()
-        db.refresh(row)
-
-        return {"saved_id": row.id, "user_id": row.user_id, **result}  # ✅ return user_id too
-    finally:
-        db.close()
+    doc = {
+        "user_id": auto_user_id,
+        **data.model_dump(),
+        **result,
+        "created_at": datetime.utcnow(),
+    }
+    ins = coll.insert_one(doc)
+    return {"saved_id": str(ins.inserted_id), "user_id": auto_user_id, **result}
 
 
 @app.get("/history/{user_id}")
-def get_history(user_id: str):
-    db = SessionLocal()
-    try:
-        rows = (
-            db.query(Prediction)
-            .filter(Prediction.user_id == user_id)
-            .order_by(desc(Prediction.created_at))
-            .limit(20)
-            .all()
-        )
-
-        return [
-            {
-                "id": r.id,
-                "user_id": r.user_id,
-                "created_at": r.created_at,
-                "daily_kcal_need": r.daily_kcal_need,
-                "protein_g_per_day": r.protein_g_per_day,
-                "carbs_g_per_day": r.carbs_g_per_day,
-                "fat_g_per_day": r.fat_g_per_day,
-            }
-            for r in rows
-        ]
-    finally:
-        db.close()
+def get_history(user_id: str, db=Depends(get_db)):
+    coll = db[PREDICTIONS]
+    rows = list(
+        coll.find({"user_id": user_id})
+        .sort("created_at", -1)
+        .limit(20)
+    )
+    out = []
+    for r in rows:
+        created = r.get("created_at")
+        if created and hasattr(created, "isoformat"):
+            created = created.isoformat()
+        out.append({
+            "id": str(r["_id"]),
+            "user_id": r["user_id"],
+            "created_at": created,
+            "daily_kcal_need": r.get("daily_kcal_need"),
+            "protein_g_per_day": r.get("protein_g_per_day"),
+            "carbs_g_per_day": r.get("carbs_g_per_day"),
+            "fat_g_per_day": r.get("fat_g_per_day"),
+        })
+    return out
 
 
 # ============================================================================

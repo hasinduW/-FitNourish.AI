@@ -1,63 +1,30 @@
-from sqlalchemy import Column, Integer, Float, String, Date, DateTime, UniqueConstraint
-from sqlalchemy.orm import declarative_base
+"""Health assessment: MongoDB document shape and response helper."""
+
 from datetime import datetime, date
 
-Base = declarative_base()
 
-
-class HealthAssessment(Base):
-    __tablename__ = 'health_assessments'
-
-    # Primary Key
-    id = Column(Integer, primary_key=True, autoincrement=True)
-
-    # User & Date Info
-    user_id = Column(Integer, nullable=False)
-    date = Column(Date, nullable=False, default=date.today)
-    timestamp = Column(DateTime, default=datetime.now)
-
-    # Health Metrics
-    blood_pressure = Column(String(20))
-    glucose = Column(Float)
-    cholesterol = Column(Float)
-
-    # Lifestyle Data
-    exercise_hours = Column(Float)
-    daily_calories = Column(Float)
-    sleep_hours = Column(Float)
-    weight = Column(Float, nullable=False)
-    height = Column(Float, nullable=False)
-    bmi = Column(Float)
-
-    # Assessment Results
-    risk_level = Column(String(50))
-    risk_score = Column(Float)
-    recommended_diet = Column(String(100))
-    diet_confidence = Column(Float)
-
-    # Unique constraint: one record per user per day
-    __table_args__ = (
-        UniqueConstraint('user_id', 'date', name='unique_user_date'),
-    )
-
-    def to_dict(self):
-        """Convert model to dictionary"""
-        return {
-            'id': self.id,
-            'userId': self.user_id,
-            'date': self.date.isoformat() if self.date else None,
-            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
-            'bloodPressure': self.blood_pressure,
-            'glucose': self.glucose,
-            'cholesterol': self.cholesterol,
-            'exerciseHours': self.exercise_hours,
-            'dailyCalories': self.daily_calories,
-            'sleepHours': self.sleep_hours,
-            'weight': self.weight,
-            'height': self.height,
-            'bmi': self.bmi,
-            'riskLevel': self.risk_level,
-            'riskScore': self.risk_score,
-            'recommendedDiet': self.recommended_diet,
-            'dietConfidence': self.diet_confidence,
-        }
+def doc_to_dict(doc: dict) -> dict:
+    """Convert a MongoDB health_assessments document to API response shape."""
+    if not doc:
+        return None
+    d = doc.get("date")
+    ts = doc.get("timestamp")
+    return {
+        "id": str(doc.get("_id")),
+        "userId": doc.get("user_id"),
+        "date": d.isoformat() if hasattr(d, "isoformat") else str(d),
+        "timestamp": ts.isoformat() if ts and hasattr(ts, "isoformat") else None,
+        "bloodPressure": doc.get("blood_pressure"),
+        "glucose": doc.get("glucose"),
+        "cholesterol": doc.get("cholesterol"),
+        "exerciseHours": doc.get("exercise_hours"),
+        "dailyCalories": doc.get("daily_calories"),
+        "sleepHours": doc.get("sleep_hours"),
+        "weight": doc.get("weight"),
+        "height": doc.get("height"),
+        "bmi": doc.get("bmi"),
+        "riskLevel": doc.get("risk_level"),
+        "riskScore": doc.get("risk_score"),
+        "recommendedDiet": doc.get("recommended_diet"),
+        "dietConfidence": doc.get("diet_confidence"),
+    }

@@ -1,16 +1,14 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 from datetime import datetime
 
-from models.patient_profile import PatientProfile
+from models.patient_profile import doc_to_dict
+from database_models import PATIENT_PROFILES
 from db import get_db
 
 router = APIRouter(prefix="/api/patient", tags=["Patient Profile"])
 
-
-# ── Pydantic Schema ───────────────────────────────────────────────
 
 class PatientProfileRequest(BaseModel):
     userId:     int
@@ -22,64 +20,63 @@ class PatientProfileRequest(BaseModel):
     alcohol:    str
 
 
-# ── Endpoints ─────────────────────────────────────────────────────
-
 @router.post("/profile")
-def save_patient_profile(body: PatientProfileRequest, db: Session = Depends(get_db)):
+def save_patient_profile(body: PatientProfileRequest, db=Depends(get_db)):
     """Create or update patient basic profile."""
     try:
-        existing = db.query(PatientProfile).filter_by(user_id=body.userId).first()
+        coll = db[PATIENT_PROFILES]
+        now = datetime.utcnow()
+        existing = coll.find_one({"user_id": body.userId})
 
         if existing:
-            # Update
-            existing.age        = body.age
-            existing.gender     = body.gender
-            existing.married    = body.married
-            existing.profession = body.profession
-            existing.smoking    = body.smoking
-            existing.alcohol    = body.alcohol
-            existing.updated_at = datetime.now()
-            db.commit()
-            db.refresh(existing)
-            print(f"✓ Profile UPDATED for user {body.userId}")
-            return {"success": True, "message": "Profile updated", "data": existing.to_dict()}
-
-        else:
-            # Create
-            new_profile = PatientProfile(
-                user_id    = body.userId,
-                age        = body.age,
-                gender     = body.gender,
-                married    = body.married,
-                profession = body.profession,
-                smoking    = body.smoking,
-                alcohol    = body.alcohol,
+            coll.update_one(
+                {"user_id": body.userId},
+                {"$set": {
+                    "age": body.age,
+                    "gender": body.gender,
+                    "married": body.married,
+                    "profession": body.profession,
+                    "smoking": body.smoking,
+                    "alcohol": body.alcohol,
+                    "updated_at": now,
+                }},
             )
-            db.add(new_profile)
-            db.commit()
-            db.refresh(new_profile)
+            updated = coll.find_one({"user_id": body.userId})
+            print(f"✓ Profile UPDATED for user {body.userId}")
+            return {"success": True, "message": "Profile updated", "data": doc_to_dict(updated)}
+        else:
+            doc = {
+                "user_id": body.userId,
+                "age": body.age,
+                "gender": body.gender,
+                "married": body.married,
+                "profession": body.profession,
+                "smoking": body.smoking,
+                "alcohol": body.alcohol,
+                "created_at": now,
+                "updated_at": now,
+            }
+            coll.insert_one(doc)
+            created = coll.find_one({"user_id": body.userId})
             print(f"✓ Profile CREATED for user {body.userId}")
-            return {"success": True, "message": "Profile created", "data": new_profile.to_dict()}
-
+            return {"success": True, "message": "Profile created", "data": doc_to_dict(created)}
     except Exception as e:
-        db.rollback()
         print(f"Error saving profile: {e}")
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 
 @router.get("/profile/{user_id}")
-def get_patient_profile(user_id: int, db: Session = Depends(get_db)):
+def get_patient_profile(user_id: int, db=Depends(get_db)):
     """Get patient profile by user ID."""
     try:
-        profile = db.query(PatientProfile).filter_by(user_id=user_id).first()
+        coll = db[PATIENT_PROFILES]
+        profile = coll.find_one({"user_id": user_id})
 
         if not profile:
             return JSONResponse(
                 status_code=404,
                 content={"success": False, "error": "Profile not found"}
             )
-
-        return {"success": True, "data": profile.to_dict()}
-
+        return {"success": True, "data": doc_to_dict(profile)}
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})

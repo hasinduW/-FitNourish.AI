@@ -7,7 +7,6 @@ from typing import Optional, Dict, List
 
 from db import get_db
 from fastapi import Depends
-from sqlalchemy.orm import Session
 
 from health_risk.core import model_loader
 from health_risk.core.utils import make_json_safe
@@ -68,7 +67,7 @@ def home():
     }
 
 @router.post("/api/assess")
-def assess_health(body: AssessRequest, db: Session = Depends(get_db)):
+def assess_health(body: AssessRequest, db=Depends(get_db)):
     try:
         user_data = body.dict()
 
