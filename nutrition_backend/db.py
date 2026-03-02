@@ -43,6 +43,7 @@ def init_db():
         PATIENT_PROFILES,
         DIET_PRINCIPLES,
         HEALTH_ASSESSMENTS,
+        USERS,
     )
     db = get_database()
     db[PREDICTIONS].create_index([("user_id", 1), ("created_at", -1)])
@@ -50,4 +51,5 @@ def init_db():
     db[PATIENT_PROFILES].create_index("user_id", unique=True)
     db[DIET_PRINCIPLES].create_index([("user_id", 1), ("date", -1)])
     db[HEALTH_ASSESSMENTS].create_index([("user_id", 1), ("date", 1)], unique=True)
+    db[USERS].create_index("username_lower", unique=True)
     print("MongoDB indexes ensured.")

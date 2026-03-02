@@ -25,7 +25,15 @@ pip install -r requirements.txt
 The backend uses **MongoDB Atlas**. The connection string and database name are set in `db.py` (no `.env` file is required for basic setup).
 
 - **Database name**: `fitnourish-ai`
-- **Collections**: `predictions`, `meal_plans`, `patient_profiles`, `diet_principles`, `health_assessments` (created on first use)
+- **Collections**: `predictions`, `meal_plans`, `patient_profiles`, `diet_principles`, `health_assessments`, `users` (created on first use)
+
+### Authentication (JWT)
+
+- **POST /api/auth/signup** – Register with `username` and `password` (min 6 chars). Returns `access_token`, `user_id`, `username`.
+- **POST /api/auth/login** – Login with `username` and `password`. Returns JWT and user info.
+- **GET /api/auth/me** – Return current user (requires `Authorization: Bearer <token>`).
+
+Passwords are hashed with bcrypt; tokens are JWTs (HS256). For protected routes, use the `get_current_user_id` dependency from `api.auth`.
 
 For production, move the connection string to an environment variable and load it in `db.py`.
 

@@ -81,11 +81,13 @@ from health_risk.api.health import router as health_router
 from health_risk.api.analytics import router as analytics_router
 from health_risk.api.patient_routes import router as patient_router
 from health_risk.api.diet_principles import router as diet_principles_router
+from api.auth import router as auth_router
 
 app.include_router(health_router)
 app.include_router(analytics_router)
 app.include_router(patient_router)
 app.include_router(diet_principles_router)
+app.include_router(auth_router)
 
 
 # Load nutrition model once when server starts (if exists)
