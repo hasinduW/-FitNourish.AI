@@ -8,6 +8,7 @@ import {
   Text,
   TextInput,
   View,
+  Switch,
 } from "react-native";
 import { predictAndSave } from "../../src/api/client";
 
@@ -50,8 +51,12 @@ export default function PredictTab() {
     height_cm: "160",
     weight_kg: "60",
     goal: "Maintain",
+
+    // keep as 0/1 in form for backend
     has_diabetes: "1",
     has_hypertension: "1",
+
+    // ✅ smartwatch fields (auto-fill by demo sync BUT still editable)
     steps_per_day: "7500",
     active_minutes: "60",
     calories_burned_active: "400",
@@ -60,11 +65,46 @@ export default function PredictTab() {
     stress_score: "55",
   });
 
+  // ✅ Toggle UI state (Yes/No) but stored in form as 0/1
+  const [diabetesOn, setDiabetesOn] = useState(form.has_diabetes === "1");
+  const [hypertensionOn, setHypertensionOn] = useState(form.has_hypertension === "1");
+
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, has_diabetes: diabetesOn ? "1" : "0" }));
+  }, [diabetesOn]);
+
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, has_hypertension: hypertensionOn ? "1" : "0" }));
+  }, [hypertensionOn]);
+
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   function update(key: string, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // ✅ Step 4: gender/goal as button selectors
+  function setGender(g: "Male" | "Female") {
+    setForm((prev) => ({ ...prev, gender: g }));
+  }
+  function setGoal(g: "Maintain" | "Lose" | "Gain") {
+    setForm((prev) => ({ ...prev, goal: g }));
+  }
+
+  // ✅ Step 3: Smartwatch Sync (Demo) -> autofill only wearable fields
+  function onSmartwatchSyncDemo() {
+    const demo = {
+      steps_per_day: String(randInt(4500, 12000)),
+      active_minutes: String(randInt(20, 120)),
+      calories_burned_active: String(randInt(120, 700)),
+      resting_heart_rate: String(randInt(55, 85)),
+      avg_heart_rate: String(randInt(75, 120)),
+      stress_score: String(randInt(20, 85)),
+    };
+
+    setForm((prev) => ({ ...prev, ...demo }));
+    Alert.alert("Synced ✅", "Smartwatch values loaded (Demo). You can still edit them.");
   }
 
   function toPayload() {
@@ -90,21 +130,23 @@ export default function PredictTab() {
       {
         title: "Profile",
         subtitle: "Basic details for calorie estimation",
-        fields: ["age", "gender", "height_cm", "weight_kg", "goal"],
+        // ✅ remove gender + goal here because we show buttons
+        fields: ["age", "height_cm", "weight_kg"],
       },
       {
         title: "Health Conditions",
-        subtitle: "Multi-disease aware planning",
-        fields: ["has_diabetes", "has_hypertension"],
+        subtitle: "Multi-disease aware planning (toggle Yes/No)",
+        // ✅ handled by Switch toggles
+        fields: [],
       },
       {
         title: "Daily Activity",
-        subtitle: "Phone-based activity signals",
+        subtitle: "Smartwatch activity (auto-fill) — still editable",
         fields: ["steps_per_day", "active_minutes", "calories_burned_active"],
       },
       {
         title: "Smartwatch Snapshot",
-        subtitle: "Heart rate + stress indicators",
+        subtitle: "Wearable snapshot (auto-fill) — still editable",
         fields: ["resting_heart_rate", "avg_heart_rate", "stress_score"],
       },
     ];
@@ -268,9 +310,9 @@ export default function PredictTab() {
           </Text>
 
           <View style={styles.statsRow}>
-            <StatCard title="Steps" value="7,500" sub="Goal: 10,000" />
-            <StatCard title="Active" value="60 min" sub="Good" />
-            <StatCard title="Stress" value="55" sub="Moderate" />
+            <StatCard title="Steps" value={form.steps_per_day || "—"} sub="Today" />
+            <StatCard title="Active" value={`${form.active_minutes || "—"} min`} sub="Today" />
+            <StatCard title="Stress" value={form.stress_score || "—"} sub="Score" />
           </View>
         </View>
 
@@ -322,7 +364,7 @@ export default function PredictTab() {
     );
   }
 
-  // ✅ FORM SCREEN (same as your nice UI, no PP1)
+  // ✅ FORM SCREEN (NOW includes Sync button + dropdown buttons + toggles)
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
@@ -343,9 +385,108 @@ export default function PredictTab() {
       <View style={styles.card}>
         <Text style={styles.pageTitle}>Nutrition Target Calculator</Text>
         <Text style={styles.pageDesc}>
-          Enter your health & activity information. Then generate daily calories and macros.
+          Sync smartwatch values or type manually. Then generate daily calories and macros.
         </Text>
 
+        {/* ✅ Step 3 — Smartwatch Sync (Demo) button */}
+        <Pressable
+          onPress={onSmartwatchSyncDemo}
+          style={({ pressed }) => [
+            styles.syncBtn,
+            pressed && { opacity: 0.92, transform: [{ scale: 0.99 }] },
+          ]}
+        >
+          <Text style={styles.syncTitle}>⌚ Sync from Smartwatch (Demo)</Text>
+          <Text style={styles.syncSub}>
+            Auto-fills steps, active calories, heart rate & stress — you can still edit.
+          </Text>
+        </Pressable>
+
+        {/* ✅ Step 4 — Gender + Goal buttons */}
+        <View style={{ marginTop: 12 }}>
+          <Text style={styles.sectionTitle}>Quick Select</Text>
+          <Text style={styles.sectionSub}>Use controls instead of typing</Text>
+
+          <View style={styles.inlineRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Gender</Text>
+              <View style={styles.segment}>
+                {["Female", "Male"].map((g) => (
+                  <Pressable
+                    key={g}
+                    onPress={() => setGender(g as any)}
+                    style={[
+                      styles.segmentBtn,
+                      form.gender === g && styles.segmentBtnActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        form.gender === g && styles.segmentTextActive,
+                      ]}
+                    >
+                      {g}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={{ width: 10 }} />
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Goal</Text>
+              <View style={styles.segment}>
+                {["Maintain", "Lose", "Gain"].map((g) => (
+                  <Pressable
+                    key={g}
+                    onPress={() => setGoal(g as any)}
+                    style={[
+                      styles.segmentBtn,
+                      form.goal === g && styles.segmentBtnActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        form.goal === g && styles.segmentTextActive,
+                      ]}
+                    >
+                      {g}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* ✅ Step 4 — Disease toggles (Yes/No) */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Health Conditions</Text>
+            <Text style={styles.sectionSub}>Toggle Yes/No (stored as 0/1)</Text>
+          </View>
+
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>Diabetes</Text>
+            <View style={styles.toggleRight}>
+              <Text style={styles.toggleValue}>{diabetesOn ? "Yes" : "No"}</Text>
+              <Switch value={diabetesOn} onValueChange={setDiabetesOn} />
+            </View>
+          </View>
+
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>Hypertension</Text>
+            <View style={styles.toggleRight}>
+              <Text style={styles.toggleValue}>{hypertensionOn ? "Yes" : "No"}</Text>
+              <Switch value={hypertensionOn} onValueChange={setHypertensionOn} />
+            </View>
+          </View>
+        </View>
+
+        {/* Your grouped input sections (same) */}
         {groupedFields.map((section) => (
           <View key={section.title} style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -364,6 +505,7 @@ export default function PredictTab() {
                     autoCapitalize="none"
                     placeholder={placeholderFor(k)}
                     placeholderTextColor="#7A8A86"
+                    editable={true} // ✅ still editable after smartwatch sync
                   />
                   {helperTextFor(k) ? <Text style={styles.helper}>{helperTextFor(k)}</Text> : null}
                 </View>
@@ -421,6 +563,10 @@ export default function PredictTab() {
 
 /* ---------- Small UI helpers ---------- */
 
+function randInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function prettyLabel(k: string) {
   const map: Record<string, string> = {
     age: "Age",
@@ -462,10 +608,9 @@ function placeholderFor(k: string) {
 function helperTextFor(k: string) {
   const map: Record<string, string> = {
     goal: "Use: Maintain / Lose / Gain",
-    has_diabetes: "0 = No, 1 = Yes",
-    has_hypertension: "0 = No, 1 = Yes",
     stress_score: "0–100 (higher = more stress)",
     steps_per_day: "Steps must be 0–30000",
+    active_minutes: "Active minutes must be 0–300",
   };
   return map[k] ?? "";
 }
@@ -821,6 +966,59 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
+  // ✅ NEW: Smartwatch sync button styles
+  syncBtn: {
+    backgroundColor: "#E9F6F0",
+    borderWidth: 1,
+    borderColor: "#D5EFE5",
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginTop: 10,
+  },
+  syncTitle: {
+    color: GREEN_DARK,
+    fontWeight: "900",
+    fontSize: 14,
+  },
+  syncSub: {
+    marginTop: 4,
+    color: MUTED,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  // ✅ NEW: segmented button styles (dropdown-like)
+  inlineRow: { flexDirection: "row", marginTop: 10 },
+  segment: {
+    flexDirection: "row",
+    borderWidth: 1,
+    borderColor: "#EDF4F1",
+    backgroundColor: "#FBFDFC",
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  segmentBtn: { flex: 1, paddingVertical: 10, alignItems: "center" },
+  segmentBtnActive: { backgroundColor: "#E9F6F0" },
+  segmentText: { color: MUTED, fontWeight: "900", fontSize: 12 },
+  segmentTextActive: { color: GREEN_DARK },
+
+  // ✅ NEW: toggle row styles
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FBFDFC",
+    borderWidth: 1,
+    borderColor: "#EDF4F1",
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 10,
+  },
+  toggleLabel: { fontSize: 12, fontWeight: "900", color: TEXT },
+  toggleRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+  toggleValue: { fontSize: 12, fontWeight: "900", color: GREEN_DARK },
+
   section: {
     marginTop: 14,
     paddingTop: 10,
@@ -984,3 +1182,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
+
