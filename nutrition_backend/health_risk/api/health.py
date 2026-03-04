@@ -24,7 +24,7 @@ class FoodItem(BaseModel):
 # Request body schema
 class AssessRequest(BaseModel):
     # User info
-    userId: Optional[int] = None
+    userId: Optional[str] = None
     age: int
     gender: str
     weight: float
