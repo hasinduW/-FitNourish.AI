@@ -30,7 +30,8 @@ export const FOOD_DATABASE: FoodDatabase[] = [
   { name: 'Orange Juice', category: 'Beverages', serving_g: 240, cal_per_100g: 45, sugar_per_100g: 8.4 },
 ];
 
-export const API_URL = 'http://192.168.8.136:8000'; 
+// export const API_URL = 'http://192.168.8.107:8000'; 
+export const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
 
 export const MEAL_ICONS: Record<string, string> = {
   breakfast: '☕',
