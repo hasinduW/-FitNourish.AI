@@ -11,7 +11,7 @@ import { router } from "expo-router";
 import Constants from "expo-constants";
 
 import { API_URL } from "../types/constants";
-const USER_ID = 1;
+import { useAuth } from "@/contexts/AuthContext";
 
 // ── Types ─────────────────────────────────────────────────────────
 
@@ -91,6 +91,10 @@ const StatItem = ({
 // ── Main Screen ───────────────────────────────────────────────────
 
 export default function HealthHub() {
+  const { user } = useAuth();
+
+  const USER_ID = user?.user_id;
+
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -280,7 +284,7 @@ export default function HealthHub() {
 // ── Styles ────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0fdf4" },
+  container: { flex: 1, backgroundColor: "#F2F7F5" },
 
   header: {
     backgroundColor: "#065f46",

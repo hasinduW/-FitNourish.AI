@@ -14,41 +14,7 @@ import {
 import { router } from "expo-router";
 
 import { API_URL } from "../types/constants";
-const USER_ID = 1;
-
-// ── Types ─────────────────────────────────────────────────────────
-
-interface PatientProfile {
-  userId: number;
-  age: string;
-  gender: string;
-  married: string;
-  profession: string;
-  smoking: string;
-  alcohol: string;
-}
-
-const INITIAL: PatientProfile = {
-  userId: USER_ID,
-  age: "",
-  gender: "",
-  married: "",
-  profession: "",
-  smoking: "",
-  alcohol: "",
-};
-
-const PROFESSIONS = [
-  "office_worker",
-  "teacher",
-  "artist",
-  "farmer",
-  "driver",
-  "engineer",
-  "student",
-  "doctor",
-  "other",
-];
+import { useAuth } from "@/contexts/AuthContext";
 
 // ── Reusable UI ───────────────────────────────────────────────────
 
@@ -114,6 +80,41 @@ const WrapOptions = ({
 // ── Main Screen ───────────────────────────────────────────────────
 
 export default function PatientProfileScreen() {
+  const { user } = useAuth();
+
+  const USER_ID = user?.user_id;
+
+  interface PatientProfile {
+    userId: string | undefined;
+    age: string;
+    gender: string;
+    married: string;
+    profession: string;
+    smoking: string;
+    alcohol: string;
+  }
+
+  const INITIAL: PatientProfile = {
+    userId: USER_ID,
+    age: "",
+    gender: "",
+    married: "",
+    profession: "",
+    smoking: "",
+    alcohol: "",
+  };
+
+  const PROFESSIONS = [
+    "office_worker",
+    "teacher",
+    "artist",
+    "farmer",
+    "driver",
+    "engineer",
+    "student",
+    "doctor",
+    "other",
+  ];
   const [profile, setProfile] = useState<PatientProfile>(INITIAL);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -303,13 +304,13 @@ export default function PatientProfileScreen() {
 // ── Styles ────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0fdf4" },
+  container: { flex: 1, backgroundColor: "#F2F7F5" },
   content: { padding: 20 },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "#ffffff",
   },
   loadingText: { marginTop: 12, color: "#059669", fontSize: 15 },
 
@@ -318,6 +319,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#065f46",
     marginBottom: 6,
+    marginTop: 20,
   },
   subHeader: {
     fontSize: 14,
