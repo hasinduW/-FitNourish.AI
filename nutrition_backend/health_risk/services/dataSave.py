@@ -9,9 +9,10 @@ def store_health_assessment(db, user_data, risk_result, diet_result):
     db: pymongo Database (from get_db).
     """
     try:
-        today = date.today()
+        # today = date.today()
+        today = datetime.combine(date.today(), datetime.min.time())
         bmi = round(user_data["weight"] / ((user_data["height"] / 100) ** 2), 1)
-        user_id = int(user_data.get("userId", 0))
+        user_id = str(user_data.get("userId", ""))
         coll = db[HEALTH_ASSESSMENTS]
 
         existing = coll.find_one({"user_id": user_id, "date": today})
