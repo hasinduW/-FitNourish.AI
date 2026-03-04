@@ -11,6 +11,7 @@ import {
 import { LineChart, BarChart } from "react-native-chart-kit";
 
 import { API_URL } from "../types/constants";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SCREEN_WIDTH = Dimensions.get("window").width - 40;
 
@@ -188,7 +189,8 @@ const buildBarData = (points: ValuePoint[], label: string) => ({
 // ── Main Component ────────────────────────────────────────────────
 
 export default function HealthAnalytics() {
-  const userId = "1";
+  const { user } = useAuth();
+  const userId = user?.user_id;
   const [period, setPeriod] = useState("month");
   const [analyticsData, setAnalytics] = useState<AnalyticsData | null>(null);
   const [summaryData, setSummary] = useState<Summary | null>(null);
@@ -491,13 +493,13 @@ export default function HealthAnalytics() {
 // ── Styles ────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0fdf4" },
+  container: { flex: 1, backgroundColor: "#F2F7F5" },
   content: { padding: 20 },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "#ffffff",
   },
   loadingText: { marginTop: 12, color: "#059669", fontSize: 15 },
 
@@ -506,6 +508,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#065f46",
     marginBottom: 4,
+    marginTop: 20,
   },
   subHeader: { fontSize: 14, color: "#6b7280", marginBottom: 16 },
 
