@@ -16,34 +16,7 @@ import { UserData, AssessmentResults, Meals } from "../types";
 import { API_URL, DISEASE_TYPES, SEVERITIES } from "../types/constants";
 import FoodLogger from "../components/FoodLogger";
 import ResultsScreen from "./ResultsScreen";
-
-const USER_ID = 1;
-
-const initialUserData: UserData = {
-  userId: USER_ID,
-  age: "",
-  gender: "",
-  weight: "",
-  height: "",
-  exercise: "low",
-  sleep: "",
-  sugar_intake: "medium",
-  smoking: "",
-  alcohol: "",
-  married: "",
-  profession: "",
-  disease_type: "None",
-  severity: "Mild",
-  cholesterol: "",
-  blood_pressure: "",
-  glucose: "",
-  dietary_restrictions: "None",
-  allergies: "None",
-  exercise_hours: "2",
-  adherence: "60",
-  daily_caloric_intake: "2200",
-  meals: { breakfast: [], lunch: [], dinner: [], snacks: [] },
-};
+import { useAuth } from "@/contexts/AuthContext";
 
 // ── Reusable UI ───────────────────────────────────────────────────
 
@@ -140,6 +113,35 @@ const SectionHeader = ({ emoji, title }: { emoji: string; title: string }) => (
 // ── Main Screen ───────────────────────────────────────────────────
 
 export default function AssessmentScreen() {
+  const { user } = useAuth();
+
+  const USER_ID = user?.user_id;
+
+  const initialUserData: UserData = {
+    userId: USER_ID,
+    age: "",
+    gender: "",
+    weight: "",
+    height: "",
+    exercise: "low",
+    sleep: "",
+    sugar_intake: "medium",
+    smoking: "",
+    alcohol: "",
+    married: "",
+    profession: "",
+    disease_type: "None",
+    severity: "Mild",
+    cholesterol: "",
+    blood_pressure: "",
+    glucose: "",
+    dietary_restrictions: "None",
+    allergies: "None",
+    exercise_hours: "2",
+    adherence: "60",
+    daily_caloric_intake: "2200",
+    meals: { breakfast: [], lunch: [], dinner: [], snacks: [] },
+  };
   const [userData, setUserData] = useState<UserData>(initialUserData);
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -582,13 +584,13 @@ export default function AssessmentScreen() {
 // ── Styles ────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0fdf4" },
+  container: { flex: 1, backgroundColor: "#F2F7F5" },
   content: { padding: 16 },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "#ffffff",
   },
   loadingText: { marginTop: 12, color: "#059669", fontSize: 15 },
 
@@ -600,6 +602,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    marginTop: 25,
     borderWidth: 2,
     borderColor: "#fed7aa",
   },
@@ -631,6 +634,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ecfdf5",
     borderRadius: 16,
     padding: 16,
+    marginTop: 25,
     marginBottom: 16,
     borderWidth: 1.5,
     borderColor: "#6ee7b7",

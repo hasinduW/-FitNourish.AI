@@ -176,7 +176,7 @@ export default function ResultsScreen({ results, onBack }: Props) {
       <View style={[styles.card, styles.dietCard]}>
         <Text style={styles.dietTitle}>🥗 {diet.recommended_diet}</Text>
         <Text style={styles.dietDesc}>{diet.diet_info?.description}</Text>
-        <View style={styles.confidenceRow}>
+        {/* <View style={styles.confidenceRow}>
           <Text style={styles.confidenceLabel}>Confidence</Text>
           <Text style={styles.confidenceValue}>
             {diet.confidence?.toFixed(0)}%
@@ -189,7 +189,7 @@ export default function ResultsScreen({ results, onBack }: Props) {
               { width: `${diet.confidence}%` as any },
             ]}
           />
-        </View>
+        </View> */}
 
         {/* Principles with numbered index */}
         <View style={styles.infoBox}>
@@ -324,7 +324,7 @@ export default function ResultsScreen({ results, onBack }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "#F2F7F5",
     paddingHorizontal: 16,
     paddingTop: 20,
   },
@@ -334,6 +334,7 @@ const styles = StyleSheet.create({
     color: "#065f46",
     textAlign: "center",
     letterSpacing: 2,
+    marginTop: 20,
   },
   headerDivider: {
     height: 4,

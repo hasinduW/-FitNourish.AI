@@ -21,7 +21,8 @@ class SavePrinciplesRequest(BaseModel):
 def save_diet_principles(body: SavePrinciplesRequest, db=Depends(get_db)):
     """Save or update today's latest diet principles for a user."""
     try:
-        today = date.today()
+        # today = date.today()
+        today = datetime.combine(date.today(), datetime.min.time())
         principles = (body.principles + [None, None, None, None])[:4]
         coll = db[DIET_PRINCIPLES]
         now = datetime.utcnow()
@@ -64,7 +65,7 @@ def save_diet_principles(body: SavePrinciplesRequest, db=Depends(get_db)):
 
 
 @router.get("/today/{user_id}")
-def get_todays_principles(user_id: int, db=Depends(get_db)):
+def get_todays_principles(user_id: str, db=Depends(get_db)):
     """Get today's latest diet principles."""
     try:
         today = date.today()
@@ -82,7 +83,7 @@ def get_todays_principles(user_id: int, db=Depends(get_db)):
 
 
 @router.get("/history/{user_id}")
-def get_principles_history(user_id: int, db=Depends(get_db)):
+def get_principles_history(user_id: str, db=Depends(get_db)):
     """Get all past diet principles for a user."""
     try:
         coll = db[DIET_PRINCIPLES]

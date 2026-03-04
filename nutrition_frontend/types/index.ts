@@ -22,7 +22,7 @@ export interface Meals {
 }
 
 export interface UserData {
-  userId: number;
+  userId: string | undefined;
   age: string;
   gender: string;
   weight: string;
