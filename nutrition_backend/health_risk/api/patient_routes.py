@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/patient", tags=["Patient Profile"])
 
 
 class PatientProfileRequest(BaseModel):
-    userId:     int
+    userId:     str
     age:        int
     gender:     str
     married:    str
@@ -26,11 +26,12 @@ def save_patient_profile(body: PatientProfileRequest, db=Depends(get_db)):
     try:
         coll = db[PATIENT_PROFILES]
         now = datetime.utcnow()
-        existing = coll.find_one({"user_id": body.userId})
+        user_id = str(body.userId)
+        existing = coll.find_one({"user_id": user_id})
 
         if existing:
             coll.update_one(
-                {"user_id": body.userId},
+                {"user_id": user_id},
                 {"$set": {
                     "age": body.age,
                     "gender": body.gender,
@@ -41,12 +42,12 @@ def save_patient_profile(body: PatientProfileRequest, db=Depends(get_db)):
                     "updated_at": now,
                 }},
             )
-            updated = coll.find_one({"user_id": body.userId})
-            print(f"✓ Profile UPDATED for user {body.userId}")
+            updated = coll.find_one({"user_id": user_id})
+            print(f"✓ Profile UPDATED for user {user_id}")
             return {"success": True, "message": "Profile updated", "data": doc_to_dict(updated)}
         else:
             doc = {
-                "user_id": body.userId,
+                "user_id": user_id,
                 "age": body.age,
                 "gender": body.gender,
                 "married": body.married,
@@ -57,8 +58,8 @@ def save_patient_profile(body: PatientProfileRequest, db=Depends(get_db)):
                 "updated_at": now,
             }
             coll.insert_one(doc)
-            created = coll.find_one({"user_id": body.userId})
-            print(f"✓ Profile CREATED for user {body.userId}")
+            created = coll.find_one({"user_id": user_id})
+            print(f"✓ Profile CREATED for user {user_id}")
             return {"success": True, "message": "Profile created", "data": doc_to_dict(created)}
     except Exception as e:
         print(f"Error saving profile: {e}")
@@ -66,11 +67,12 @@ def save_patient_profile(body: PatientProfileRequest, db=Depends(get_db)):
 
 
 @router.get("/profile/{user_id}")
-def get_patient_profile(user_id: int, db=Depends(get_db)):
+def get_patient_profile(user_id: str, db=Depends(get_db)):
     """Get patient profile by user ID."""
     try:
         coll = db[PATIENT_PROFILES]
-        profile = coll.find_one({"user_id": user_id})
+        # profile = coll.find_one({"user_id": user_id})
+        profile = coll.find_one({"user_id": user_id}) or coll.find_one({"user_id": int(user_id) if user_id.isdigit() else None})
 
         if not profile:
             return JSONResponse(
