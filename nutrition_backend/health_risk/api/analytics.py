@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 import traceback
 
 from db import get_db
@@ -10,16 +10,25 @@ from health_risk.services.calculateHealthStatus import get_bp_status, get_choles
 router = APIRouter(prefix="/api/analytics")
 
 
+def to_datetime(d: date) -> datetime:
+    """Convert a date to a midnight datetime for MongoDB queries."""
+    return datetime(d.year, d.month, d.day, 0, 0, 0)
+
+
 @router.get("/{user_id}")
-def get_health_analytics(user_id: int, period: str = Query(default="month"), db=Depends(get_db)):
+def get_health_analytics(user_id: str, period: str = Query(default="month"), db=Depends(get_db)):
     try:
-        end_date = date.today()
+        end_date = to_datetime(date.today())
         period_map = {
             "week": timedelta(days=7), "month": timedelta(days=30),
             "3months": timedelta(days=90), "6months": timedelta(days=180),
             "year": timedelta(days=365),
         }
-        start_date = end_date - period_map.get(period, timedelta(days=30)) if period in period_map else date(2000, 1, 1)
+        start_date = (
+            to_datetime(date.today() - period_map.get(period, timedelta(days=30)))
+            if period in period_map
+            else to_datetime(date(2000, 1, 1))
+        )
 
         coll = db[HEALTH_ASSESSMENTS]
         assessments = list(coll.find({
@@ -49,12 +58,10 @@ def get_health_analytics(user_id: int, period: str = Query(default="month"), db=
                 risk_data.append({"date": date_str, "level": a["risk_level"], "score": a.get("risk_score") or 0})
 
         latest, first = assessments[-1], assessments[0]
-        latest_date = latest.get("date")
-        first_date = first.get("date")
 
         return {
             "success": True, "period": period, "userId": user_id,
-            "dateRange": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+            "dateRange": {"start": start_date.strftime("%Y-%m-%d"), "end": end_date.strftime("%Y-%m-%d")},
             "statistics": {
                 "weight_change": round(latest.get("weight", 0) - first.get("weight", 0), 1) if latest.get("weight") and first.get("weight") else 0,
                 "avg_glucose": round(sum(a["glucose"] for a in assessments if a.get("glucose")) / len([a for a in assessments if a.get("glucose")]), 1) if any(a.get("glucose") for a in assessments) else 0,
@@ -74,9 +81,9 @@ def get_health_analytics(user_id: int, period: str = Query(default="month"), db=
 
 
 @router.get("/{user_id}/summary")
-def get_health_summary(user_id: int, db=Depends(get_db)):
+def get_health_summary(user_id: str, db=Depends(get_db)):
     try:
-        thirty_days_ago = date.today() - timedelta(days=30)
+        thirty_days_ago = to_datetime(date.today() - timedelta(days=30))
         coll = db[HEALTH_ASSESSMENTS]
 
         recent = list(coll.find({
@@ -88,14 +95,15 @@ def get_health_summary(user_id: int, db=Depends(get_db)):
             return JSONResponse(status_code=404, content={"success": False, "error": "No recent data found"})
 
         latest = recent[0]
-        week_ago = date.today() - timedelta(days=7)
+        week_ago = to_datetime(date.today() - timedelta(days=7))
         week_old = coll.find_one({
             "user_id": user_id,
             "date": {"$lte": week_ago},
         }, sort=[("date", -1)])
 
         latest_date = latest.get("date")
-        latest_date_str = latest_date.isoformat() if (latest_date and hasattr(latest_date, "isoformat")) else (str(latest_date) if latest_date is not None else None)
+        latest_date_str = latest_date.strftime("%Y-%m-%d") if latest_date else None
+
         return {
             "success": True,
             "summary": {
@@ -109,4 +117,5 @@ def get_health_summary(user_id: int, db=Depends(get_db)):
             }
         }
     except Exception as e:
+        traceback.print_exc()
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
