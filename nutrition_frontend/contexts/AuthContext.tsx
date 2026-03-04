@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { login as apiLogin, signup as apiSignup } from "../src/api/client";
@@ -13,12 +19,25 @@ type User = {
   last_name?: string;
 } | null;
 
+type AuthResponse = {
+  access_token: string;
+  user_id: string;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+};
+
 type AuthContextType = {
   token: string | null;
   user: User;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  signup: (firstName: string, lastName: string, username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<AuthResponse>;
+  signup: (
+    firstName: string,
+    lastName: string,
+    username: string,
+    password: string,
+  ) => Promise<AuthResponse>;
   logout: () => Promise<void>;
 };
 
@@ -52,7 +71,7 @@ export function AuthProvider({ children }: { children?: React.ReactNode }) {
   }, [loadStored]);
 
   const login = useCallback(async (username: string, password: string) => {
-    const res = await apiLogin(username, password);
+    const res = (await apiLogin(username, password)) as AuthResponse;
     const u = {
       user_id: res.user_id,
       username: res.username,
@@ -66,11 +85,22 @@ export function AuthProvider({ children }: { children?: React.ReactNode }) {
     setToken(res.access_token);
     setUser(u);
     router.replace("/Dashboard" as any);
+    return res;
   }, []);
 
   const signup = useCallback(
-    async (firstName: string, lastName: string, username: string, password: string) => {
-      const res = await apiSignup(firstName, lastName, username, password);
+    async (
+      firstName: string,
+      lastName: string,
+      username: string,
+      password: string,
+    ) => {
+      const res = (await apiSignup(
+        firstName,
+        lastName,
+        username,
+        password,
+      )) as AuthResponse;
       const u = {
         user_id: res.user_id,
         username: res.username,
@@ -84,8 +114,9 @@ export function AuthProvider({ children }: { children?: React.ReactNode }) {
       setToken(res.access_token);
       setUser(u);
       router.replace("/Dashboard" as any);
+      return res;
     },
-    []
+    [],
   );
 
   const logout = useCallback(async () => {
