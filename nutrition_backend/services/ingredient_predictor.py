@@ -7,11 +7,21 @@ This module handles the prediction of ingredients from meal images using ML mode
 import os
 import json
 import numpy as np
+from pathlib import Path
+import tempfile
+
+# Force CPU before importing TensorFlow to avoid predict() hanging in main process
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import tensorflow as tf
+tf.config.set_visible_devices([], "GPU")
+try:
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+    tf.config.threading.set_inter_op_parallelism_threads(1)
+except Exception:
+    pass
+
 from PIL import Image
 import io
-import tempfile
-from pathlib import Path
 
 
 def load_class_map(json_path: str = None) -> dict:
@@ -110,103 +120,54 @@ def make_ingredient_prediction(img, model, class_map=None):
     return predicted_labels, probs
 
 
+def _get_ingredient_model_path(model_path=None):
+    if model_path is not None:
+        return Path(model_path)
+    base_path = Path(__file__).parent.parent
+    for folder in ('ml-models', 'model', 'models'):
+        p = base_path / folder / 'ingredient_model_EfficientNetV2B0.keras'
+        if p.exists():
+            return p
+    return Path('/models/ingredient_model_EfficientNetV2B0.keras')
+
+
+def predict_ingredients_from_image_bytes(image_bytes: bytes, model_path=None, class_map_path: str = None) -> dict:
+    """
+    Predict ingredients from raw image bytes. Safe to call from a subprocess (ProcessPoolExecutor).
+    """
+    model_path = _get_ingredient_model_path(model_path)
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found at: {model_path}")
+    class_map = load_class_map(class_map_path) if class_map_path else get_class_map()
+    import warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message=".*optimizer.*")
+        image_model = tf.keras.models.load_model(str(model_path), compile=False)
+    temp_file_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+            temp_file.write(image_bytes)
+            temp_file_path = temp_file.name
+        user_img = tf.keras.utils.load_img(temp_file_path, target_size=(320, 320))
+        img_320 = user_img.resize((320, 320))
+        x_image_model = np.array(img_320)
+        x_image_model = np.expand_dims(x_image_model, axis=0)
+    finally:
+        if temp_file_path and os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+    preds, probs = make_ingredient_prediction(x_image_model, image_model, class_map)
+    return {'predictions': preds, 'probabilities': probs}
+
+
 def predict_ingredients_from_image(image_file, model_path: str = None, class_map: dict = None, class_map_path: str = None) -> dict:
     """
     Predict ingredients from an uploaded meal image.
-    
-    Args:
-        image_file: FastAPI UploadFile object containing the image
-        model_path: Path to the model file. If None, uses default path.
-        class_map: Dictionary mapping class indices to ingredient names.
-                   If None, uses default CLASS_MAP or loads from class_map_path.
-        class_map_path: Path to class encoding JSON file. Only used if class_map is None.
-        
-    Returns:
-        dict: Dictionary containing:
-            - predictions: List of top 5 predicted ingredient names
-            - probabilities: List of corresponding probabilities (0-100)
-            
-    Raises:
-        FileNotFoundError: If the model file or class encoding file is not found
-        ValueError: If the image cannot be processed
     """
-    if class_map is None:
-        if class_map_path is not None:
-            class_map = load_class_map(class_map_path)
-        else:
-            class_map = get_class_map()
-        
     try:
-        # Set default model path if not provided
-        if model_path is None:
-            # Use relative path from project root
-            base_path = Path(__file__).parent.parent
-            # Try 'ml-models' first, then 'model' (singular), then 'models' (plural)
-            model_path = base_path / 'ml-models' / 'ingredient_model_EfficientNetV2B0.keras'
-            
-            # Fallback to 'model' (singular) if 'ml-models' doesn't exist
-            if not model_path.exists():
-                model_path = base_path / 'model' / 'ingredient_model_EfficientNetV2B0.keras'
-            
-            # Fallback to 'models' (plural) if 'model' doesn't exist
-            if not model_path.exists():
-                model_path = base_path / 'models' / 'ingredient_model_EfficientNetV2B0.keras'
-            
-            # Final fallback to absolute path
-            if not model_path.exists():
-                model_path = Path('/models/ingredient_model_EfficientNetV2B0.keras')
-        
-        # Load the model
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Model file not found at: {model_path}")
-        
-        # Suppress optimizer warnings since we're only using the model for inference
-        import warnings
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning, message=".*optimizer.*")
-            image_model = tf.keras.models.load_model(str(model_path), compile=False)
-        
-        # Save uploaded file temporarily to disk so we can use tf.keras.utils.load_img
-        # This function requires a file path, not an UploadFile object
-        temp_file_path = None
-        try:
-            # Read the file content
-            image_bytes = image_file.file.read()
-            
-            # Reset file pointer for potential future reads
-            image_file.file.seek(0)
-            
-            # Create a temporary file to save the image
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
-                temp_file.write(image_bytes)
-                temp_file_path = temp_file.name
-            
-            # Load image using TensorFlow's utility function
-            # This automatically handles image decoding and resizing to target_size
-            user_img = tf.keras.utils.load_img(temp_file_path, target_size=(320, 320))
-            
-            img_320 = user_img.resize((320, 320))
-            x_image_model = np.array(img_320)
-            x_image_model = np.expand_dims(x_image_model, axis=0)
-
-            # The x_regression_models variable is already correctly sized for 320x320
-            x_regression_models = x_image_model.copy() # Simply assign the same processed image for consistency
-
-            print("Image processed for both models at 320x320.")
-        finally:
-            # Clean up temporary file
-            if temp_file_path is not None and os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
-        
-        # Make prediction
-        preds, probs = make_ingredient_prediction(x_image_model, image_model, class_map)
-        
-        return {
-            'predictions': preds,
-            'probabilities': probs
-        }
-        
+        image_bytes = image_file.file.read()
+        image_file.file.seek(0)
+        return predict_ingredients_from_image_bytes(image_bytes, model_path, class_map_path)
     except FileNotFoundError as e:
-        raise FileNotFoundError(f"Model file not found: {e}")
+        raise FileNotFoundError(f"Model file not found: {e}") from e
     except Exception as e:
-        raise ValueError(f"Error processing image: {str(e)}")
+        raise ValueError(f"Error processing image: {str(e)}") from e

@@ -7,11 +7,21 @@ from meal images using ML models.
 
 import os
 import numpy as np
-import tensorflow as tf
-from PIL import Image
-import io
 from pathlib import Path
 import tempfile
+
+# Force CPU before importing TensorFlow to avoid Metal/GPU and predict() hangs on macOS
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+import tensorflow as tf
+tf.config.set_visible_devices([], "GPU")
+try:
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+    tf.config.threading.set_inter_op_parallelism_threads(1)
+except Exception:
+    pass
+
+from PIL import Image
+import io
 
 def calories_from_macro(protein, carbs, fat):
     """Calculate calories from macronutrients."""
@@ -85,97 +95,56 @@ def make_portion_independent_prediction(img, model, total_mass):
         'mass': total_mass,
     }
 
+
+def _get_model_path(model_path=None):
+    if model_path is not None:
+        return Path(model_path)
+    base_path = Path(__file__).parent.parent
+    for folder in ('ml-models', 'model', 'models'):
+        p = base_path / folder / 'nutrient_model_portion_independent.keras'
+        if p.exists():
+            return p
+    return Path('/models/nutrient_model_portion_independent.keras')
+
+
+def predict_nutrients_from_image_bytes(image_bytes: bytes, model_path=None) -> dict:
+    """
+    Predict nutrients from raw image bytes. Safe to call from a subprocess (ProcessPoolExecutor).
+    Avoids TF model.predict() hanging when run in the main process.
+    """
+    model_path = _get_model_path(model_path)
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found at: {model_path}")
+    import warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message=".*optimizer.*")
+        portion_independent = tf.keras.models.load_model(str(model_path), compile=False)
+    temp_file_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+            temp_file.write(image_bytes)
+            temp_file_path = temp_file.name
+        user_img = tf.keras.utils.load_img(temp_file_path, target_size=(320, 320))
+        img_320 = user_img.resize((320, 320))
+        x_image_model = np.array(img_320)
+        x_image_model = np.expand_dims(x_image_model, axis=0)
+    finally:
+        if temp_file_path and os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+    return make_portion_independent_prediction(x_image_model, portion_independent, 100)
+
+
 def predict_nutrients_from_image(image_file, model_path: str = None) -> dict:
     """
     Predict nutrients from an uploaded meal image.
-    
-    Args:
-        image_file: FastAPI UploadFile object containing the image
-        model_path: Path to the model file. If None, uses default path.
-        
-    Returns:
-        dict: Dictionary containing predictions with protein, fat, carbs, calories, and mass
-        
-    Raises:
-        FileNotFoundError: If the model file is not found
-        ValueError: If the image cannot be processed
     """
     try:
-        # Set default model path if not provided
-        if model_path is None:
-            # Use relative path from project root
-            base_path = Path(__file__).parent.parent
-            # Try 'ml-models' first, then 'model' (singular), then 'models' (plural)
-            model_path = base_path / 'ml-models' / 'nutrient_model_portion_independent.keras'
-            
-            # Fallback to 'model' (singular) if 'ml-models' doesn't exist
-            if not model_path.exists():
-                model_path = base_path / 'model' / 'nutrient_model_portion_independent.keras'
-            
-            # Fallback to 'models' (plural) if 'model' doesn't exist
-            if not model_path.exists():
-                model_path = base_path / 'models' / 'nutrient_model_portion_independent.keras'
-            
-            # Final fallback to absolute path
-            if not model_path.exists():
-                model_path = Path('/models/nutrient_model_portion_independent.keras')
-        
-        # Load the model
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Model file not found at: {model_path}")
-        
-        # Suppress optimizer warnings since we're only using the model for inference
-        import warnings
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning, message=".*optimizer.*")
-            portion_independent = tf.keras.models.load_model(str(model_path), compile=False)
-        
-        # Save uploaded file temporarily to disk so we can use tf.keras.utils.load_img
-        # This function requires a file path, not an UploadFile object
-        temp_file_path = None
-        try:
-            # Read the file content
-            image_bytes = image_file.file.read()
-            
-            # Reset file pointer for potential future reads
-            image_file.file.seek(0)
-            
-            # Create a temporary file to save the image
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
-                temp_file.write(image_bytes)
-                temp_file_path = temp_file.name
-            
-            # Load image using TensorFlow's utility function
-            # This automatically handles image decoding and resizing to target_size
-            user_img = tf.keras.utils.load_img(temp_file_path, target_size=(320, 320))
-            
-            img_320 = user_img.resize((320, 320))
-            x_image_model = np.array(img_320)
-            x_image_model = np.expand_dims(x_image_model, axis=0)
-
-            # The x_regression_models variable is already correctly sized for 320x320
-            x_regression_models = x_image_model.copy() # Simply assign the same processed image for consistency
-
-            print("Image processed for both models at 320x320.")
-        finally:
-            # Clean up temporary file
-            if temp_file_path is not None and os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
-        
-        # Make prediction
-        prediction_output = make_portion_independent_prediction(x_image_model, portion_independent, 100)
-        
-        # prediction_output is a dictionary with the following keys:
-        # 'protein': the predicted protein in grams
-        # 'fat': the predicted fat in grams
-        # 'carbs': the predicted carbs in grams
-        # 'calories': the predicted calories
-        # 'mass': the mass of the item (100g in this case)
-        return prediction_output
-        
+        image_bytes = image_file.file.read()
+        image_file.file.seek(0)
+        return predict_nutrients_from_image_bytes(image_bytes, model_path)
     except FileNotFoundError as e:
-        raise FileNotFoundError(f"Model file not found: {e}")
+        raise FileNotFoundError(f"Model file not found: {e}") from e
     except Exception as e:
-        raise ValueError(f"Error processing image: {str(e)}")
+        raise ValueError(f"Error processing image: {str(e)}") from e
 
 
