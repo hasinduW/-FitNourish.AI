@@ -1,0 +1,1190 @@
+[
+  {
+    "id": "basket_001",
+    "user_location": {
+      "lat": 6.8523,
+      "lng": 79.8653
+    },
+    "items": [
+      {
+        "canonical_group_id": 2,
+        "candidate_clean_product_ids": [
+          117,
+          729
+        ],
+        "name": "chilli garlic sauce",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 48,
+        "candidate_clean_product_ids": [
+          5653,
+          5654
+        ],
+        "name": "tomatoes 500g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_002",
+    "user_location": {
+      "lat": 6.9338,
+      "lng": 79.8478
+    },
+    "items": [
+      {
+        "canonical_group_id": 15,
+        "candidate_clean_product_ids": [
+          160,
+          734
+        ],
+        "name": "vegetarian chilli paste",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 9,
+        "candidate_clean_product_ids": [
+          145,
+          1248
+        ],
+        "name": "malay pickle",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 48,
+        "candidate_clean_product_ids": [
+          5653,
+          5654
+        ],
+        "name": "tomatoes 500g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_003",
+    "user_location": {
+      "lat": 6.9338,
+      "lng": 79.8478
+    },
+    "items": [
+      {
+        "canonical_group_id": 38,
+        "candidate_clean_product_ids": [
+          5647,
+          5648
+        ],
+        "name": "onions 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 28,
+        "candidate_clean_product_ids": [
+          5659,
+          5660
+        ],
+        "name": "cream crackers 125g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_004",
+    "user_location": {
+      "lat": 6.9147,
+      "lng": 79.8776
+    },
+    "items": [
+      {
+        "canonical_group_id": 6,
+        "candidate_clean_product_ids": [
+          115,
+          1219
+        ],
+        "name": "maldive fish",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 14,
+        "candidate_clean_product_ids": [
+          159,
+          668
+        ],
+        "name": "green gram dhal",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_005",
+    "user_location": {
+      "lat": 6.9094,
+      "lng": 79.909
+    },
+    "items": [
+      {
+        "canonical_group_id": 36,
+        "candidate_clean_product_ids": [
+          5627,
+          5628
+        ],
+        "name": "milk powder 400g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 13,
+        "candidate_clean_product_ids": [
+          156,
+          1209
+        ],
+        "name": "seeni sambol",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_006",
+    "user_location": {
+      "lat": 6.9338,
+      "lng": 79.8478
+    },
+    "items": [
+      {
+        "canonical_group_id": 15,
+        "candidate_clean_product_ids": [
+          160,
+          734
+        ],
+        "name": "vegetarian chilli paste",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 29,
+        "candidate_clean_product_ids": [
+          5623,
+          5624
+        ],
+        "name": "curry powder 100g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 38,
+        "candidate_clean_product_ids": [
+          5647,
+          5648
+        ],
+        "name": "onions 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 18,
+        "candidate_clean_product_ids": [
+          5641,
+          5642
+        ],
+        "name": "brown bread 450g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 52,
+        "candidate_clean_product_ids": [
+          5639,
+          5640
+        ],
+        "name": "white bread 450g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_007",
+    "user_location": {
+      "lat": 6.8523,
+      "lng": 79.8653
+    },
+    "items": [
+      {
+        "canonical_group_id": 45,
+        "candidate_clean_product_ids": [
+          5667,
+          5668
+        ],
+        "name": "spaghetti 400g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 28,
+        "candidate_clean_product_ids": [
+          5659,
+          5660
+        ],
+        "name": "cream crackers 125g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 22,
+        "candidate_clean_product_ids": [
+          5621,
+          5622
+        ],
+        "name": "chilli powder 100g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_008",
+    "user_location": {
+      "lat": 6.9338,
+      "lng": 79.8478
+    },
+    "items": [
+      {
+        "canonical_group_id": 14,
+        "candidate_clean_product_ids": [
+          159,
+          668
+        ],
+        "name": "green gram dhal",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 49,
+        "candidate_clean_product_ids": [
+          5625,
+          5626
+        ],
+        "name": "turmeric powder 50g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 22,
+        "candidate_clean_product_ids": [
+          5621,
+          5622
+        ],
+        "name": "chilli powder 100g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_009",
+    "user_location": {
+      "lat": 6.8523,
+      "lng": 79.8653
+    },
+    "items": [
+      {
+        "canonical_group_id": 25,
+        "candidate_clean_product_ids": [
+          5631,
+          5632
+        ],
+        "name": "coffee 100g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 7,
+        "candidate_clean_product_ids": [
+          125,
+          684
+        ],
+        "name": "garlic paste",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_010",
+    "user_location": {
+      "lat": 6.9094,
+      "lng": 79.909
+    },
+    "items": [
+      {
+        "canonical_group_id": 39,
+        "candidate_clean_product_ids": [
+          5665,
+          5666
+        ],
+        "name": "pasta 400g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 17,
+        "candidate_clean_product_ids": [
+          5597,
+          5598
+        ],
+        "name": "basmati rice 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 52,
+        "candidate_clean_product_ids": [
+          5639,
+          5640
+        ],
+        "name": "white bread 450g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 3,
+        "candidate_clean_product_ids": [
+          24,
+          1266
+        ],
+        "name": "red dhal",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_011",
+    "user_location": {
+      "lat": 6.8523,
+      "lng": 79.8653
+    },
+    "items": [
+      {
+        "canonical_group_id": 35,
+        "candidate_clean_product_ids": [
+          5657,
+          5658
+        ],
+        "name": "leeks 250g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 8,
+        "candidate_clean_product_ids": [
+          143,
+          683
+        ],
+        "name": "kidney beans",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 25,
+        "candidate_clean_product_ids": [
+          5631,
+          5632
+        ],
+        "name": "coffee 100g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 6,
+        "candidate_clean_product_ids": [
+          115,
+          1219
+        ],
+        "name": "maldive fish",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 36,
+        "candidate_clean_product_ids": [
+          5627,
+          5628
+        ],
+        "name": "milk powder 400g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_012",
+    "user_location": {
+      "lat": 6.9338,
+      "lng": 79.8478
+    },
+    "items": [
+      {
+        "canonical_group_id": 37,
+        "candidate_clean_product_ids": [
+          5633,
+          5634
+        ],
+        "name": "oats 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 13,
+        "candidate_clean_product_ids": [
+          156,
+          1209
+        ],
+        "name": "seeni sambol",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 46,
+        "candidate_clean_product_ids": [
+          5619,
+          5620
+        ],
+        "name": "sugar 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 5,
+        "candidate_clean_product_ids": [
+          111,
+          1234
+        ],
+        "name": "chilli sauce",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_013",
+    "user_location": {
+      "lat": 6.9147,
+      "lng": 79.8776
+    },
+    "items": [
+      {
+        "canonical_group_id": 50,
+        "candidate_clean_product_ids": [
+          5615,
+          5616
+        ],
+        "name": "vegetable oil 1l",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 19,
+        "candidate_clean_product_ids": [
+          5655,
+          5656
+        ],
+        "name": "cabbage 1",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 6,
+        "candidate_clean_product_ids": [
+          115,
+          1219
+        ],
+        "name": "maldive fish",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_014",
+    "user_location": {
+      "lat": 6.9003,
+      "lng": 79.8536
+    },
+    "items": [
+      {
+        "canonical_group_id": 25,
+        "candidate_clean_product_ids": [
+          5631,
+          5632
+        ],
+        "name": "coffee 100g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 18,
+        "candidate_clean_product_ids": [
+          5641,
+          5642
+        ],
+        "name": "brown bread 450g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_015",
+    "user_location": {
+      "lat": 6.9094,
+      "lng": 79.909
+    },
+    "items": [
+      {
+        "canonical_group_id": 11,
+        "candidate_clean_product_ids": [
+          147,
+          672
+        ],
+        "name": "toor dhal",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 24,
+        "candidate_clean_product_ids": [
+          5613,
+          5614
+        ],
+        "name": "coconut oil 1l",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 23,
+        "candidate_clean_product_ids": [
+          5661,
+          5662
+        ],
+        "name": "chocolate biscuits 200g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 14,
+        "candidate_clean_product_ids": [
+          159,
+          668
+        ],
+        "name": "green gram dhal",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_016",
+    "user_location": {
+      "lat": 6.8679,
+      "lng": 79.8891
+    },
+    "items": [
+      {
+        "canonical_group_id": 45,
+        "candidate_clean_product_ids": [
+          5667,
+          5668
+        ],
+        "name": "spaghetti 400g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 44,
+        "candidate_clean_product_ids": [
+          5593,
+          5594
+        ],
+        "name": "samba rice 5kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 42,
+        "candidate_clean_product_ids": [
+          5595,
+          5596
+        ],
+        "name": "red rice 5kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 5,
+        "candidate_clean_product_ids": [
+          111,
+          1234
+        ],
+        "name": "chilli sauce",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_017",
+    "user_location": {
+      "lat": 6.9147,
+      "lng": 79.8776
+    },
+    "items": [
+      {
+        "canonical_group_id": 35,
+        "candidate_clean_product_ids": [
+          5657,
+          5658
+        ],
+        "name": "leeks 250g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 47,
+        "candidate_clean_product_ids": [
+          5629,
+          5630
+        ],
+        "name": "tea bags 100",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 16,
+        "candidate_clean_product_ids": [
+          5601,
+          5602
+        ],
+        "name": "atta flour 1kg",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_018",
+    "user_location": {
+      "lat": 6.9147,
+      "lng": 79.8776
+    },
+    "items": [
+      {
+        "canonical_group_id": 25,
+        "candidate_clean_product_ids": [
+          5631,
+          5632
+        ],
+        "name": "coffee 100g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 18,
+        "candidate_clean_product_ids": [
+          5641,
+          5642
+        ],
+        "name": "brown bread 450g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 41,
+        "candidate_clean_product_ids": [
+          5603,
+          5604
+        ],
+        "name": "red dhal 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 45,
+        "candidate_clean_product_ids": [
+          5667,
+          5668
+        ],
+        "name": "spaghetti 400g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 36,
+        "candidate_clean_product_ids": [
+          5627,
+          5628
+        ],
+        "name": "milk powder 400g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_019",
+    "user_location": {
+      "lat": 6.9338,
+      "lng": 79.8478
+    },
+    "items": [
+      {
+        "canonical_group_id": 54,
+        "candidate_clean_product_ids": [
+          5645,
+          5646
+        ],
+        "name": "yoghurt 500g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 50,
+        "candidate_clean_product_ids": [
+          5615,
+          5616
+        ],
+        "name": "vegetable oil 1l",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 4,
+        "candidate_clean_product_ids": [
+          109,
+          1217
+        ],
+        "name": "tomato sauce",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 15,
+        "candidate_clean_product_ids": [
+          160,
+          734
+        ],
+        "name": "vegetarian chilli paste",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_020",
+    "user_location": {
+      "lat": 6.8679,
+      "lng": 79.8891
+    },
+    "items": [
+      {
+        "canonical_group_id": 26,
+        "candidate_clean_product_ids": [
+          5635,
+          5636
+        ],
+        "name": "cornflakes 500g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 18,
+        "candidate_clean_product_ids": [
+          5641,
+          5642
+        ],
+        "name": "brown bread 450g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 5,
+        "candidate_clean_product_ids": [
+          111,
+          1234
+        ],
+        "name": "chilli sauce",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 14,
+        "candidate_clean_product_ids": [
+          159,
+          668
+        ],
+        "name": "green gram dhal",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_021",
+    "user_location": {
+      "lat": 6.9094,
+      "lng": 79.909
+    },
+    "items": [
+      {
+        "canonical_group_id": 14,
+        "candidate_clean_product_ids": [
+          159,
+          668
+        ],
+        "name": "green gram dhal",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 42,
+        "candidate_clean_product_ids": [
+          5595,
+          5596
+        ],
+        "name": "red rice 5kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 32,
+        "candidate_clean_product_ids": [
+          5605,
+          5606
+        ],
+        "name": "green gram 500g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 26,
+        "candidate_clean_product_ids": [
+          5635,
+          5636
+        ],
+        "name": "cornflakes 500g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_022",
+    "user_location": {
+      "lat": 6.8679,
+      "lng": 79.8891
+    },
+    "items": [
+      {
+        "canonical_group_id": 10,
+        "candidate_clean_product_ids": [
+          146,
+          737
+        ],
+        "name": "sinhala pickle",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 17,
+        "candidate_clean_product_ids": [
+          5597,
+          5598
+        ],
+        "name": "basmati rice 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 9,
+        "candidate_clean_product_ids": [
+          145,
+          1248
+        ],
+        "name": "malay pickle",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 16,
+        "candidate_clean_product_ids": [
+          5601,
+          5602
+        ],
+        "name": "atta flour 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 48,
+        "candidate_clean_product_ids": [
+          5653,
+          5654
+        ],
+        "name": "tomatoes 500g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_023",
+    "user_location": {
+      "lat": 6.8523,
+      "lng": 79.8653
+    },
+    "items": [
+      {
+        "canonical_group_id": 48,
+        "candidate_clean_product_ids": [
+          5653,
+          5654
+        ],
+        "name": "tomatoes 500g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 38,
+        "candidate_clean_product_ids": [
+          5647,
+          5648
+        ],
+        "name": "onions 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 28,
+        "candidate_clean_product_ids": [
+          5659,
+          5660
+        ],
+        "name": "cream crackers 125g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 26,
+        "candidate_clean_product_ids": [
+          5635,
+          5636
+        ],
+        "name": "cornflakes 500g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_024",
+    "user_location": {
+      "lat": 6.9338,
+      "lng": 79.8478
+    },
+    "items": [
+      {
+        "canonical_group_id": 9,
+        "candidate_clean_product_ids": [
+          145,
+          1248
+        ],
+        "name": "malay pickle",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 33,
+        "candidate_clean_product_ids": [
+          5663,
+          5664
+        ],
+        "name": "instant noodles 5 pack",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 32,
+        "candidate_clean_product_ids": [
+          5605,
+          5606
+        ],
+        "name": "green gram 500g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_025",
+    "user_location": {
+      "lat": 6.9094,
+      "lng": 79.909
+    },
+    "items": [
+      {
+        "canonical_group_id": 8,
+        "candidate_clean_product_ids": [
+          143,
+          683
+        ],
+        "name": "kidney beans",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 10,
+        "candidate_clean_product_ids": [
+          146,
+          737
+        ],
+        "name": "sinhala pickle",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_026",
+    "user_location": {
+      "lat": 6.8679,
+      "lng": 79.8891
+    },
+    "items": [
+      {
+        "canonical_group_id": 51,
+        "candidate_clean_product_ids": [
+          5599,
+          5600
+        ],
+        "name": "wheat flour 1kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 44,
+        "candidate_clean_product_ids": [
+          5593,
+          5594
+        ],
+        "name": "samba rice 5kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 28,
+        "candidate_clean_product_ids": [
+          5659,
+          5660
+        ],
+        "name": "cream crackers 125g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_027",
+    "user_location": {
+      "lat": 6.9003,
+      "lng": 79.8536
+    },
+    "items": [
+      {
+        "canonical_group_id": 25,
+        "candidate_clean_product_ids": [
+          5631,
+          5632
+        ],
+        "name": "coffee 100g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 39,
+        "candidate_clean_product_ids": [
+          5665,
+          5666
+        ],
+        "name": "pasta 400g",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_028",
+    "user_location": {
+      "lat": 6.9338,
+      "lng": 79.8478
+    },
+    "items": [
+      {
+        "canonical_group_id": 36,
+        "candidate_clean_product_ids": [
+          5627,
+          5628
+        ],
+        "name": "milk powder 400g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 1,
+        "candidate_clean_product_ids": [
+          1028,
+          1277
+        ],
+        "name": "soya meat chicken",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 44,
+        "candidate_clean_product_ids": [
+          5593,
+          5594
+        ],
+        "name": "samba rice 5kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 47,
+        "candidate_clean_product_ids": [
+          5629,
+          5630
+        ],
+        "name": "tea bags 100",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_029",
+    "user_location": {
+      "lat": 6.8523,
+      "lng": 79.8653
+    },
+    "items": [
+      {
+        "canonical_group_id": 50,
+        "candidate_clean_product_ids": [
+          5615,
+          5616
+        ],
+        "name": "vegetable oil 1l",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 42,
+        "candidate_clean_product_ids": [
+          5595,
+          5596
+        ],
+        "name": "red rice 5kg",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 22,
+        "candidate_clean_product_ids": [
+          5621,
+          5622
+        ],
+        "name": "chilli powder 100g",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 8,
+        "candidate_clean_product_ids": [
+          143,
+          683
+        ],
+        "name": "kidney beans",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "id": "basket_030",
+    "user_location": {
+      "lat": 6.8679,
+      "lng": 79.8891
+    },
+    "items": [
+      {
+        "canonical_group_id": 11,
+        "candidate_clean_product_ids": [
+          147,
+          672
+        ],
+        "name": "toor dhal",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 30,
+        "candidate_clean_product_ids": [
+          5637,
+          5638
+        ],
+        "name": "eggs 10 pack",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 1,
+        "candidate_clean_product_ids": [
+          1028,
+          1277
+        ],
+        "name": "soya meat chicken",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 47,
+        "candidate_clean_product_ids": [
+          5629,
+          5630
+        ],
+        "name": "tea bags 100",
+        "qty": 1
+      },
+      {
+        "canonical_group_id": 17,
+        "candidate_clean_product_ids": [
+          5597,
+          5598
+        ],
+        "name": "basmati rice 1kg",
+        "qty": 1
+      }
+    ]
+  }
+]

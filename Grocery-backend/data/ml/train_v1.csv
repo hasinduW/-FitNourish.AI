@@ -1,0 +1,279 @@
+clean_product_id,store,normalized_name,category_l1,category_l2
+2,keells,drinking water,beverages,water
+3,keells,marie biscuit,snacks,biscuits
+4,keells,mustard seeds,spices,spices
+5,keells,dill seeds,spices,spices
+6,keells,nice biscuit,snacks,biscuits
+7,keells,custard cream biscuit,snacks,biscuits
+8,keells,papadam,staples,papadams
+9,keells,chocolate cream biscuit,snacks,biscuits
+11,keells,vanilla wafers,snacks,biscuits
+12,keells,table salt,staples,salt
+15,keells,coriander seeds,spices,spices
+16,keells,goraka,spices,spices
+17,keells,cream cracker,snacks,biscuits
+18,keells,drinking water,beverages,water
+19,keells,corn flour,staples,flour
+21,keells,chilli pieces,spices,spices
+22,keells,chilli powder,spices,spices
+23,keells,green peas,staples,lentils_pulses
+24,keells,red dhal,staples,lentils_pulses
+26,keells,raw curry powder,spices,spices
+27,keells,maldive fish powder mix,protein,dried_fish
+35,keells,roasted curry powder,spices,spices
+39,keells,green peas,staples,lentils_pulses
+40,keells,wheat flour,staples,flour
+50,keells,table salt,staples,salt
+51,keells,soya sauce,condiments,sauces
+53,keells,soya beans,staples,lentils_pulses
+57,keells,gram dhall,staples,lentils_pulses
+59,keells,bbq chicken tikka mix,spices,spice_mixes
+60,keells,tea green box,beverages,tea
+64,keells,tea bopf,beverages,tea
+66,keells,atta flour,staples,flour
+67,keells,tea bopf box,beverages,tea
+72,keells,mustard cream,spices,spices
+76,keells,red dhal,staples,lentils_pulses
+78,keells,toilet bowl cleaner power,fats,oils
+79,keells,natural coconut water vinegar,beverages,water
+81,keells,toilet bowl cleaner floral,fats,oils
+85,keells,drinking water,beverages,water
+86,keells,dates,fruits,dried_fruits
+90,keells,red beans,staples,lentils_pulses
+91,keells,chilli powder,spices,spices
+92,keells,chilli pieces,spices,spices
+93,keells,cake flour,staples,flour
+94,keells,semolina,staples,flour
+95,keells,popcorn,snacks,popcorn
+96,keells,whole chilli,spices,spices
+98,keells,pepper powder,spices,spices
+101,keells,pepper seeds,spices,spices
+104,keells,soya sauce,condiments,sauces
+105,keells,raw curry powder,spices,spices
+107,keells,ginger flavoured tea box,beverages,tea
+108,keells,tomato sauce,condiments,sauces
+110,keells,chilli sauce,spices,spices
+113,keells,roasted curry powder,spices,spices
+114,keells,maldive fish,protein,dried_fish
+116,keells,chilli garlic sauce,spices,spices
+121,keells,konde gram,staples,lentils_pulses
+127,keells,whipping cream powder,dairy,cream
+134,keells,dates,fruits,dried_fruits
+138,keells,foil container,fats,oils
+143,keells,foil container,fats,oils
+144,keells,kidney beans,staples,lentils_pulses
+146,keells,malay pickle,condiments,pickles
+147,keells,sinhala pickle,condiments,pickles
+149,keells,toor dhal,staples,lentils_pulses
+150,keells,tomato sauce,condiments,sauces
+151,keells,chilli sauce,spices,spices
+156,keells,aluminium foil 25ft,fats,oils
+157,keells,chilli paste,spices,spices
+159,keells,tea bopf,beverages,tea
+160,keells,pistachios roasted salted,staples,salt
+161,keells,green gram dhal,staples,lentils_pulses
+162,keells,vegetarian chilli paste,spices,spices
+164,keells,soy milk powder packet,dairy,milk_powder
+165,keells,tea kahata,beverages,tea
+180,cargills,heinz baked beans in tomato sauce,staples,lentils_pulses
+194,cargills,mc currie chinese chilli paste,spices,spices
+201,cargills,kist tomato sauce,condiments,sauces
+202,cargills,kist tomato sauce,condiments,sauces
+203,cargills,md maldive fish sambol,protein,dried_fish
+204,cargills,kist chilli paste,spices,spices
+219,cargills,pasta roma pasta sauce chilli,spices,spices
+231,cargills,md malay pickle,condiments,pickles
+236,cargills,master spice chilli paste,spices,spices
+237,cargills,md mixed pickle,condiments,pickles
+251,cargills,red dhal,staples,lentils_pulses
+258,cargills,chick peas,staples,lentils_pulses
+266,cargills,kist tomato sauce squeezable,condiments,sauces
+274,cargills,my choice gram dhal packet,staples,lentils_pulses
+286,cargills,edinborough tomato sauce,condiments,sauces
+291,cargills,marmite free munchee cream cracker,snacks,biscuits
+293,cargills,md tomato sauce,condiments,sauces
+316,cargills,freelan meat curry powder mix,spices,spices
+322,cargills,sab dried katta,staples,flour
+330,cargills,hosen baked beans,staples,lentils_pulses
+342,cargills,catch green gram dhal,staples,lentils_pulses
+343,cargills,dadd s chinese chilli paste,spices,spices
+345,cargills,anchor red split lentils,staples,lentils_pulses
+346,cargills,catch toor dhal,staples,lentils_pulses
+349,cargills,md chilli sauce,spices,spices
+355,cargills,md katta sambol,staples,flour
+356,cargills,sethum kidney beans,staples,lentils_pulses
+366,cargills,kist tomato sauce,condiments,sauces
+367,cargills,mbf katta dry fish,staples,flour
+375,cargills,mc currie maldive fish sambol,protein,dried_fish
+389,cargills,kist chilli paste,spices,spices
+392,cargills,catch baked beans,staples,lentils_pulses
+401,cargills,dad s garden garlic chilli sauce,spices,spices
+404,cargills,dad s garden lemon mustard sauce,spices,spices
+405,cargills,dad s garden thai chilli sauce,spices,spices
+406,cargills,zensai vegetarian chilli paste,spices,spices
+407,cargills,ma s yellow rice paste,staples,rice
+409,cargills,mc currie sinhala pickle,condiments,pickles
+410,cargills,dads garden steak grill sauce,beverages,tea
+418,cargills,md hot chilli sauce,spices,spices
+424,cargills,kist tomato sauce,condiments,sauces
+429,cargills,suree sweet chilli sauce,spices,spices
+431,cargills,mity green peas,staples,lentils_pulses
+434,cargills,kernell s corn rice,staples,rice
+441,cargills,koluu fish mustard curry,spices,spices
+444,cargills,master spice vegetarian chilli paste,spices,spices
+454,cargills,md green chilli sauce,spices,spices
+457,cargills,oateo oat flour,staples,flour
+478,cargills,happy hen eggs xl,protein,eggs
+480,cargills,my choice red dhal packet,staples,lentils_pulses
+481,cargills,happy hen eggs m,protein,eggs
+482,cargills,my choice green gram packet,staples,lentils_pulses
+483,cargills,my choice chick peas packet,staples,lentils_pulses
+484,cargills,nel farm brown eggs,protein,eggs
+485,cargills,my choice red dhal packet,staples,lentils_pulses
+488,cargills,maggi devilled chilli noodles,spices,spices
+489,cargills,my choice chick peas packet,staples,lentils_pulses
+492,cargills,havana brown egg 10.,protein,eggs
+506,cargills,f w jalapeno peppers,spices,spices
+507,cargills,arogya farm omega 3 dha rich eggs medium,protein,eggs
+512,cargills,koluu beef pepper curry,spices,spices
+516,cargills,kernell s corn rice,staples,rice
+521,cargills,havana brown egg medium,protein,eggs
+522,cargills,tess yellowfin tuna fish in chilli oil,fats,oils
+680,keells,aluminium foil 25ft,fats,oils
+729,keells,natural coconut water vinegar,beverages,water
+752,keells,cumin powder,spices,spices
+770,keells,cumin seeds,spices,spices
+776,keells,toilet bowl cleaner pine,fats,oils
+808,keells,tea kahata,beverages,tea
+826,keells,tea bopf,beverages,tea
+845,keells,foil container,fats,oils
+854,keells,aluminium foil 25ft,fats,oils
+877,cargills,heinz baked beans in tomato sauce,staples,lentils_pulses
+891,cargills,mc currie chinese chilli paste,spices,spices
+898,cargills,kist tomato sauce,condiments,sauces
+899,cargills,kist tomato sauce,condiments,sauces
+900,cargills,md maldive fish sambol,protein,dried_fish
+901,cargills,kist chilli paste,spices,spices
+916,cargills,pasta roma pasta sauce chilli,spices,spices
+928,cargills,md malay pickle,condiments,pickles
+933,cargills,master spice chilli paste,spices,spices
+934,cargills,md mixed pickle,condiments,pickles
+948,cargills,red dhal,staples,lentils_pulses
+955,cargills,chick peas,staples,lentils_pulses
+963,cargills,kist tomato sauce squeezable,condiments,sauces
+971,cargills,my choice gram dhal packet,staples,lentils_pulses
+983,cargills,edinborough tomato sauce,condiments,sauces
+990,cargills,md tomato sauce,condiments,sauces
+1013,cargills,freelan meat curry powder mix,spices,spices
+1019,cargills,sab dried katta,staples,flour
+1027,cargills,hosen baked beans,staples,lentils_pulses
+1039,cargills,catch green gram dhal,staples,lentils_pulses
+1040,cargills,dadd s chinese chilli paste,spices,spices
+1042,cargills,anchor red split lentils,staples,lentils_pulses
+1043,cargills,catch toor dhal,staples,lentils_pulses
+1046,cargills,md chilli sauce,spices,spices
+1052,cargills,md katta sambol,staples,flour
+1053,cargills,sethum kidney beans,staples,lentils_pulses
+1063,cargills,kist tomato sauce,condiments,sauces
+1064,cargills,mbf katta dry fish,staples,flour
+1072,cargills,mc currie maldive fish sambol,protein,dried_fish
+1086,cargills,kist chilli paste,spices,spices
+1089,cargills,catch baked beans,staples,lentils_pulses
+1098,cargills,dad s garden garlic chilli sauce,spices,spices
+1101,cargills,dad s garden lemon mustard sauce,spices,spices
+1102,cargills,dad s garden thai chilli sauce,spices,spices
+1103,cargills,zensai vegetarian chilli paste,spices,spices
+1104,cargills,ma s yellow rice paste,staples,rice
+1106,cargills,mc currie sinhala pickle,condiments,pickles
+1107,cargills,dads garden steak grill sauce,beverages,tea
+1115,cargills,md hot chilli sauce,spices,spices
+1121,cargills,kist tomato sauce,condiments,sauces
+1126,cargills,suree sweet chilli sauce,spices,spices
+1128,cargills,mity green peas,staples,lentils_pulses
+1131,cargills,kernell s corn rice,staples,rice
+1138,cargills,koluu fish mustard curry,spices,spices
+1141,cargills,master spice vegetarian chilli paste,spices,spices
+1151,cargills,md green chilli sauce,spices,spices
+1154,cargills,oateo oat flour,staples,flour
+1175,cargills,happy hen eggs xl,protein,eggs
+1177,cargills,my choice red dhal packet,staples,lentils_pulses
+1178,cargills,happy hen eggs m,protein,eggs
+1179,cargills,my choice green gram packet,staples,lentils_pulses
+1180,cargills,my choice chick peas packet,staples,lentils_pulses
+1181,cargills,nel farm brown eggs,protein,eggs
+1182,cargills,my choice red dhal packet,staples,lentils_pulses
+1185,cargills,maggi devilled chilli noodles,spices,spices
+1186,cargills,my choice chick peas packet,staples,lentils_pulses
+1203,cargills,f w jalapeno peppers,spices,spices
+1204,cargills,arogya farm omega 3 dha rich eggs medium,protein,eggs
+1209,cargills,koluu beef pepper curry,spices,spices
+1213,cargills,kernell s corn rice,staples,rice
+1218,cargills,havana brown egg medium,protein,eggs
+1219,cargills,tess yellowfin tuna fish in chilli oil,fats,oils
+1233,cargills,heinz baked beans in tomato sauce,staples,lentils_pulses
+1245,cargills,md tomato sauce,condiments,sauces
+1255,cargills,kist tomato sauce,condiments,sauces
+1256,cargills,kist chilli paste,spices,spices
+1264,cargills,mc currie maldive fish sambol,protein,dried_fish
+1276,cargills,md mixed pickle,condiments,pickles
+1286,cargills,red dhal,staples,lentils_pulses
+1287,cargills,happy hen eggs xl,protein,eggs
+1291,cargills,my choice red dhal packet,staples,lentils_pulses
+1293,cargills,chick peas,staples,lentils_pulses
+1294,cargills,happy hen eggs m,protein,eggs
+1295,cargills,my choice green gram packet,staples,lentils_pulses
+1299,cargills,my choice chick peas packet,staples,lentils_pulses
+1309,cargills,my choice gram dhal packet,staples,lentils_pulses
+1316,cargills,my choice red dhal packet,staples,lentils_pulses
+1317,cargills,kist tomato sauce squeezable,condiments,sauces
+1320,cargills,edinborough tomato sauce,condiments,sauces
+1358,cargills,my choice chick peas packet,staples,lentils_pulses
+1368,cargills,hosen baked beans,staples,lentils_pulses
+1371,cargills,kist tomato sauce,condiments,sauces
+1377,cargills,my choice green gram packet,staples,lentils_pulses
+1389,cargills,freelan meat curry powder mix,spices,spices
+1391,cargills,md chilli sauce,spices,spices
+1392,cargills,my choice jumbo red dhal,staples,lentils_pulses
+1397,cargills,mbf katta dry fish,staples,flour
+1398,cargills,mc currie chinese chilli paste,spices,spices
+1405,cargills,sab dried katta,staples,flour
+1406,cargills,pasta roma pasta sauce chilli,spices,spices
+1419,cargills,dadd s chinese chilli paste,spices,spices
+1421,cargills,sethum kidney beans,staples,lentils_pulses
+1426,cargills,catch toor dhal,staples,lentils_pulses
+1429,cargills,ma s yellow rice paste,staples,rice
+1431,cargills,md katta sambol,staples,flour
+1435,cargills,catch green gram dhal,staples,lentils_pulses
+1446,cargills,md maldive fish sambol,protein,dried_fish
+1448,cargills,kist tomato sauce,condiments,sauces
+1462,cargills,dad s garden garlic chilli sauce,spices,spices
+1468,cargills,kist tomato sauce,condiments,sauces
+1470,cargills,md hot chilli sauce,spices,spices
+1474,cargills,suree sweet chilli sauce,spices,spices
+1482,cargills,f w jalapeno peppers,spices,spices
+1485,cargills,mc currie sinhala pickle,condiments,pickles
+1486,cargills,md green chilli sauce,spices,spices
+1491,cargills,catch baked beans,staples,lentils_pulses
+1492,cargills,dad s garden lemon mustard sauce,spices,spices
+1502,cargills,koluu beef pepper curry,spices,spices
+1504,cargills,kernell s corn rice,staples,rice
+1505,cargills,kist chilli paste,spices,spices
+1506,cargills,master spice vegetarian chilli paste,spices,spices
+1507,cargills,md malay pickle,condiments,pickles
+1515,cargills,dads garden steak grill sauce,beverages,tea
+1516,cargills,mity green peas,staples,lentils_pulses
+1523,cargills,oateo oat flour,staples,flour
+1526,cargills,koluu fish mustard curry,spices,spices
+1534,cargills,master spice chilli paste,spices,spices
+1537,cargills,zensai vegetarian chilli paste,spices,spices
+1560,cargills,anchor red split lentils,staples,lentils_pulses
+1564,cargills,nel farm brown eggs,protein,eggs
+1567,cargills,arogya farm omega 3 dha rich eggs medium,protein,eggs
+1578,cargills,nelfarm fresh eggs medium,protein,eggs
+1586,cargills,tabasco pepper sauce,spices,spices
+1590,cargills,dad s garden thai chilli sauce,spices,spices
+1594,cargills,kernell s corn rice,staples,rice
+1598,cargills,havana brown egg medium,protein,eggs
+1600,cargills,tess yellowfin tuna fish in chilli oil,fats,oils
+1603,cargills,md lime pickle,condiments,pickles
+1605,cargills,mc currie lime pickle,condiments,pickles

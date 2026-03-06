@@ -1,0 +1,15 @@
+taxonomy_version,category_l1,category_l2,energy_kcal_per_100g,protein_g_per_100g,fat_g_per_100g,carbs_g_per_100g,fiber_g_per_100g,sugar_g_per_100g,sodium_mg_per_100g,is_food,source_name,source_notes
+v1,staples,lentils_pulses,350,24,1.5,60,11,2,20,TRUE,manual_baseline,category average per 100g
+v1,staples,rice,360,7,0.7,80,1,0.1,5,TRUE,manual_baseline,uncooked dry rice
+v1,staples,flour,364,10,1,76,2.7,0.3,2,TRUE,manual_baseline,wheat flour generic
+v1,staples,salt,0,0,0,0,0,0,38758,TRUE,manual_baseline,table salt; sodium mg approx
+v1,spices,spices,300,12,10,55,25,5,20,TRUE,manual_baseline,spices vary; placeholder avg
+v1,spices,spice_mixes,280,10,6,50,10,8,1000,TRUE,manual_baseline,mixes often contain salt
+v1,condiments,sauces,80,2,0.5,18,1,12,900,TRUE,manual_baseline,sauces vary; placeholder avg
+v1,condiments,pickles,120,1,6,12,2,6,2000,TRUE,manual_baseline,pickles high sodium
+v1,beverages,tea,1,0.1,0,0.2,0,0,5,TRUE,manual_baseline,brewed tea; close to zero
+v1,fruits,dried_fruits,280,2.5,0.5,75,8,60,10,TRUE,manual_baseline,dates-like dried fruit avg
+v1,protein,dried_fish,260,50,4,0,0,0,2500,TRUE,manual_baseline,maldive fish; high protein & sodium
+v1,snacks,biscuits,480,7,20,68,2,25,400,TRUE,manual_baseline,sweet biscuit avg
+v1,snacks,popcorn,380,11,4.5,74,15,1,10,TRUE,manual_baseline,plain popcorn kernels avg
+v1,dairy,cream,520,6,55,20,0,5,80,TRUE,manual_baseline,powder/cream avg; placeholder

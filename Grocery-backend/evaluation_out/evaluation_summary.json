@@ -1,0 +1,12 @@
+{
+  "count_baskets_processed": 30,
+  "single_success_count": 30,
+  "multi_success_count": 30,
+  "nearest_optimal_rate": 0.0,
+  "full_coverage_rate": 1.0,
+  "avg_savings_vs_nearest": 0.0,
+  "max_savings_vs_nearest": 0.0,
+  "min_savings_vs_nearest": 0.0,
+  "multi_store_win_rate": 0.03333333333333333,
+  "avg_multi_num_stops": 1.7666666666666666
+}

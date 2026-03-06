@@ -1,0 +1,439 @@
+##
+
+---
+
+## 🧱 Architecture Overview
+
+**Scrape → Store Raw Files → Insert to DB → (Future) Clean & Analyse**
+
+- Each scrape run creates a **snapshot**
+- Raw data is preserved as JSONL/CSV (audit trail)
+- Database stores historical prices (no overwrites)
+
+---
+
+## 🛠️ Tech Stack
+
+- Python 3.9+
+- PostgreSQL
+- Alembic (database migrations)
+- psycopg (Postgres driver)
+- requests
+- python-dotenv
+
+---
+
+## 📁 Project Structure
+
+project/
+├── src/
+│ ├── scraper/ # Data scraping logic
+│ ├── loaders/ # Database insertion scripts
+│ └── common/ # Shared utilities (paths, helpers)
+├── db/
+│ └── alembic/ # Database migrations
+├── data/
+│ ├── raw/ # Raw snapshot files (gitignored)
+│ └── processed/ # Future cleaned datasets
+├── .env.example
+├── alembic.ini
+├── requirements.txt
+└── README.md
+
+
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1️⃣ Clone the repository
+copy or clone
+cd project
+
+### 2️⃣ Create virtual environment
+python -m venv .venv
+
+.\.venv\Scripts\Activate.ps1
+
+
+### 3️⃣ Install dependencies
+
+pip install -r requirements.txt
+playwright install
+
+
+### PostgreSQL Setup
+CREATE USER grocery_user WITH PASSWORD 'strong_password';
+CREATE DATABASE grocery_db OWNER grocery_user;
+
+### Configure environment variables
+cp .env.example .env
+
+## edit env
+DATABASE_URL=postgresql+psycopg://grocery_user:strong_password@localhost:5432/grocery_db
+DATABASE_URL_PG=postgresql://grocery_user:strong_password@localhost:5432/grocery_db
+
+
+### 🧬 Database Migrations
+
+--run migration create table
+alembic upgrade head
+
+-- verify
+alembic current
+
+
+## Test rollback (proves downgrade works) - DO NOT RUN WHEN SETUP
+
+--see current version
+alembic current
+
+--Roll back one migration
+alembic downgrade -1
+
+
+### 🕷️ Run the Scraper
+
+python -m src.scraper.keells_scrape_raw
+
+
+## output example 
+data/raw/keells/20251223/
+  keells_SCDR_keells_products_20251223_104530.jsonl
+  keells_SCDR_keells_products_20251223_104530.csv
+
+
+### 🧾 Insert Data into Database
+
+--Insert the latest scraped file automatically:
+
+python -m src.loaders.insert_raw_products
+
+
+--Or insert a specific file:
+
+python -m src.loaders.insert_raw_products \
+  --file data/raw/keells/20251223/keells_SCDR_keells_products_20251223_104530.jsonl
+
+
+--updated details should be in later part of the readme
+
+
+### run flask 
+python -m src.api.app
+
+--endpoints
+
+http://127.0.0.1:5000/health
+http://127.0.0.1:5000/snapshots
+http://127.0.0.1:5000/products/latest
+
+###Add CORS (so frontend can call backend)
+pip install flask-cors
+
+
+
+
+### clean data
+python -m src.cleaning.build_clean_layer
+
+--updated details should be in later part of the readme
+
+
+## add cat table
+--run migration again if starting from here
+alembic upgrade head
+
+
+
+### Run categorisation
+python -m src.categorisation.apply_rules
+
+--updated details should be in later part of the readme
+
+
+### check categorsied coverage 
+SELECT
+  COUNT(*) AS total_products,
+  COUNT(pc.clean_product_id) AS categorised,
+  ROUND(100.0 * COUNT(pc.clean_product_id) / COUNT(*), 2) AS coverage_pct
+FROM clean_products cp
+LEFT JOIN product_categories pc
+  ON pc.clean_product_id = cp.clean_product_id
+ AND pc.is_active = TRUE;
+
+
+
+ ## load references
+ python -m src.nutrition.load_reference
+
+ -- load from custom path
+ python -m src.nutrition.load_reference --csv data/nutrition/nutrition_reference_v1.csv
+
+
+### build product mapping
+-- build everything
+python -m src.nutrition.build_product_nutrition
+
+-- cargills only 
+python src/nutrition/build_product_nutrition.py --store cargills
+
+-- keels only
+python src/nutrition/build_product_nutrition.py --store keels
+
+
+## sql validation
+--show samples with name
+
+SELECT
+  cp.canonical_name,
+  pn.category_l2,
+  pn.energy_kcal_per_100g,
+  pn.protein_g_per_100g
+FROM product_nutrition pn
+JOIN clean_products cp ON cp.clean_product_id = pn.clean_product_id
+WHERE pn.model_version='rules_v1'
+ORDER BY pn.product_nutrition_id DESC
+LIMIT 20;
+
+
+
+### cargills parser
+-- if starting from here
+pip install -r requirements.txt
+playwright install
+
+## cargills scrape data 
+python -m src.scraper.cargills_scrape_raw
+
+
+## cargills Insert Data into Database
+python -m src.loaders.insert_raw_products --store cargills
+
+## cargills clean data
+python -m src.cleaning.build_clean_layer --store cargills --outlet Colombo
+
+## or process all cargills keels etc 
+python -m src.cleaning.build_clean_layer --store cargills --all-outlets
+
+
+
+## run categorisation updated
+
+-- Categorise only cargills
+python -m src.categorisation.apply_rules --store cargills
+
+-- Categorise only Keells
+python -m src.categorisation.apply_rules --store keells
+
+Categorise everything
+python -m src.categorisation.apply_rules
+
+
+## product mapping updated
+-- build everything
+python -m src.nutrition.build_product_nutrition
+
+-- cargills only 
+python src/nutrition/build_product_nutrition.py --store cargills
+
+-- keels only
+python src/nutrition/build_product_nutrition.py --store keels
+
+
+
+### Data pipeline for understading
+
+raw_products
+   ↓
+clean_products
+   ↓
+product_categories  (rules / ML)
+   ↓
+product_nutrition   (derived, rebuildable)
+
+
+
+
+### install ml dependencies
+
+####
+python -m src.ml.export_training_data --out data/ml/train_v1.csv
+
+-- per store
+python -m src.ml.export_training_data --store cargills
+
+
+### train model
+python -m src.ml.train_text_classifier --train-csv data/ml/train_v1.csv
+
+
+## predict and store
+python -m src.ml.predict_and_store --model-path models/ml_v1.joblib --model-version ml_v1
+
+
+-- per store
+python -m src.ml.predict_and_store --store cargills
+
+
+## activate ML when needed  - dont run this yet - can use next iteration of changes.
+UPDATE product_categories ml
+SET is_active = TRUE
+FROM product_categories rules
+WHERE ml.clean_product_id = rules.clean_product_id
+  AND ml.model_version = 'ml_v1'
+  AND rules.model_version = 'rules_v1'
+  AND rules.is_active = TRUE
+  AND rules.category_l2 = 'unknown'
+  AND ml.confidence >= 0.80;
+
+
+## How many ML rows inserted?
+SELECT COUNT(*)
+FROM product_categories
+WHERE model_version = 'ml_v1';
+
+
+## Average confidence
+SELECT AVG(confidence)
+FROM product_categories
+WHERE model_version = 'ml_v1';
+
+
+### get model accuracy
+python -m src.ml.predict_and_store --eval-against rules_v1 --eval-only --report
+
+
+- just for cargills
+python -m src.ml.predict_and_store --store cargills --eval-against rules_v1 --eval-only
+
+
+
+
+
+
+### added new table store outlets:
+alembic upgrade head
+
+### seed data to store outlet
+python -m src.loaders.seed_store_outlets
+
+### run flask
+python -m src.api.app
+
+
+
+
+### cheapest nearest store
+
+
+## first add env values 
+
+# Default provider when payload doesn't specify
+DISTANCE_PROVIDER_DEFAULT=haversine
+
+# Allow payload to request google/haversine at runtime
+ALLOW_DISTANCE_PROVIDER_OVERRIDE=true
+
+# Google settings (only required if using google)
+GOOGLE_MAPS_API_KEY=YOUR_KEY
+GOOGLE_MAPS_DEFAULT_MODE=driving
+
+# Travel cost defaults
+DEFAULT_COST_PER_KM=80
+DEFAULT_COST_PER_MIN=12
+DEFAULT_COST_MODEL=distance
+
+# Fallback behavior
+FALLBACK_TO_HAVERSINE=true
+
+
+
+### api endpoint
+curl -X POST http://127.0.0.1:5000/recommend/store \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [{"clean_product_id": 49, "qty": 1}],
+    "user_location": {"lat": 6.9271, "lng": 79.8612},
+    "travel": {"mode":"driving","provider":"haversine","cost_model":"distance"}
+  }'
+
+
+
+  ### possible modes to run
+  "travel": {"mode":"driving","provider":"haversine","cost_model":"distance"}
+  "travel": {"mode":"driving","provider":"google","cost_model":"time"}
+
+  ### for google we can change mode
+   "travel": {"mode":"walking","provider":"google","cost_model":"time"}
+   "travel": {"mode":"bicycling","provider":"google"} ## env has default cost model
+
+
+## in recommend.py
+    #candidate_stores = sorted(set(store_price.keys())) #use this to only get the stores with prices.
+    # Always consider these stores (even if missing items),
+    # so frontend can show breakdown + missing items.
+    candidate_stores = ["keells", "cargills", "spar"]
+
+
+
+### pip install openai
+
+
+### alembic upgrade head
+
+
+### Create canonical groups for a small demo set (10–30 items)
+
+Example for “dhal”:
+
+SELECT clean_product_id, store, canonical_name, normalized_name, canonical_group_id
+FROM public.clean_products
+WHERE normalized_name ILIKE '%dhal%'
+ORDER BY store, canonical_name;
+
+
+
+##
+pip install psycopg[binary] rapidfuzz
+
+##auto-link canonical groups (with dry-run)
+## dry run
+python .\src\scripts\auto_canonical_groups.py --dry-run --threshold 94
+python .\src\scripts\auto_canonical_groups.py --db "postgresql://grocery_user:change_me_strong@localhost:5432/grocery_db" --dry-run --threshold 94
+python .\src\scripts\auto_canonical_groups.py --db "postgresql://grocery_user:change_me_strong@localhost:5432/grocery_db" --dry-run --threshold 96
+#####
+python .\src\scripts\auto_canonical_groups.py --db "postgresql://grocery_user:tharu123@localhost:5432/grocery_db" --dry-run --threshold 94
+
+
+## real run 
+python .\src\scripts\auto_canonical_groups.py --db "postgresql://grocery_user:change_me_strong@localhost:5432/grocery_db" --threshold 94
+
+###
+python .\src\scripts\auto_canonical_groups.py --db "postgresql://grocery_user:tharu123@localhost:5432/grocery_db" --threshold 94
+
+## mock data inserts
+##run (SAFE mode, insert-only)
+python -m src.scripts.seed_demo_data --safe
+
+
+
+
+### generate baskets from current DB
+python -m src.scripts.generate_eval_baskets --basket-count 30 --min-items 2 --max-items 5
+
+
+## open new terminal  (as server is running on terminal)
+## activate venv (like initially did)
+
+### run evaluation
+python -m src.scripts.evaluate --base-url http://127.0.0.1:5000 --baskets src/scripts/baskets_eval.json
+
+
+
+## plot
+## install
+pip install pandas matplotlib
+
+### run 
+python -m src.scripts.plot_results
