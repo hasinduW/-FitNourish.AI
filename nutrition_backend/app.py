@@ -1,9 +1,16 @@
+# Limit TensorFlow threads before any TF import (avoids predict() hanging)
+import os
+os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 import asyncio
 import json
+import functools
+from concurrent.futures import ProcessPoolExecutor
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import List
@@ -19,8 +26,8 @@ from fastapi import Depends
 from api.auth import get_current_user_id
 from db import get_db, get_database
 from database_models import PREDICTIONS
-from services.nutrients_predictor import predict_nutrients_from_image
-from services.ingredient_predictor import predict_ingredients_from_image
+from services.nutrients_predictor import predict_nutrients_from_image, predict_nutrients_from_image_bytes
+from services.ingredient_predictor import predict_ingredients_from_image, predict_ingredients_from_image_bytes
 from services.meal_plan_predictor import generate_meal_plan
 from models import (  # Pydantic models
     UserInput,
@@ -47,7 +54,10 @@ async def lifespan(app: FastAPI):
 
     #run the risk models
     load_models()
-    
+
+    # Process pool for meal-analysis ML (TF model.predict() can hang in main process)
+    app.state.meal_analysis_pool = ProcessPoolExecutor(max_workers=1)
+
     try:
         from services.meal_plan_predictor import get_dataset_cache
         get_dataset_cache()
@@ -56,7 +66,7 @@ async def lifespan(app: FastAPI):
     except FileNotFoundError as e:
         print(f"Meal plan dataset not loaded at startup: {e}")
     yield
-    # Shutdown: nothing to release
+    app.state.meal_analysis_pool.shutdown(wait=True)
 
 
 app = FastAPI(title="Nutrition & Meal Prediction API", lifespan=lifespan)
@@ -190,7 +200,7 @@ def get_history(user_id: str, db=Depends(get_db), current_user_id: str = Depends
 # ============================================================================
 
 @app.post("/api/analyze-meal", response_model=MealAnalysisResponse)
-async def analyze_meal(image: UploadFile = File(...), user_id: str = Depends(get_current_user_id)):
+async def analyze_meal(request: Request, image: UploadFile = File(...), user_id: str = Depends(get_current_user_id)):
     """
     Analyze uploaded meal image and return ingredients, nutrients, and calories.
     Uses ML models to predict both ingredients and nutrients from the image.
@@ -198,24 +208,17 @@ async def analyze_meal(image: UploadFile = File(...), user_id: str = Depends(get
     try:
         # Read image bytes once
         image_bytes = await image.read()
-        
-        # Reset file pointer for future reads if needed
         await image.seek(0)
-        
-        # Create mock UploadFile-like objects for the predictors
-        # The predictors read from image_file.file.read()
-        class MockUploadFile:
-            def __init__(self, image_bytes):
-                self.file = BytesIO(image_bytes)
-        
-        nutrients_upload = MockUploadFile(image_bytes)
-        ingredients_upload = MockUploadFile(image_bytes)
-        
-        # Use ML prediction service to get nutrients from image
-        nutrients_output = predict_nutrients_from_image(nutrients_upload)
-        
-        # Use ML prediction service to get ingredients from image
-        ingredients_output = predict_ingredients_from_image(ingredients_upload)
+
+        # Run both ML inferences in a separate process so model.predict() does not hang
+        loop = asyncio.get_event_loop()
+        pool = request.app.state.meal_analysis_pool
+        nutrients_output = await loop.run_in_executor(
+            pool, functools.partial(predict_nutrients_from_image_bytes, image_bytes)
+        )
+        ingredients_output = await loop.run_in_executor(
+            pool, functools.partial(predict_ingredients_from_image_bytes, image_bytes)
+        )
         
         # Extract values from nutrients ML prediction (per 100g)
         protein = nutrients_output.get('protein', 0)
