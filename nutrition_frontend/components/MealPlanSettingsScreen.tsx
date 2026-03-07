@@ -22,8 +22,11 @@ const GRAY_TEXT = "#6B6B6B";
 const ERROR_RED = "#DC2626";
 
 const DEFAULT_MEALS_PER_DAY = 3;
+const DEFAULT_DAILY_CALORIE_TARGET = 2500;
 const DEFAULT_CALORIE_RATIOS = [0.25, 0.4, 0.35];
 const DEFAULT_MACRO_RATIOS = { fat: 0.3, carb: 0.45, protein: 0.25 };
+const MIN_DAILY_CALORIES = 500;
+const MAX_DAILY_CALORIES = 5000;
 
 const isWeb = Platform.OS === "web";
 
@@ -32,11 +35,13 @@ function sumRatios(values: number[]): number {
 }
 
 type Props = {
+  initialDailyCalorieTarget?: number;
   initialMealsPerDay?: number;
   initialCalorieRatios?: number[];
   initialMacroRatios?: { fat: number; carb: number; protein: number };
   initialPreferredIngredients?: string[];
   onSave?: (settings: {
+    dailyCalorieTarget: number;
     mealsPerDay: number;
     calorieDistributionRatios: number[];
     targetMacroRatios: { fat: number; carb: number; protein: number };
@@ -45,12 +50,16 @@ type Props = {
 };
 
 export function MealPlanSettingsScreen({
+  initialDailyCalorieTarget = DEFAULT_DAILY_CALORIE_TARGET,
   initialMealsPerDay = DEFAULT_MEALS_PER_DAY,
   initialCalorieRatios = DEFAULT_CALORIE_RATIOS,
   initialMacroRatios = DEFAULT_MACRO_RATIOS,
   initialPreferredIngredients = [],
   onSave,
 }: Props) {
+  const [dailyCalorieTarget, setDailyCalorieTarget] = useState(
+    String(initialDailyCalorieTarget)
+  );
   const [mealsPerDay, setMealsPerDay] = useState(String(initialMealsPerDay));
   const [calorieRatios, setCalorieRatios] = useState<string[]>(
     initialCalorieRatios.map((r) => String(r))
@@ -91,6 +100,10 @@ export function MealPlanSettingsScreen({
       .slice(0, 50);
   }, [allIngredients, ingredientSearch]);
 
+  const dailyCalorieTargetNum = Math.max(
+    MIN_DAILY_CALORIES,
+    Math.min(MAX_DAILY_CALORIES, parseInt(dailyCalorieTarget, 10) || DEFAULT_DAILY_CALORIE_TARGET)
+  );
   const mealsPerDayNum = Math.max(1, Math.min(10, parseInt(mealsPerDay, 10) || 1));
   const calorieInputsCount = Math.max(1, Math.min(10, mealsPerDayNum));
   const calorieValues = calorieRatios
@@ -104,6 +117,10 @@ export function MealPlanSettingsScreen({
   const proteinNum = parseFloat(protein) || 0;
   const macroTotal = fatNum + carbNum + proteinNum;
   const macroTotalValid = Math.abs(macroTotal - 1) < 0.001;
+
+  function handleResetDailyCalorieTarget() {
+    setDailyCalorieTarget(String(DEFAULT_DAILY_CALORIE_TARGET));
+  }
 
   function handleResetMeals() {
     setMealsPerDay(String(DEFAULT_MEALS_PER_DAY));
@@ -149,6 +166,7 @@ export function MealPlanSettingsScreen({
       calSum > 0 ? calValues.map((v) => v / calSum) : Array(calorieInputsCount).fill(1 / calorieInputsCount);
     const macroSum = fatNum + carbNum + proteinNum;
     onSave?.({
+      dailyCalorieTarget: dailyCalorieTargetNum,
       mealsPerDay: mealsPerDayNum,
       calorieDistributionRatios,
       targetMacroRatios: {
@@ -176,6 +194,30 @@ export function MealPlanSettingsScreen({
         <Text style={[styles.headerTitle, { fontFamily: Fonts.serif }]}>
           Meal Plan Settings
         </Text>
+
+        {/* Section 0: Daily Calorie Target */}
+        <Text style={styles.sectionLabel}>Daily Calorie Target</Text>
+        <Text style={styles.sublabel}>
+          Total calories per day for your meal plan (e.g. 2500).
+        </Text>
+        <View style={styles.row}>
+          <TextInput
+            style={styles.input}
+            value={dailyCalorieTarget}
+            onChangeText={setDailyCalorieTarget}
+            keyboardType="number-pad"
+            placeholder="2500"
+          />
+          <Pressable
+            onPress={handleResetDailyCalorieTarget}
+            style={({ pressed }) => [
+              styles.resetBtn,
+              pressed && styles.resetBtnPressed,
+            ]}
+          >
+            <Text style={styles.resetBtnText}>Reset to Default</Text>
+          </Pressable>
+        </View>
 
         {/* Section 1: No of Meals */}
         <Text style={styles.sectionLabel}>No of Meals</Text>

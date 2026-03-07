@@ -4,12 +4,15 @@
 Thumbs.db
 *.swp
 *~
+.idea
+.qodo
+.vscode
 
 # Backend (Python / FastAPI)
 nutrition_backend/__pycache__/
 nutrition_backend/**/__pycache__/
-nutrition_backend/*.csv
-nutrition_backend/sri_lanka_dataset_1000_inputs_outputs_only.csv
+# nutrition_backend/*.csv
+# nutrition_backend/sri_lanka_dataset_1000_inputs_outputs_only.csv
 nutrition_backend/artifacts/
 nutrition_backend/run.sh
 nutrition_backend/venv/

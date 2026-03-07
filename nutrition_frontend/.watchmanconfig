@@ -1,0 +1,12 @@
+{
+  "ignore_dirs": [
+    "android/.gradle",
+    "android/app/build",
+    "android/build",
+    "node_modules/**/build",
+    "node_modules/**/.gradle",
+    "node_modules/**/caches",
+    "node_modules/**/kotlin",
+    "node_modules/**/compileKotlin"
+  ]
+}

@@ -20,7 +20,7 @@ function toFoodAnalysisResult(api: {
   }
   return {
     title: "Meal analysis",
-    ingredients: api.ingredients.map((i) => `${i.name} (${i.amount} ${i.unit})`),
+    ingredients: api.ingredients.map((i) => i.name),
     nutrition,
   };
 }

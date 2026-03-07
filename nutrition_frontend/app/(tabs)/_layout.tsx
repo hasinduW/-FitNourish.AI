@@ -2,15 +2,19 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs } from "expo-router";
 import React from "react";
 
-import { HapticTab } from "@/components/haptic-tab";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { HapticTab } from "../../components/haptic-tab";
+import { Colors } from "../../constants/theme";
+import { useColorScheme } from "../../hooks/use-color-scheme";
 
 const PRIMARY_GREEN = "#2EA37A";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const tint = PRIMARY_GREEN;
+
+  // ✅ Ensure TypeScript knows this is only "light" or "dark"
+  const theme: "light" | "dark" =
+    colorScheme === "dark" ? "dark" : "light";
 
   return (
     <Tabs
@@ -22,11 +26,20 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="dashboard"
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="home" size={26} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Health Connect",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="fitness-center" size={26} color={color} />
           ),
         }}
       />
@@ -53,12 +66,17 @@ export default function TabLayout() {
         options={{ href: null }}
       />
       <Tabs.Screen
+        name="explore"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="person" size={26} color={color} />
-          ),
+          // title: "Profile",
+          // tabBarIcon: ({ color }) => (
+          //   <MaterialIcons name="person" size={26} color={color} />
+          // ),
+          href: null,
         }}
       />
     </Tabs>

@@ -35,9 +35,8 @@ venv.bak/
 
 # Dataset files
 dataset/images
-
-
-
+ml-models/ingredient_model_EfficientNetV2B0.keras
+ml-models/nutrient_model_portion_independent.keras
 
 # ML Models
 model/

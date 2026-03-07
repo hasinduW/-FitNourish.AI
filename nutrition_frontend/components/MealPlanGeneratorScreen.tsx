@@ -50,6 +50,9 @@ function orderIngredientsWithPreferredFirst(
 // Placeholder when API returns no image
 const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+// Hero image for the generate state (appetizing meal / meal plan vibe)
+const GENERATE_HERO_IMAGE =
+  "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=85";
 
 const isWeb = Platform.OS === "web";
 
@@ -99,8 +102,14 @@ export function MealPlanGeneratorScreen({
   preferredIngredients,
 }: Props) {
   const [mealPlan, setMealPlan] = useState<MealPlanItem[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // When daily calorie target changes (e.g. fetched from API), clear the plan so user must regenerate
+  useEffect(() => {
+    setMealPlan(null);
+    setError(null);
+  }, [dailyCalorieTarget]);
 
   const fetchMealPlan = useCallback(async () => {
     setLoading(true);
@@ -120,23 +129,11 @@ export function MealPlanGeneratorScreen({
     }
   }, [dailyCalorieTarget, mealsPerDay, calorieDistributionRatios, targetMacroRatios, preferredIngredients]);
 
-  useEffect(() => {
-    fetchMealPlan();
-  }, [fetchMealPlan]);
-
   const { width } = Dimensions.get("window");
   const contentMaxWidth = isWeb ? Math.min(width, MAX_WIDTH_WEB) : width;
 
-  if (loading) {
-    return (
-      <View style={[styles.scrollView, styles.centered]}>
-        <ActivityIndicator size="large" color={SAGE_GREEN} />
-        <Text style={[styles.loadingText, { color: SAGE_GREEN }]}>
-          Generating your meal plan...
-        </Text>
-      </View>
-    );
-  }
+  const hasPlan = mealPlan != null && mealPlan.length > 0;
+  const showGenerateState = !hasPlan && !loading;
 
   return (
     <ScrollView
@@ -173,91 +170,140 @@ export function MealPlanGeneratorScreen({
         </Text>
       </View>
 
-      {/* Section title + divider */}
-      <Text style={[styles.sectionTitle, { fontFamily: Fonts.serif }]}>
-        Suggested meal plan
-      </Text>
-      <View style={styles.divider} />
-
-      {error ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
-          <Pressable onPress={fetchMealPlan} style={styles.retryBtn}>
-            <Text style={styles.retryBtnText}>Retry</Text>
-          </Pressable>
+      {loading ? (
+        <View style={[styles.generateSection, styles.centered]}>
+          <ActivityIndicator size="large" color={SAGE_GREEN} />
+          <Text style={[styles.loadingText, { color: SAGE_GREEN }]}>
+            Generating your meal plan...
+          </Text>
         </View>
-      ) : null}
-
-      {/* Meal cards */}
-      {(mealPlan ?? []).map((meal: MealPlanItem, index: number) => (
-        <View key={index} style={styles.card}>
-          {/* Card header: background image + meal name overlay */}
-          <View style={styles.cardImageWrapper}>
+      ) : showGenerateState ? (
+        <>
+          <View style={styles.generateHeroWrapper}>
             <ImageBackground
-              source={{ uri: meal.imageUri }}
-              style={styles.cardImage}
+              source={{ uri: GENERATE_HERO_IMAGE }}
+              style={styles.generateHeroImage}
               resizeMode="cover"
             >
-              <View style={styles.cardImageOverlay} />
-              <Text style={[styles.cardMealName, { zIndex: 1 }]}>{meal.mealName}</Text>
+              <View style={styles.generateHeroOverlay} />
+              <Text style={styles.generateHeroTitle}>Your plan, your pace</Text>
+              <Text style={styles.generateHeroSub}>
+                We will suggest meals that match your calories and goals
+              </Text>
             </ImageBackground>
           </View>
+          <View style={styles.generateSection}>
+            <Text style={styles.generatePrompt}>
+              Get a personalized meal plan based on your daily target and preferences.
+            </Text>
+            <Pressable
+              onPress={fetchMealPlan}
+              style={({ pressed }) => [
+                styles.generateBtn,
+                pressed && styles.generateBtnPressed,
+              ]}
+            >
+              <Text style={styles.generateBtnText}>Generate Meal Plan</Text>
+            </Pressable>
+          </View>
+          {error ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+              <Pressable onPress={fetchMealPlan} style={styles.retryBtn}>
+                <Text style={styles.retryBtnText}>Retry</Text>
+              </Pressable>
+            </View>
+          ) : null}
+        </>
+      ) : (
+        <View style={styles.mealPlanResults}>
+          {/* Section title + divider */}
+          <Text style={[styles.sectionTitle, { fontFamily: Fonts.serif }]}>
+            Suggested meal plan
+          </Text>
+          <View style={styles.divider} />
 
-          {/* Ingredients list: max 10, preferred first, 2 columns of 5 */}
-          <View style={styles.ingredientsSection}>
-            <Text style={styles.ingredientsLabel}>Ingredients</Text>
-            <View style={styles.ingredientsTwoCol}>
-              {(() => {
-                const displayed = orderIngredientsWithPreferredFirst(meal.ingredients, preferredIngredients);
-                const col1 = displayed.slice(0, INGREDIENTS_PER_COLUMN);
-                const col2 = displayed.slice(INGREDIENTS_PER_COLUMN, MAX_INGREDIENTS);
-                return (
-                  <>
-                    <View style={styles.ingredientsColumn}>
-                      {col1.map((ing, i) => (
-                        <View key={i} style={styles.bulletRow}>
-                          <Text style={styles.bullet}>•</Text>
-                          <Text style={styles.bulletText}>{ing}</Text>
+          {error ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+              <Pressable onPress={fetchMealPlan} style={styles.retryBtn}>
+                <Text style={styles.retryBtnText}>Retry</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {/* Meal cards */}
+          {(mealPlan ?? []).map((meal: MealPlanItem, index: number) => (
+            <View key={index} style={styles.card}>
+              {/* Card header: background image + meal name overlay */}
+              <View style={styles.cardImageWrapper}>
+                <ImageBackground
+                  source={{ uri: meal.imageUri }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                >
+                  <View style={styles.cardImageOverlay} />
+                  <Text style={[styles.cardMealName, { zIndex: 1 }]}>{meal.mealName}</Text>
+                </ImageBackground>
+              </View>
+
+              {/* Ingredients list: max 10, preferred first, 2 columns of 5 */}
+              <View style={styles.ingredientsSection}>
+                <Text style={styles.ingredientsLabel}>Ingredients</Text>
+                <View style={styles.ingredientsTwoCol}>
+                  {(() => {
+                    const displayed = orderIngredientsWithPreferredFirst(meal.ingredients, preferredIngredients);
+                    const col1 = displayed.slice(0, INGREDIENTS_PER_COLUMN);
+                    const col2 = displayed.slice(INGREDIENTS_PER_COLUMN, MAX_INGREDIENTS);
+                    return (
+                      <>
+                        <View style={styles.ingredientsColumn}>
+                          {col1.map((ing, i) => (
+                            <View key={i} style={styles.bulletRow}>
+                              <Text style={styles.bullet}>•</Text>
+                              <Text style={styles.bulletText}>{ing}</Text>
+                            </View>
+                          ))}
                         </View>
-                      ))}
-                    </View>
-                    <View style={styles.ingredientsColumn}>
-                      {col2.map((ing, i) => (
-                        <View key={INGREDIENTS_PER_COLUMN + i} style={styles.bulletRow}>
-                          <Text style={styles.bullet}>•</Text>
-                          <Text style={styles.bulletText}>{ing}</Text>
+                        <View style={styles.ingredientsColumn}>
+                          {col2.map((ing, i) => (
+                            <View key={INGREDIENTS_PER_COLUMN + i} style={styles.bulletRow}>
+                              <Text style={styles.bullet}>•</Text>
+                              <Text style={styles.bulletText}>{ing}</Text>
+                            </View>
+                          ))}
                         </View>
-                      ))}
-                    </View>
-                  </>
-                );
-              })()}
-            </View>
-          </View>
+                      </>
+                    );
+                  })()}
+                </View>
+              </View>
 
-          {/* Nutrients grid: Fat, Protein, Carbs */}
-          <View style={styles.nutrientsGrid}>
-            <View style={styles.nutrientBox}>
-              <Text style={styles.nutrientLabel}>Fat</Text>
-              <Text style={styles.nutrientValue}>{meal.nutrients.fat}g</Text>
-            </View>
-            <View style={styles.nutrientBox}>
-              <Text style={styles.nutrientLabel}>Protein</Text>
-              <Text style={styles.nutrientValue}>{meal.nutrients.protein}g</Text>
-            </View>
-            <View style={styles.nutrientBox}>
-              <Text style={styles.nutrientLabel}>Carbs</Text>
-              <Text style={styles.nutrientValue}>{meal.nutrients.carbs}g</Text>
-            </View>
-          </View>
+              {/* Nutrients grid: Fat, Protein, Carbs */}
+              <View style={styles.nutrientsGrid}>
+                <View style={styles.nutrientBox}>
+                  <Text style={styles.nutrientLabel}>Fat</Text>
+                  <Text style={styles.nutrientValue}>{meal.nutrients.fat}g</Text>
+                </View>
+                <View style={styles.nutrientBox}>
+                  <Text style={styles.nutrientLabel}>Protein</Text>
+                  <Text style={styles.nutrientValue}>{meal.nutrients.protein}g</Text>
+                </View>
+                <View style={styles.nutrientBox}>
+                  <Text style={styles.nutrientLabel}>Carbs</Text>
+                  <Text style={styles.nutrientValue}>{meal.nutrients.carbs}g</Text>
+                </View>
+              </View>
 
-          {/* Footer: Total Calories */}
-          <View style={styles.cardFooter}>
-            <Text style={styles.cardFooterLabel}>Total Calories</Text>
-            <Text style={styles.cardFooterValue}>{meal.totalCalories} kcal</Text>
-          </View>
+              {/* Footer: Total Calories */}
+              <View style={styles.cardFooter}>
+                <Text style={styles.cardFooterLabel}>Total Calories</Text>
+                <Text style={styles.cardFooterValue}>{meal.totalCalories} kcal</Text>
+              </View>
+            </View>
+          ))}
         </View>
-      ))}
+      )}
 
       <View style={styles.bottomSpacer} />
     </ScrollView>
@@ -277,6 +323,69 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     fontWeight: "500",
+  },
+  generateHeroWrapper: {
+    width: "100%",
+    height: 220,
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 24,
+  },
+  generateHeroImage: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "flex-end",
+    padding: 20,
+  },
+  generateHeroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  generateHeroTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#fff",
+    zIndex: 1,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  generateHeroSub: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.95)",
+    marginTop: 6,
+    zIndex: 1,
+    textShadowColor: "rgba(0,0,0,0.4)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  generateSection: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  generatePrompt: {
+    fontSize: 16,
+    color: GRAY_TEXT,
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  generateBtn: {
+    backgroundColor: SAGE_GREEN,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 14,
+    alignItems: "center",
+    alignSelf: "center",
+  },
+  generateBtnPressed: {
+    opacity: 0.9,
+  },
+  generateBtnText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
   },
   errorBox: {
     padding: 20,
@@ -333,19 +442,22 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(46, 163, 122, 0.12)",
   },
   dailyBanner: {
+    alignItems: "center",
+    justifyContent: "center",
     width: "100%",
     backgroundColor: SAGE_GREEN,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 28,
-    alignItems: "center",
   },
   dailyBannerText: {
     fontSize: 18,
     fontWeight: "700",
     color: "#fff",
+    textAlign: "center",
   },
+  mealPlanResults: {},
   sectionTitle: {
     fontSize: 20,
     fontWeight: "600",
