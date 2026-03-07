@@ -1,16 +1,21 @@
 # OS
 .DS_Store
 *.DS_Store
+Thumbs.db
+*.swp
+*~
 
 # Backend (Python / FastAPI)
 nutrition_backend/__pycache__/
 nutrition_backend/**/__pycache__/
+nutrition_backend/*.csv
 nutrition_backend/sri_lanka_dataset_1000_inputs_outputs_only.csv
 nutrition_backend/artifacts/
 nutrition_backend/run.sh
 nutrition_backend/venv/
 nutrition_backend/.env
 nutrition_backend/.env.local
+nutrition_backend/dataset/
 
 # Frontend (Expo / Node)
 nutrition_frontend/node_modules/
@@ -20,3 +25,6 @@ nutrition_frontend/dist/
 nutrition_frontend/web-build/
 nutrition_frontend/.env
 nutrition_frontend/.env.local
+nutrition_frontend/npm-debug.log*
+nutrition_frontend/yarn-debug.log*
+nutrition_frontend/yarn-error.log*
