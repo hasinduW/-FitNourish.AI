@@ -114,7 +114,7 @@ export function FoodAnalysisResultsScreen({
         <Text style={styles.cardLabel}>Nutritional Information</Text>
         <View style={styles.caloriesRow}>
           <Text style={styles.caloriesLabel}>Calories</Text>
-          <Text style={styles.caloriesValue}>{result.nutrition.calories} kcal</Text>
+          <Text style={styles.caloriesValue}>{result.nutrition.calories} kcal (For 100g)</Text>
         </View>
         <View style={styles.nutritionGrid}>
           <View style={styles.nutritionItem}>
@@ -128,10 +128,6 @@ export function FoodAnalysisResultsScreen({
           <View style={styles.nutritionItem}>
             <Text style={styles.nutritionLabel}>Fat</Text>
             <Text style={styles.nutritionValue}>{result.nutrition.fat}g</Text>
-          </View>
-          <View style={styles.nutritionItem}>
-            <Text style={styles.nutritionLabel}>Fiber</Text>
-            <Text style={styles.nutritionValue}>{result.nutrition.fiber}g</Text>
           </View>
         </View>
       </View>

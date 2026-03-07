@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children?: React.ReactNode }) {
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        router.replace("/Dashboard" as any);
+        router.replace("/(tabs)/dashboard" as any);
       }
     } catch {
       // ignore
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children?: React.ReactNode }) {
     ]);
     setToken(res.access_token);
     setUser(u);
-    router.replace("/Dashboard" as any);
+    router.replace("/(tabs)/dashboard" as any);
     return res;
   }, []);
 
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children?: React.ReactNode }) {
       ]);
       setToken(res.access_token);
       setUser(u);
-      router.replace("/Dashboard" as any);
+      router.replace("/(tabs)/dashboard" as any);
       return res;
     },
     [],

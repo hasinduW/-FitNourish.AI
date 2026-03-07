@@ -24,13 +24,15 @@ class MealSuggestionRequest(BaseModel):
     @field_validator('calorie_distribution_ratios')
     @classmethod
     def validate_calorie_ratios(cls, v: Optional[List[float]], info: ValidationInfo) -> Optional[List[float]]:
-        """Validate calorie distribution ratios if provided."""
-        if v is not None:
-            if not all(0 < ratio <= 1 for ratio in v):
-                raise ValueError("All calorie distribution ratios must be between 0 and 1")
-            meals_per_day = info.data.get('meals_per_day')
-            if meals_per_day and len(v) != meals_per_day:
-                raise ValueError(f"Number of calorie distribution ratios ({len(v)}) must match meals_per_day ({meals_per_day})")
+        """Validate calorie distribution ratios if provided. If length doesn't match meals_per_day, ignore and use backend defaults."""
+        if v is None:
+            return v
+        if not all(0 < ratio <= 1 for ratio in v):
+            raise ValueError("All calorie distribution ratios must be between 0 and 1")
+        meals_per_day = info.data.get('meals_per_day')
+        if meals_per_day is not None and len(v) != meals_per_day:
+            # Mismatch: ignore client ratios so backend will use default distribution for this meal count
+            return None
         return v
     
     @field_validator('target_macro_ratios')

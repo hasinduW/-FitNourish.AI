@@ -9,13 +9,14 @@ export default function MealPlanSettingsRoute() {
   const { settings, setSettings } = useMealPlanSettings();
 
   function handleSave(payload: {
+    dailyCalorieTarget: number;
     mealsPerDay: number;
     calorieDistributionRatios: number[];
     targetMacroRatios: { fat: number; carb: number; protein: number };
     preferredIngredients: string[];
   }) {
     setSettings({
-      dailyCalorieTarget: settings.dailyCalorieTarget,
+      dailyCalorieTarget: payload.dailyCalorieTarget,
       mealsPerDay: payload.mealsPerDay,
       calorieDistributionRatios: payload.calorieDistributionRatios,
       targetMacroRatios: payload.targetMacroRatios,
@@ -27,6 +28,7 @@ export default function MealPlanSettingsRoute() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
       <MealPlanSettingsScreen
+        initialDailyCalorieTarget={settings.dailyCalorieTarget}
         initialMealsPerDay={settings.mealsPerDay}
         initialCalorieRatios={settings.calorieDistributionRatios}
         initialMacroRatios={settings.targetMacroRatios}

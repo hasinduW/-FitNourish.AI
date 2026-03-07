@@ -4,6 +4,9 @@
 Thumbs.db
 *.swp
 *~
+.idea
+.qodo
+.vscode
 
 # Backend (Python / FastAPI)
 nutrition_backend/__pycache__/
