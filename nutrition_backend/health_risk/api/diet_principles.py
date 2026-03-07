@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/diet-principles", tags=["Diet Principles"])
 
 
 class SavePrinciplesRequest(BaseModel):
-    userId:     int
+    userId:     str
     dietName:   str
     principles: List[str]
 

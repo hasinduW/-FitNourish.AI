@@ -1,31 +1,559 @@
 Food_Item,Category,Calories_per_100g,Protein_per_100g,Carbohydrates_per_100g,Fat_per_100g,Fiber_per_100g,Sugars_per_100g,Sodium_per_100g,Cholesterol_per_100g,Common_Serving_Size_g
-Apple,Fruits,52,0.3,14.0,0.2,2.4,10.4,1,0,182
-Banana,Fruits,89,1.1,23.0,0.3,2.6,12.2,1,0,118
-Orange,Fruits,47,0.9,12.0,0.1,2.4,9.4,0,0,131
-Strawberry,Fruits,32,0.7,7.7,0.3,2.0,4.9,1,0,150
-Grapes,Fruits,69,0.7,18.0,0.2,0.9,15.5,2,0,150
-Broccoli,Vegetables,34,2.8,7.0,0.4,2.6,1.7,33,0,91
-Carrot,Vegetables,41,0.9,10.0,0.2,2.8,4.7,69,0,61
+Apple,Fruits,52,0.3,14,0.2,2.4,10.4,1,0,182
+Banana,Fruits,89,1.1,23,0.3,2.6,12.2,1,0,118
+Orange,Fruits,47,0.9,12,0.1,2.4,9.4,0,0,131
+Strawberry,Fruits,32,0.7,7.7,0.3,2,4.9,1,0,150
+Grapes,Fruits,69,0.7,18,0.2,0.9,15.5,2,0,150
+Broccoli,Vegetables,34,2.8,7,0.4,2.6,1.7,33,0,91
+Carrot,Vegetables,41,0.9,10,0.2,2.8,4.7,69,0,61
 Spinach,Vegetables,23,2.9,3.6,0.4,2.2,0.4,79,0,30
 Tomato,Vegetables,18,0.9,3.9,0.2,1.2,2.6,5,0,123
-Potato,Vegetables,77,2.0,17.0,0.1,2.2,0.8,6,0,173
-Chicken Breast,Meat,165,31.0,0.0,3.6,0.0,0.0,74,85,170
-Beef Steak,Meat,271,25.0,0.0,19.0,0.0,0.0,72,90,225
-Salmon,Meat,208,20.0,0.0,13.0,0.0,0.0,59,55,178
-Pork Chop,Meat,242,27.0,0.0,14.0,0.0,0.0,62,80,150
-Eggs,Meat,155,13.0,1.1,11.0,0.0,1.1,124,373,50
-Rice,Grains,130,2.7,28.0,0.3,0.4,0.1,1,0,158
-Pasta,Grains,131,5.0,25.0,1.1,1.8,0.6,6,0,140
-Oats,Grains,389,16.9,66.0,6.9,10.6,0.99,2,0,40
-Quinoa,Grains,120,4.4,21.0,1.9,2.8,0.9,7,0,185
-Milk,Dairy,61,3.2,4.8,3.3,0.0,5.1,44,10,244
-Yogurt,Dairy,59,10.0,3.6,0.4,0.0,3.2,36,5,200
-Cheese,Dairy,402,25.0,1.3,33.0,0.0,0.5,621,105,28
-Butter,Dairy,717,0.9,0.1,81.0,0.0,0.1,11,215,14
-Paneer,Dairy,265,18.0,3.6,20.0,0.0,2.8,18,54,100
-Nuts,Snacks,607,20.0,21.0,54.0,9.0,5.0,1,0,28
-Cookies,Snacks,502,5.6,64.0,25.0,2.3,35.0,386,20,30
-Water,Beverages,0,0.0,0.0,0.0,0.0,0.0,0,0,240
-Coffee,Beverages,2,0.3,0.0,0.0,0.0,0.0,5,0,240
+Potato,Vegetables,77,2,17,0.1,2.2,0.8,6,0,173
+Chicken Breast,Meat,165,31,0,3.6,0,0,74,85,170
+Beef Steak,Meat,271,25,0,19,0,0,72,90,225
+Salmon,Meat,208,20,0,13,0,0,59,55,178
+Pork Chop,Meat,242,27,0,14,0,0,62,80,150
+Eggs,Meat,155,13,1.1,11,0,1.1,124,373,50
+Rice,Grains,130,2.7,28,0.3,0.4,0.1,1,0,158
+Pasta,Grains,131,5,25,1.1,1.8,0.6,6,0,140
+Oats,Grains,389,16.9,66,6.9,10.6,0.99,2,0,40
+Quinoa,Grains,120,4.4,21,1.9,2.8,0.9,7,0,185
+Milk,Dairy,61,3.2,4.8,3.3,0,5.1,44,10,244
+Yogurt,Dairy,59,10,3.6,0.4,0,3.2,36,5,200
+Cheese,Dairy,402,25,1.3,33,0,0.5,621,105,28
+Butter,Dairy,717,0.9,0.1,81,0,0.1,11,215,14
+Paneer,Dairy,265,18,3.6,20,0,2.8,18,54,100
+Nuts,Snacks,607,20,21,54,9,5,1,0,28
+Cookies,Snacks,502,5.6,64,25,2.3,35,386,20,30
+Water,Beverages,0,0,0,0,0,0,0,0,240
+Coffee,Beverages,2,0.3,0,0,0,0,5,0,240
 Orange Juice,Beverages,45,0.7,10.4,0.2,0.2,8.4,1,0,240
-Milkshake,Beverages,119,3.9,18.0,3.4,0.3,17.0,95,13,300
+Milkshake,Beverages,119,3.9,18,3.4,0.3,17,95,13,300
+Cottage Cheese,Dairy,98,11,3.4,4.3,0,2.7,364,17,113
+Strawberries,Fruits,33,0.7,8,0.3,2,4.9,1,0,152
+Garden Salad,Other,64.6,6.1,3.2,3.4,1.8,2,170,0,85
+Bacon,Proteins,541,37,1.4,42,0,0.1,1717,110,19
+Potatoes,Vegetables,77,2,17,0.1,2.2,0.9,6,0,148
+Caesar Salad,Other,44,3.2,4.3,2.1,1.5,2,350,15,100
+Cauliflower,Vegetables,25,1.8,5,0.3,2,1.9,30,0,100
+Scrambled Eggs,Proteins,148,10,1.6,11,0,0.6,246,352,100
+Wild Rice,Grains,119,5,25,0.4,1.8,0.7,3,0,164
+Steak,Proteins,271,25,0,19,0,0,66,80,170
+Cheese Pizza,Dairy,265.9,11.2,33.5,9.4,2.3,3.6,598,17,107
+Olives,Other,115,0.8,6.3,10.7,3.2,0.5,1556,0,28
+Berries,Fruits,57,0.7,14,0.3,5.3,5.7,1,0,140
+Asparagus,Vegetables,20.4,2.2,3.9,0.1,2.1,1.9,2,0,134
+Hash Browns,Other,326,2.6,32,22,1.6,0.5,342,0,156
+Brussels Sprouts,Other,43,3.4,9,0.3,3.8,2.2,25,0,78
+Pasta Salad,Grains,201.5,5.9,17.3,11.9,1.5,2.8,320,5,120
+Turkey,Proteins,189,29,0.1,7,0,0,70,109,85
+Bread,Grains,265.4,13.5,42.3,4.2,2.7,5.7,491,0,28
+Duck,Proteins,337,19,0,28,0,0,74,84,140
+Squash,Vegetables,20.5,0.9,3.4,0.3,1.5,2.2,2,0,116
+Guacamole,Other,200,2.9,8.6,17.1,4,0.4,173,0,30
+Brown Rice,Grains,111,2.6,23,0.9,1.8,0.4,5,0,195
+Artic Char,Other,154,20,0,8.1,0,0,50,60,140
+Beef,Proteins,250,26,0,15,0,0,66,80,85
+White Rice,Grains,130,2.7,28,0.3,0.4,0.1,1,0,186
+Chicken,Proteins,165,31,0,3.6,0,0,82,88,140
+Mixed Greens,Other,28,2.2,5.3,0.4,2,0.6,45,0,85
+Lettuce,Vegetables,15,1.4,2.9,0.2,1.3,0.8,10,0,72
+Cucumbers,Vegetables,10,1,2,0,0.5,1.7,2,0,119
+Bell Peppers,Vegetables,40,2,9,0.2,2.1,4.2,4,0,92
+Celery,Vegetables,16,0.7,3.4,0.2,1.6,1.3,80,0,101
+Blue Cheese,Dairy,353,21,2.3,29,0,0.5,1146,75,28
+Spinach (Raw),Vegetables,23,2.9,3.6,0.4,2.2,0.4,79,0,30
+Cantaloupe,Fruits,34,0.8,8,0.2,0.9,7.9,16,0,276
+Pineapple,Fruits,50,0.5,13,0.1,1.4,9.9,1,0,165
+Sausage,Proteins,344.6,19.3,4.2,27.3,0,1,749,72,85
+Raspberries,Fruits,53,1.2,12,0.7,6.5,4.4,1,0,123
+Blackberries,Fruits,43,1.4,9.2,0.5,5.3,4.9,1,0,144
+Avocado,Other,160,2,9,15,6.7,0.7,7,0,150
+Green Beans,Vegetables,31,1.8,7,0.1,2.7,1.4,6,0,110
+Bean Sprouts,Vegetables,30,3,5.9,0.2,0.9,1.1,6,0,104
+Mushroom,Vegetables,22,3.1,3.3,0.3,1,2,5,0,96
+Corn,Vegetables,96,3.4,21,1.5,2,6.3,15,0,154
+Ham,Proteins,145,21,1.5,6,0,1,1203,53,85
+Fish,Proteins,90,18.4,0,13,0,0,61,60,140
+Tofu,Proteins,73,8,1.9,4.8,0.3,0.5,7,0,126
+Shrimp,Proteins,99,24,0.2,0.3,0,0,566,189,85
+Kiwi,Fruits,61,1.1,15,0.5,3,9,3,0,177
+Lemon,Fruits,29,1.1,9,0.3,2.8,2.5,2,0,58
+Oatmeal,Grains,68,2.4,12,1.4,1.7,0.6,49,0,234
+Tortilla,Grains,218,6,45,2.9,3.5,1.5,400,0,45
+Potato Chips,Vegetables,536,7,53,35,3.8,0.3,525,0,28
+Noodles,Grains,138,4.5,25,2.1,1.8,0.7,5,0,160
+Bean(Seed),Nuts & Seeds,140,9,24,0.6,7.4,0.3,2,0,130
+Alcohol,Beverages,43.1,0.5,3.6,0,0,0,4,0,44
+Grape Juice,Fruits,67,0.6,17,0.4,0,14.2,5,0,240
+Ground Beef,Proteins,332.1,14.2,0,29.5,0,0,75,99,85
+Syrup,Other,260,0,67,0.1,0,58,18,0,20
+Grapefruits,Fruits,42,0.8,11,0.1,1.6,6.9,0,0,246
+Fruit Punch,Other,45,0,12.5,0,0.1,11,22,0,240
+Figs,Fruits,275,2.5,65,0,2.9,16.3,1,0,50
+Macaroni And Cheese,Dairy,164,7,23,5,1.4,4.9,560,18,240
+Kale,Vegetables,49,3.3,9,0.7,3.6,2.3,38,0,67
+Radishes,Vegetables,16,0.7,3.4,0.1,1.6,1.9,39,0,116
+Refried Beans,Other,91.8,5.2,15.2,1.2,5.5,0.5,586,0,130
+Brisket,Proteins,155.2,21,0,7.2,0,0,72,93,85
+Almonds,Nuts & Seeds,578.1,22.4,22.7,49.5,12.5,4.4,1,0,28
+Protein Powder,Other,400,80,10,3.3,1.5,5,200,30,30
+Okra,Vegetables,32.8,1.9,7.2,0.2,3.2,1.5,7,0,100
+Turkey Bacon,Proteins,379.7,29.1,3.1,28.1,0,0.4,1076,71,28
+Pickles,Other,11,0.3,2.3,0.2,0.7,0.8,1208,0,28
+Pecans,Nuts & Seeds,690,9,14,72,9.6,3.97,0,0,28
+Muenster Cheese,Dairy,367.5,23.9,1.1,29.6,0,0.3,528,96,28
+Brie Cheese,Dairy,333.4,21,0.5,28,0,0.5,629,100,28
+Apple Juice,Fruits,46,0.1,11,0.1,0.2,9.6,4,0,240
+Raisin Bran,Fruits,314,8,77,2.7,7,18,350,0,59
+Coleslaw,Other,152.3,1,14.8,9.7,2,8.9,265,9,120
+Margarine,Other,717,0.2,0.7,81,0,0.1,751,0,14
+Spaghetti,Other,158,6,31,0.9,1.8,0.6,1,0,140
+Ground Pork,Proteins,393,23,1.4,33,0,0,75,91,85
+Herring,Proteins,85.9,4.7,3.2,5.9,0,0,90,60,140
+Wine,Beverages,85,0.1,2.6,0,0,0.6,4,0,148
+Alfalfa,Other,29,4,3.8,0.7,1.9,0.2,6,0,33
+Onions,Vegetables,40,1.1,9,0.1,1.7,4.2,4,0,160
+Artichokes,Vegetables,47,3.3,11,0.2,5.4,1,94,0,120
+Mussels,Proteins,171.8,23.8,7,4.5,0,0,369,56,85
+Falafel,Other,334.1,13.3,30.7,17.8,5.4,0,294,0,140
+Multigrain Bread,Grains,285.7,4.1,49,9.2,3.9,3.9,400,0,28
+Marshmallows,Other,318,1.8,81,0.2,0.1,57,80,0,28
+Leeks,Vegetables,61,1.5,14,0.3,1.8,3.9,20,0,89
+Snow Peas,Vegetables,81,5,14,0.4,2.6,4,4,0,98
+Pretzels,Grains,380.3,10.1,80.4,2.6,2,3,1029,0,28
+Strudels,Other,318.2,5,50,10.8,1.5,12,120,15,105
+Grilled Chicken,Proteins,226.2,22.6,0.1,14.9,0,0,74,88,140
+Half And Half,Other,130,3,4.3,12,0,4.2,41,17,30
+Mixed Nuts,Other,606.9,20.6,21.1,53.5,6,4.4,220,0,28
+Spring Rolls,Grains,154.3,16.2,4.3,8,2,2.5,320,10,100
+French Toast,Other,229.2,7.8,24.8,10.9,1.5,8.6,311,116,65
+Barbecue Sauce,Other,172,0.8,41,0.6,0.5,28,700,0,36
+Clams,Proteins,148,25.5,5.1,2,0,0,481,67,85
+Honeydew Melons,Fruits,36,0.5,9,0.1,0.8,8.1,18,0,248
+Ketchup,Other,112,1.3,26,0.2,0.3,22.4,907,0,17
+Polenta,Grains,370,7,79,1.8,1.2,0.4,311,0,125
+Lemonade,Fruits,40,0.1,10,0,0.3,10.5,10,0,240
+Mayonnaise,Other,680,1,0.6,75,0,0.6,635,60,14
+Tacos,Other,226,8.8,20.1,13,2.5,2,415,35,170
+Eggnog,Proteins,87.8,4.6,8,4.2,0,17,68,149,247
+Tabouli,Other,85,2.1,10.7,4.5,3,1.5,180,0,120
+Gelatin,Other,61.8,1.2,14.1,0,0,0,55,0,85
+Watermelon,Fruits,30,0.6,7.6,0.2,0.4,6.2,1,0,286
+Garlic,Vegetables,149,6.4,33,0.5,2.1,1,17,0,9
+Crawfish,Proteins,77,16,0,1,0,0,97,178,85
+Walnuts,Nuts & Seeds,653.3,15.1,13.9,64.2,6.7,2.6,2,0,28
+Octopus,Proteins,163.7,29.7,4.4,2.1,0,0,230,96,85
+Mustard,Other,61.3,3.7,6,3.3,1.1,2.5,1104,0,5
+Pastries,Other,550.8,7.2,45.2,38.4,1.2,17,380,50,90
+Egg Whites,Proteins,52,10,0.7,0.2,0,0.2,166,0,243
+Raisins,Fruits,299,3.1,79,0.5,3.7,59.2,26,0,43
+Rye Bread,Grains,258.6,8.6,48.2,3.2,5.8,3.8,603,0,32
+Dark Chocolate,Other,575,6,27,46,10.9,24,20,3,40
+Croissants,Other,406.2,8,45.9,21.2,1.7,9,374,67,57
+Shallots,Other,20,1.5,3.3,0.2,3.2,7.9,12,0,100
+Biscuits,Grains,352.5,7,44.7,16.2,1.5,3.4,633,0,57
+Tilapia,Proteins,128.8,26.1,0,2.7,0,0,56,50,85
+Poached Eggs,Proteins,142.5,12.5,0.8,9.2,0,0.4,294,422,50
+Succotash,Other,99,5,20,1,3.5,3.2,280,0,128
+Seafood,Other,204.4,28.5,1.8,8.1,0,0,200,80,85
+Egg Rolls,Grains,196.6,10.2,28.7,4.5,1.8,2.5,413,15,64
+Caesar Dressing,Other,44.1,3.2,4.3,2.1,0.2,1,470,40,30
+Tuna Salad,Proteins,187,16.2,9.2,9.2,0.3,1.5,400,20,85
+India Pale Ale Beer,Beverages,55.6,0.3,1.7,0,0,0,14,0,355
+Veal,Proteins,172,24.4,0,7.6,0,0,78,97,85
+Sorbet,Other,124,1.9,26.7,0.5,0.7,26,37,0,113
+Bison,Proteins,179,25,0,8,0,0,57,82,85
+Scallops,Proteins,105.9,20,5.9,0.6,0,0,667,53,85
+Turkey Breast,Proteins,189.1,28.8,0,7.1,0,0,51,83,85
+Parmesan Cheese,Dairy,430.7,38.4,4.2,28.6,0,0.3,1529,79,5
+Sushi,Other,143,4.3,29.9,0.4,0.5,1.5,420,35,100
+Swordfish,Proteins,171.8,23.4,0,7.9,0,0,98,50,85
+Agave Nectar,Other,310,0.1,76,0.5,0,68,4,0,21
+Cabbage,Vegetables,21,1.3,3.2,0.5,2.5,3.2,18,0,89
+Bulgur,Grains,342,12,76,1.3,4.5,0.4,5,0,182
+Brown Sugar,Other,380,0.1,98,0,0,97,28,0,4
+Chicken Thighs,Proteins,177.2,23.9,0,8.3,0,0,88,95,52
+Paella,Other,183.4,10.4,14.1,9.1,1.5,1.5,600,75,250
+Colby Cheese,Dairy,394,24.3,2.5,31.3,0,0.1,604,95,28
+Gumbo,Other,86.7,4.1,9.8,3.3,2,3.5,680,60,245
+Apple Cider,Fruits,46.2,0.1,11.3,0.1,0,10,7,0,240
+Chow Mein,Other,461.1,10.8,67.6,18.4,2,3,540,30,250
+Olive Oil,Other,884,0,0,100,0,0,2,0,14
+Parsnips,Other,75,1.2,18,0.3,4.9,5.4,10,0,133
+Kidney Beans,Other,333,24,60,0.8,11.4,0.4,2,0,177
+Chowders,Other,99,3.1,7.6,6.2,1.2,3,820,25,245
+Skim Milk,Dairy,34,3.4,4.9,0.1,0,5.1,44,2,244
+Grapefruit Juice,Fruits,38.9,0.5,9.1,0.1,0.2,8.3,0,0,240
+Tamales,Other,152.8,6.2,18.1,6,3.2,1.5,520,40,150
+Lasagna,Other,135,7.2,15.4,5,2.5,4.5,700,30,250
+Whole Wheat Bread,Grains,246.8,13,42.1,3.3,6.9,5.6,400,0,28
+Gravy,Other,79.1,2,5.2,5.9,0.5,1.5,790,4,60
+Almond Butter,Dairy,608.6,20.9,18.7,55.5,10,5.1,136,0,32
+Cherry Pie,Fruits,269.4,2.8,38.7,12.2,1.5,19,250,10,125
+Chestnuts,Other,130.8,2.1,28.1,1.4,5.1,10.6,3,0,28
+Bread Crumbs,Grains,395,13.2,71.3,5.1,4.5,4.5,736,0,28
+Apple Pie,Fruits,236.7,1.8,34.5,11,1.6,12,250,10,125
+French Dressing,Other,453.2,0.7,15.6,44.2,0,5,587,0,30
+Tempeh,Proteins,192.9,18.8,9.3,10.9,7.3,0,9,0,84
+Pies,Other,236.7,1.9,34.5,11.1,1.5,14,280,15,125
+Rice Noodles,Grains,109,0.9,25,0.2,1.8,0.3,10,0,176
+Milk Shakes,Dairy,112.1,3.9,18,2.9,0.3,20,95,32,300
+Soy Yogurt,Dairy,101.4,3.7,17.3,1.9,0,10,35,0,170
+Chips,Grains,536.3,7,52.9,35,3.8,0.3,525,0,28
+Ravioli,Other,77.1,2.5,13.8,1.5,1.8,2,450,30,220
+Collards,Vegetables,31.3,3,5.3,0.6,4,0.5,30,0,190
+Green Peas,Vegetables,77.4,5,13.6,0.4,5.1,5.7,5,0,145
+Chickpeas,Other,164,9,27,2.6,12.5,10.7,24,0,164
+Carrot Cake,Vegetables,415.3,5,78.6,9.9,1.5,32,358,55,80
+Vinegar,Other,0,0,0,0,0,0,2,0,15
+Hamburgers,Proteins,295,16.8,24.1,14.1,1.5,3.5,400,75,230
+Cheesecake,Dairy,321,5.7,25.3,22.3,0.5,25,350,140,80
+Yam,Vegetables,124.1,1.6,29.4,0.2,4.1,0.5,9,0,136
+Hot Dogs,Other,290.2,9.8,4.2,25.5,0,1.4,1100,44,50
+Fried Rice,Grains,157.7,4.7,29.9,2.2,1.2,1.5,680,0,200
+Wafers,Other,433.4,6.8,72.6,14.4,0.5,32,155,0,14
+Cod,Proteins,84.7,18.9,0,0.5,0,0,54,55,140
+Salads,Other,152.3,1,14.8,9.7,2,2,300,10,100
+Breadsticks,Grains,408.3,12.3,69.1,9.2,2.5,1.5,850,0,28
+Swiss Cheese,Dairy,379.9,27.6,5.2,28.2,0,1.4,187,92,28
+Buttermilk,Dairy,40.2,3.3,4.8,0.9,0,5.3,105,8,245
+Blueberries,Fruits,57.2,0.7,14.4,0.3,2.4,10,1,0,148
+Enchiladas,Other,168.1,6.1,15.8,9.2,3,2.5,830,30,230
+Chili,Other,40,1.8,8.9,0.4,6.5,4,800,30,245
+Pork Chops,Proteins,230.8,23.9,0,14.1,0,0,64,87,85
+Corn On The Cob,Vegetables,106.1,3.1,22,2.4,2,6.3,15,0,154
+Muffins,Grains,377,4.6,53.3,15.9,1.5,21,380,42,57
+Fried Chicken,Proteins,246.1,30.4,1.9,11.8,0.5,0.3,750,120,140
+Ice Cream Cones,Dairy,418.9,7.9,79,7.1,1,25,70,10,53
+Pastrami,Other,145.8,21.6,0.4,5.8,0,0.2,1082,68,28
+Chocolate Milk,Dairy,83.1,3.2,10.2,3.4,0.5,10,132,10,240
+Plums,Fruits,45.7,0.7,11.5,0.3,1.4,9.9,0,0,66
+Burgers,Other,295,16.8,24.1,14.1,1.2,3.5,410,80,230
+Pears,Fruits,57.2,0.4,15.2,0.1,3.1,9.8,1,0,178
+Seeds,Nuts & Seeds,558.2,30.9,10.8,49.2,8,1,10,0,28
+Squid,Proteins,175.1,17.8,8.1,7,0,0,221,233,85
+Tostadas,Other,148,7.1,13.2,7.8,3,2.5,490,20,150
+Lamb,Proteins,294.1,24.7,0,21.1,0,0,70,97,85
+Brazil Nuts,Nuts & Seeds,657.4,14.2,12.1,66.3,7.5,2.3,3,0,28
+Macaroni,Other,372.5,12.7,75.4,1.5,1.8,0.6,1,0,140
+Pita Bread,Grains,275,8.8,55.8,1.1,1.7,0.6,536,0,57
+Vegetable Oil,Other,886.4,0,0,100,0,0,0,0,14
+Pine Nuts,Nuts & Seeds,664.6,13.2,12.6,68.5,3.7,3.6,2,0,28
+Macadamia Nuts,Nuts & Seeds,718.8,7.9,13.9,75,8.6,4.6,5,0,28
+Potato Salad,Vegetables,142.9,2.8,11.1,8,1.5,5,430,50,130
+Veggie Burgers,Proteins,177.1,15.9,14.1,6.1,4.5,3.5,430,0,113
+Pasta Sauce,Grains,29.2,1.3,6.9,0.2,2.4,8,590,0,125
+Calamari,Other,175.1,17.8,8.1,7,0,0,221,233,85
+Cornmeal,Vegetables,370,7,79.3,1.8,7.3,0.4,3,0,30
+Bologna,Other,245.2,15.1,0.7,20.6,0,1,946,65,28
+Frostings,Other,421.7,0,68.6,16.3,0.3,70,68,0,39
+Oysters,Proteins,198.9,8.8,11.7,12.8,0,0,417,55,85
+Vodka,Beverages,230.6,0,0,0,0,0,0,0,44
+Smoothies,Beverages,38.3,1.3,8.4,0,1.5,14,50,4,250
+Pecan Pie,Nuts & Seeds,412.3,4.9,52.5,21.8,2,38,270,65,100
+Roast Beef,Proteins,169.8,29.1,0,5.9,0,0,60,85,85
+Hot Chocolate,Other,77,3.5,10.9,2.3,1,24,110,5,240
+Hominy,Other,72.1,1.5,14.3,0.9,2.5,0.2,10,0,165
+Custard,Dairy,117.5,4,17.2,4,0,11,73,124,100
+Smoked Salmon,Proteins,117.3,18.4,0,4.3,0,0,784,23,85
+Scones,Other,352.5,7,44.7,16.2,1.8,12,310,32,90
+Tortellini,Other,307.2,13.8,47,7.2,1.5,2,480,40,220
+Mozzarella Cheese,Dairy,277.6,28,3.2,17.1,0,1,627,79,28
+Wheat Bread,Grains,246.8,13,42.1,3.3,4.5,5,480,0,28
+Baked Beans,Other,152.9,5.7,21.6,5,5.5,10,530,0,130
+Blueberry Pie,Fruits,245.6,2.7,33,11.9,1.3,15,250,8,125
+Hard Boiled Eggs,Proteins,155.5,12.5,1.2,10.5,0,0.6,124,422,50
+Cashews,Nuts & Seeds,553.4,17.8,30.9,43.2,3.3,5.9,12,0,28
+Rolls,Grains,308.9,10.7,52.1,6.5,2.5,4,400,0,38
+Tortilla Chips,Grains,464.2,8.6,73.7,15.3,4,0.4,415,0,28
+Broth,Other,264,16.5,18.5,14.7,0,1,860,0,240
+Tahini,Other,595.6,17,21.1,53.5,9.3,0.5,17,0,30
+Mashed Potatoes,Vegetables,90.7,1.7,15.1,2.9,2,1.5,380,10,210
+Nougat,Other,399,3.4,92.4,1.6,0,60,40,0,28
+Fish Oil,Proteins,903.3,0,0,101,0,0,0,766,14
+Brownies,Other,466.1,6.2,49.8,28.8,1.8,40,162,62,55
+Popcorn,Vegetables,374.5,11,74,4.3,14.5,0.3,746,0,28
+Corned Beef,Vegetables,250.8,17.9,0.5,19,0,0,973,98,85
+Iced Tea,Beverages,37.3,0,9.3,0.1,0,9,15,0,240
+Pumpkins,Vegetables,25.9,1,6.5,0.1,0.5,2.8,1,0,245
+Mousse,Other,224.9,4.1,16,16,0,20,75,120,100
+Bagels,Grains,250,10.1,49,1.5,2.2,5.6,370,0,98
+Sardines,Proteins,203.1,24.3,0,11.1,0,0,505,142,85
+Pot Pies,Other,198.2,4.9,18.9,11.3,2.5,4,850,40,200
+Coconuts,Other,353.7,3.3,15.2,33.3,9,6.2,20,0,45
+Soft Serve Ice Creams,Dairy,223.4,4.1,22.2,13,0,19,77,21,85
+Onion Rings,Vegetables,410.6,3.9,43.8,25.3,1.7,2.5,780,10,85
+Cocoa,Other,223.7,19.8,57.3,13.5,33.2,1.8,21,0,5
+Peaches,Fruits,39.3,0.9,9.5,0.3,1.5,8.4,0,0,150
+Cupcakes,Other,305.5,4.2,67.2,3.6,0.7,37,280,55,70
+Sandwiches,Other,232.9,11,17.9,13,2,4.5,700,40,200
+Trail Mix,Other,462,13.9,45.4,28.6,6,18,100,0,40
+Frozen Yogurt,Dairy,163.3,4.1,24.5,5.9,0,20,63,4,113
+Chocolate Cake,Other,370.7,5.2,53.4,15,2,40,390,55,80
+Chimichangas,Other,244.1,11.2,24.9,11.2,3,2.5,680,40,170
+Beer,Beverages,43.1,0.5,3.6,0,0,0,14,0,355
+Omelets,Other,154,10.4,0.6,11.7,0,0.5,340,422,100
+Souffle,Other,169.1,7.9,6,13,0,8,210,200,100
+Edamame,Vegetables,122,11,9.8,5.1,5.2,2.2,6,0,155
+Energy Drinks,Beverages,45.9,0.3,12,0.1,0,27,200,0,250
+Salad Dressing,Other,479.9,0.8,16.5,46.7,0,5,540,10,30
+Ribs,Other,351.3,22.7,0,28.1,0,0,68,92,85
+Trout,Proteins,140.9,20.1,0,6,0,0,52,73,85
+Romano Cheese,Dairy,387.4,31.8,3.6,27.3,0,0.3,1200,89,5
+Toast,Other,313.1,13,55.5,4.2,2.7,3.5,491,0,28
+Empanadas,Other,335.5,11.1,31.2,18,2,1.5,450,30,120
+Ranch Dressing,Other,483.7,1,6.8,50.5,0,2.3,580,25,30
+Cheddar Cheese,Dairy,401.9,24.8,1.3,33,0,0.5,621,102,28
+Salt,Other,0,0,0,0,0,0,38758,0,1
+Spreads,Other,235.7,7.9,12,17.1,0,5,400,10,15
+Sandwich Cookies,Other,469.7,5.6,70.4,20.2,1.2,43,340,0,34
+Granola,Other,469.3,10,64.7,20.4,6.5,22,70,0,58
+Provolone Cheese,Dairy,351.9,25.3,2.2,26.6,0,0.6,876,69,28
+Sundaes,Other,179.9,3.7,30.2,5.3,0.5,26,90,25,180
+Pepperoni,Vegetables,493.6,23.1,0,43.8,0,0.6,1582,99,28
+Focaccia,Other,249.6,8.9,35.5,7.9,2.5,1.5,490,0,57
+Soy Milk,Dairy,53.4,3.3,6.1,1.7,0.4,5.9,51,0,240
+Egg Yolks,Proteins,322.8,15.9,3.6,26.7,0,0.6,48,1085,17
+English Muffins,Grains,235.5,7.8,45.8,1.8,1.5,4,370,0,57
+Pie Crust,Other,236.7,1.8,34.5,11,1.2,2.5,370,20,28
+Chocolate Chip Cookies,Grains,487.4,5.8,56.9,28.1,1.6,36,313,37,40
+Puddings,Other,119.7,3.2,19.8,3.2,0,18,140,9,140
+Fudge,Other,411.4,2.4,76.2,10.3,0.7,75,100,10,19
+Croutons,Grains,408.1,12,72.3,6.7,3.5,1.5,800,0,14
+Stuffing,Grains,385.4,11,76.7,3.5,2.5,3,900,0,100
+Lamb Chops,Proteins,294.1,24.7,0,21.1,0,0,70,97,85
+Rum,Beverages,231.3,0,0,0,0,0,1,0,44
+Corn Chips,Vegetables,518,6,63.2,28.1,4,0.5,450,0,28
+Granola Bars,Other,471.2,10,65.3,20,3.5,25,170,0,47
+Pepper,Vegetables,40,2,9.3,0.2,25,0.6,20,0,2
+Peanut Butter,Dairy,589.5,25.1,19.4,50.3,6,6.3,429,0,32
+Sourdough Bread,Grains,288.9,11.9,56.2,1.8,2.3,2.7,471,0,50
+Corn Dogs,Vegetables,262.9,9.9,32,10.9,1,3.5,765,55,80
+Roast Chicken,Proteins,223.7,23.5,0,13,0,0,87,89,140
+Flounder,Proteins,70.3,12.4,0,1.9,0,0,83,58,85
+Flour,Grains,364.1,10.2,76,1,2.7,0.4,2,0,30
+Feta Cheese,Dairy,264.1,13.8,4.2,21.1,0,1,1116,89,28
+Black Beans,Other,132,8.9,23.7,0.5,16.6,0.3,1,0,172
+Garlic Bread,Vegetables,350.1,8.2,42.1,16.7,2,1.5,520,15,43
+Salami,Other,334.7,22,2.4,26,0,0.6,1740,79,28
+Chocolate,Other,546.1,4.9,60.7,31.4,7,47.9,24,10,40
+Nectarines,Fruits,44.2,1.1,10.7,0.3,1.7,7.9,0,0,136
+Chicken Soup,Proteins,35.5,2.5,3.4,1.2,0.5,1.5,940,20,245
+Root Beer,Beverages,41.5,0,10.8,0,0,11,45,0,355
+Sugar,Other,388,0,100,0,0,100,1,0,4
+Pate Nutrition,Other,318.2,14.1,1.5,28.1,0,1,650,150,28
+Haddock,Proteins,90.4,20,0,0.6,0,0,261,74,85
+Pancakes,Grains,226.6,6.3,28.4,9.6,1.4,9.3,445,60,77
+Potato Bread,Vegetables,265.8,12.8,46.9,3.1,2.3,5,380,0,28
+White Bread,Grains,264.9,9.1,48.9,3.2,1.9,5,491,0,28
+Eggplant,Vegetables,24.8,1,5.9,0.2,3,3.5,2,0,82
+Peanuts,Nuts & Seeds,567.5,25.3,16.1,49.2,8.5,4.7,18,0,28
+Waffles,Grains,290.3,7.9,32.7,14.3,1.5,8,560,75,75
+Vinaigrette,Other,465.5,0,2.6,51.8,0,2,340,0,15
+Grits,Grains,59,1.4,13,0.2,0.4,0.1,289,0,242
+Lo Mein,Other,122,4.8,20,2.4,1.5,2,560,25,200
+Cream,Dairy,336.3,2.8,2.7,36.6,0,3.5,38,130,30
+Turnips,Vegetables,21.7,0.7,5.1,0.1,1.8,3.8,67,0,130
+Cranberry Juice,Fruits,45.3,0.3,11.1,0.1,0.1,12.3,5,0,240
+Peach,Fruits,38.8,0.9,9.5,0.3,1.5,8.4,0,0,150
+Roast Pork,Proteins,291.8,23.5,0,21.2,0,0,55,80,85
+Turnover,Other,178.1,1.5,25.6,8.1,1.2,12,270,20,90
+Baby Carrots,Vegetables,41,0.9,10,0.2,2.8,4.7,69,0,85
+Egg Salad,Proteins,212,8.1,2.4,18.4,0,0.6,380,422,100
+Mangos,Fruits,60.6,0.8,15,0.4,1.6,13.7,1,0,200
+Miso Soup,Other,24.5,2.4,1.5,1.2,0.5,1,1530,0,245
+Mackerel,Proteins,262,24,0,18,0,0,90,70,85
+Calzones,Other,308,16,13,21,2.5,3.5,680,45,200
+Burritos,Other,180,7,23,6.8,4,2.5,800,30,220
+Soy Nuts,Other,449,43,29,22,7,6,140,0,28
+Crackers,Grains,510,6.6,61,26,2,3,650,0,28
+French Fries,Other,312,3.4,41,15,3.8,0.6,246,0,154
+Lentils,Other,114,9,20,0.4,7.9,1.8,2,0,198
+Mixed Vegetables,Other,32,1.7,6.9,0.3,3,3.5,200,0,130
+Honey,Other,304,0.3,82,0,0.2,82.1,4,0,21
+Risotto,Other,122,4.3,16,3.9,1,1.5,520,20,200
+Roast Turkey,Proteins,189,29,0.1,7.4,0,0,70,76,85
+Ice Creams,Dairy,207,3.5,24,11,0.5,22,80,44,132
+Meatloaf,Other,181,15,7.7,9.9,1,3,350,60,130
+Sunflower Seeds,Nuts & Seeds,546,19,15,50,8.6,2.6,9,0,28
+Quiche,Other,371,13,9.9,31,1,2.5,450,190,150
+Sauerkraut,Other,19,0.9,4.3,0.1,2.9,1.8,661,0,142
+Lime,Fruits,30,0.7,10.5,0.2,2.8,1.7,2,0,67
+Donuts,Other,421,6.1,48,23,1.2,21,280,20,60
+Fritters,Other,276,4.6,20,20,1.5,5,400,50,100
+Mahi Mahi,Proteins,109,24,0,0.9,0,0,96,94,85
+Dumplings,Other,230,6.2,39,5.4,1.5,2,430,30,100
+Chilaquiles,Other,195,8.9,12,12,3,3,700,25,200
+Snapper,Proteins,128,26,0,1.7,0,0,57,47,85
+Peas,Other,84,5.4,16,0.2,5.1,5.7,5,0,145
+Fruit Salad,Other,59,0.8,15,0.3,1.5,12,5,0,175
+Naan,Grains,291,9.6,50,5.7,2.1,3.5,399,0,90
+Catfish,Proteins,144,18,0,7.2,0,0,37,58,85
+Lima Beans,Other,115,7.8,21,0.4,7,1.4,2,0,188
+Pizza,Other,266,11,33,9.7,2.3,3.6,598,17,107
+Gouda Cheese,Dairy,356,25,2.2,27,0,0.6,819,114,28
+Cheeseburgers,Dairy,269,15,20,14,1.2,4,480,90,230
+Italian Dressing,Other,231,0.4,11.9,20.5,0.1,3,670,0,30
+Curries,Other,104,12,3.2,4.6,3.5,5,600,40,250
+Eel,Proteins,236,24,0,15,0,0,55,117,85
+Candies,Other,394,0,98,0.2,0,75,50,0,40
+Fried Eggs,Proteins,196,14,0.8,15,0,0.4,207,401,46
+Chicken Drumsticks,Proteins,184,24,0,9,0,0,84,93,52
+Margarita,Other,100,0.1,9.9,0,0,4,100,0,250
+Cobbler,Other,199,2,35,6.3,2,18,280,30,150
+Pepperoni Pizza,Vegetables,282,12,32,12,2.3,3.6,840,25,107
+Teriyaki Sauce,Other,89,5.9,16,0,0.1,12,2800,0,18
+Gorgonzola Cheese,Dairy,353,21,2.3,29,0,0.5,1300,70,28
+String Cheese,Dairy,300,22,2.2,22,0,1,627,79,28
+Wheat Beer,Grains,43,0.5,3.6,0,0,3,10,0,355
+Gyros,Other,185,12,11,10,2,3.5,760,80,200
+Champagne,Proteins,82,0.1,2.6,0,0,1.8,10,0,150
+Raisin Bread,Fruits,274,7.9,52,4.4,3,14,345,0,28
+Cornbread,Vegetables,266,6.7,44,7.1,2,12,489,40,65
+Wraps,Other,325,8.7,56,7.1,2.5,2,590,20,120
+Tuna,Proteins,130,29,0,0.6,0,0,50,63,85
+Fruit Cocktail,Other,73,0.4,19,0.1,0.9,15,10,0,124
+Potato Skins,Vegetables,340,13,15,26,3.5,1,210,10,100
+Seaweed,Other,38,2.4,8.4,0.3,0.5,0.5,233,0,10
+Sherbet,Other,144,1.1,30,2,0,30,70,10,113
+Horseradish,Vegetables,48,1.2,11,0.7,1.4,3.7,314,0,15
+Jambalaya,Other,156,7.1,15,7.4,2,3.5,750,70,250
+Greek Salad,Other,113,3.2,4.7,9.4,2,3,560,20,150
+Goulash,Other,107,7.6,10,3.9,2,4,660,60,250
+Stews,Other,106,11,8.2,3.2,2.5,4,700,40,245
+Havarti Cheese,Dairy,371,23,2.8,30,0,0.5,580,100,28
+Pilaf,Other,159.2,2.5,25.6,4.9,1.5,0.8,490,0,190
+Chutney,Other,120,5,10,8,2,40,480,0,30
+Cereal,Grains,376,12,73,6.7,5,12,270,0,40
+Ground Chicken,Proteins,189,23,0,11,0,0,80,88,85
+Fajitas,Other,200,14,18,7.9,2.5,3,650,55,200
+Chicken Wings,Proteins,328,17,9.8,24,0,0.4,695,97,100
+Hard Cider,Other,56,0,5.9,0,0,8,8,0,355
+Ice Pop,Other,79,0,19,0.2,0,15,10,0,80
+Ground Turkey,Proteins,258,25,0,17,0,0,93,109,85
+Crab,Proteins,83,18,0,0.7,0,0,395,82,85
+Plate Only,Other,0,0,0,0,0,0,0,0,0
+Prunes,Fruits,240,2.2,64,0.4,7.1,38.1,2,0,40
+Goat Cheese,Grains,264,19,0,21,0,0,368,47,28
+Tomato Soup,Vegetables,35,0.7,7.4,0.2,0.5,6.5,700,0,245
+Muesli,Other,352,11,76,3.3,7,15,186,0,85
+White Wine,Beverages,82,0.1,2.6,0,0,1.4,9,0,148
+Gnocchi,Other,201,6,41,1.2,1.5,0.5,245,0,130
+Apricots,Fruits,48,1.4,11,0.4,2,9.2,1,0,140
+Licorice,Grains,350,2.6,80,2.3,0.2,68,180,0,40
+Red Potatoes,Vegetables,89,2.3,20,0.1,2.2,1,8,0,148
+Roasted Potatoes,Vegetables,141,2.1,18,6.8,2.2,1,15,0,148
+Sour Cream,Dairy,198,2.4,4.6,19,0,4.3,53,44,30
+Jerky,Other,410,33,11,26,1.1,9,1872,61,28
+Coffee Creamer,Dairy,132,1,11.2,9.9,0,10,100,0,15
+Sweet Potato,Vegetables,76,1,18,0,3,4.2,55,0,130
+Chicken Nuggets,Proteins,307,16,15,20,0.5,0.5,667,50,85
+Anchovies,Proteins,210,29,0,9.7,0,0,3668,60,20
+Hummus,Other,166,7.9,14,9.6,6,0.4,379,0,62
+Crispbread,Grains,366,7.9,82,1.3,16,0.5,400,0,10
+Dates,Fruits,282,2.5,75,0.4,8,66.5,1,0,24
+Papayas,Fruits,43,0.5,11,0.3,1.7,5.9,8,0,140
+Stout Beer,Beverages,45,0.2,1.5,0,0,4,14,0,355
+Nutrition Bars,Other,400,38,40,9.8,5,22,180,5,45
+Jalapenos,Vegetables,29,0.9,6.5,0.4,2.8,4.1,1000,0,45
+Cappuccino,Other,42,2.6,4.2,1.6,0,7,77,15,240
+Buns,Grains,279,9.8,50,3.9,2,5,420,0,43
+Taco Shells,Other,476,6.4,63,22,4,1,130,0,13
+Maple Syrup,Other,260,0.1,65,0.1,0,60.5,9,0,20
+Rice Cakes,Grains,388.5,8.2,81,2.8,0.4,0.1,26,0,9
+Barley,Grains,123,2.3,28,0.4,17.3,0.4,12,0,200
+Sun Dried Tomatoes,Vegetables,258,14,56,3,12.3,37.6,2095,0,14
+Cereal Bars,Grains,342,5.9,78,0.9,3,22,200,0,37
+Nectar,Other,31.6,6.6,8.2,0,0.4,12,8,0,240
+Samosas,Other,262,3.5,24,17,3.5,2,430,15,130
+Pork,Proteins,238,26,0,14,0,0,62,90,85
+Beets,Vegetables,44,1.7,10,0.2,2.8,6.8,78,0,170
+Baked Potatoes,Vegetables,93,2.5,21,0.1,2.2,1.2,10,0,173
+American Cheese,Dairy,312,17,8.8,23,0,1.3,1242,93,28
+Pistachios,Nuts & Seeds,569,21,28,46,10.6,7.7,1,0,28
+Relish,Other,130,0.4,35,0.5,1.5,22,1280,0,15
+Camembert Cheese,Dairy,300,20,0.5,24,0,0.5,842,72,28
+Carp,Proteins,128,26,0,2.7,0,0,49,66,85
+Cherry Tomatoes,Fruits,18,0.9,3.9,0.2,1.2,2.6,5,0,100
+Couscous,Grains,112,3.8,23,0.2,1.4,0.1,5,0,173
+Cranberries,Fruits,46,0.5,12,0.1,4.6,4.3,2,0,100
+Quesadillas,Other,368,16,24,23,2.5,2,700,50,200
+Salsa,Other,29,1.5,6.6,0.2,1.5,3,340,0,60
+Almond Milk,Dairy,23,0.4,3.2,1,0.4,3.6,150,0,240
+Light Beer,Beverages,29,0.2,1.6,0,0,0,14,0,355
+Sweet Rolls,Grains,273,8.6,46,6.3,1.5,23,400,30,90
+Challah,Grains,287,9.5,48,6,1.8,7,350,50,55
+Ice Cream Soda,Dairy,51,0,13,0,0,22,50,15,350
+Flatbread,Grains,275,9.1,56,1.2,2.5,1.5,490,0,57
+Water Chestnuts,Vegetables,30,0.9,6.8,0.1,3,4,14,0,100
+Chicken Salad,Proteins,227,17,2.9,16,0.5,1.5,450,80,120
+Zucchini,Vegetables,15,1.1,2.7,0.4,1,2.5,8,0,113
+Cakes,Other,391,3,56,18,1,38,380,55,80
+Crepes,Other,165,5.9,16,8.3,1,4.5,360,115,80
+Mexican Cheese,Dairy,358,24,1.8,29,0,0.5,700,90,28
+Lobster,Proteins,143,26,3.1,1.9,0,0,423,146,85
+Tea,Beverages,1,0,0.3,0,0,0,7,0,240
+Nachos,Other,224,12,4.8,17,3.5,2,700,30,170
+Taco Salad,Other,157,7,14,8.5,3.5,3,780,50,300
+Lager,Other,43,0.5,3.6,0,0,0,14,0,355
+Jams,Other,278,0.4,69,0.1,1,48,32,0,20
+Cream Cheese,Dairy,350,6.2,5.5,34,0,2.7,321,110,28
+Capers,Other,23,2.4,4.9,0.9,3.2,0.4,2964,0,9
+Halibut,Proteins,111,23,0,1.6,0,0,68,41,85
+Latte,Other,44,2.9,4.4,1.7,0,10,77,15,240
+Taquitos,Other,286,9.3,34,13,2.5,1,560,25,80
+Cherries,Other,63,1.1,16,0.2,2.1,12.8,0,0,138
+Applesauce,Fruits,68,0.2,17,0.2,1.3,9.8,2,0,244
+Vegetable Juice,Beverages,22,0.9,3.9,0.3,1.4,5.4,267,0,240
+Meatballs,Other,286,14,8.1,22,0.5,1.5,450,75,85
+Pinto Beans,Other,143,9,26,0.7,15.4,0.3,1,0,171
+Mandarin Oranges,Fruits,53,0.8,13,0.3,1.8,10.6,2,0,195
+Soy Sauce,Other,53,8.1,4.9,0.6,0.8,0.9,5493,0,15
+Tempura,Other,105,6.5,11,3.9,1.5,2.5,430,80,100
+Chicken Apple Sausage,Fruits,160,14,3,10,0,4,650,75,85
+Spinach (Cooked),Vegetables,23,3,4,0,2.4,0.4,70,0,180
+Kimchi,Other,30,1.6,5.7,0.1,2,2.4,747,0,100
+Millet,Other,119,3.5,23.7,1,8.5,0,5,0,174
+Wheat Berry,Fruits,91,4.2,19.1,0.5,7.7,0.4,2,0,150
+Arugula,Vegetables,25,2.6,3.7,0.7,1.6,2.1,27,0,20
+Rosemary,Vegetables,131,2.9,20,5.7,14.1,0,26,0,2
+Chard,Vegetables,19,1.8,3.7,0.2,1.6,1.1,213,0,175
+Thyme,Vegetables,101,6,24,1.7,14,0,9,0,2
+Oregano,Vegetables,270,9,69,4,42.5,4.1,25,0,2
+Lemon Juice,Fruits,17,0.4,5.6,0,0.3,2.5,1,0,244
+Basil,Vegetables,24,4,2,0,1.6,0.3,4,0,2
+Tatsoi,Vegetables,22,2.2,3.9,0.3,1.5,1,30,0,85
+Cilantro,Vegetables,22.8,2.2,3.7,0.5,2.8,0.9,46,0,4
+Parsley,Vegetables,37.1,2.9,6.4,0.8,3.3,0.9,56,0,4
+Bok Choy,Vegetables,13,1.5,2.2,0.2,1,1.2,65,0,70
+Mustard Greens,Other,27,2.9,4.7,0.4,3.2,1.6,20,0,56
+Chive,Vegetables,30,3.3,4.4,0.7,2.5,1.9,3,0,3
+Celery Root,Vegetables,42,1.5,9.2,0.3,1.8,3.2,100,0,156
+Chayote Squash,Vegetables,24,0.6,5.1,0.5,1.7,1.7,2,0,200
+Endive,Vegetables,17,1.3,3.4,0.2,3.1,0.3,22,0,50
+Pumpkin Seeds,Vegetables,446,19,54,19,6,1.4,18,0,28
+Pesto,Other,562,12.1,8,54.9,2,1.5,490,10,30
+Orzo,Other,225,7.9,45.8,0.9,1.8,0.6,1,0,140
+Country Rice,Grains,152,3.9,31.6,6.8,1,0.1,5,0,186
+Green Onions,Vegetables,32,1.8,7,0.2,2.6,2.3,16,0,100
+Banana With Peel,Fruits,55.6,0.7,14.4,0.2,2.6,12.2,1,0,118
+Orange With Peel,Fruits,29.4,0.6,7.5,0.1,3.7,8.6,0,0,131
+Jicama,Vegetables,38,0.7,9,0.1,4.9,1.8,4,0,120
+Nopales,Vegetables,16,1.4,3.3,0.1,2.2,1.1,30,0,100
+Ginger,Vegetables,80,1.8,18,0.8,2,1.7,13,0,5
+Tomatillo,Other,32,1,6,1,1.9,2.7,1,0,132
+White Beans,Other,139,9.7,25.1,0.4,10.5,0.3,2,0,179
+Chia Seeds,Nuts & Seeds,486,17,42,31,34.4,0,16,0,28
+Corn Starch,Vegetables,380,0.3,91.4,0.1,0.9,0,9,0,8
+Greek Yogurt,Dairy,59,10,3.6,0.4,0,3.6,36,10,200
+Balsamic Vinegar,Other,88,0.5,17,0,0,14,23,0,15
+Corn Nuts,Vegetables,436,9,72,14,6,0.5,450,0,30
+Coconut Milk,Dairy,230,2.3,6,24,0,3.3,15,0,60
+Pizza Dough,Other,235.5,5.4,41.7,4.7,2.5,1.5,430,0,85
+Fennel,Vegetables,31,1.2,7,0.2,3.1,3.9,52,0,234
+Pizza Sauce,Other,29,1.3,7,0.2,2.5,6,540,0,60
+Pomegranate,Fruits,83,1.7,19,1.2,4,13.7,3,0,282
+Nut Cheese,Dairy,210,25.6,4,10.1,1.5,1.5,290,0,28
+Soy Sausage,Proteins,202,16,6.3,14.4,2.5,3,530,0,85
+Oil,Other,886.4,0,0,100,0,0,0,0,14
