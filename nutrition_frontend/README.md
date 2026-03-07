@@ -55,6 +55,40 @@ To use the app on your phone while the API runs on your laptop:
 
 **Firewall:** If the phone can’t reach the backend, allow inbound TCP port 8000 on your laptop (e.g. macOS: System Settings → Network → Firewall).
 
+---
+
+## QR code scanned but nothing happens in Expo Go
+
+If you scan the QR code and Expo Go stays on a blank screen, shows “Unable to connect”, or never loads the app, the phone usually **can’t reach the Metro dev server** on your laptop.
+
+### Try these in order
+
+**1. Use tunnel mode (works even on different Wi‑Fi)**  
+On the laptop, in `nutrition_frontend`:
+
+```bash
+npx expo start --tunnel
+```
+
+Wait until it prints a URL like `https://xxx.ngrok-free.app`. Then in Expo Go, scan the **new** QR code (or enter the URL). The app loads over the internet, so the phone and laptop don’t need to be on the same network.  
+First run may ask to install `@expo/ngrok`; say yes.
+
+**2. Same Wi‑Fi**  
+If you’re not using tunnel, the phone and laptop must be on the **same Wi‑Fi**. The default QR code uses your laptop’s LAN IP (e.g. `exp://192.168.1.5:8081`). If the phone is on mobile data or another network, it can’t connect.
+
+**3. Allow Metro port (8081) in the firewall**  
+- **Windows:** Allow inbound TCP port **8081** (same way you did for 8000), or allow “Node.js” / the terminal app you use for `npx expo start`.  
+- **Mac:** System Settings → Network → Firewall → allow your terminal/Node.
+
+**4. Type the URL manually in Expo Go**  
+In Expo Go, use “Enter URL manually” and type the URL shown in the terminal after `npx expo start` (e.g. `exp://192.168.1.5:8081`). Use your laptop’s real IP.
+
+**5. Restart and try again**  
+- Stop Expo (Ctrl+C), run `npx expo start` (or `npx expo start --tunnel`) again.  
+- In Expo Go, close the project if it’s stuck, then scan the QR code again.
+
+Using **`npx expo start --tunnel`** is the most reliable when “scan QR and nothing happens”.
+
 ## Get a fresh project
 
 When you're ready, run:
