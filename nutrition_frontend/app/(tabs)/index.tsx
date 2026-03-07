@@ -488,15 +488,21 @@ async function onSmartwatchSyncReal() {
     );
   }
 
+  const isWeb = Platform.OS === "web";
+
   // ✅ Form/dashboard (initial screen is "form")
   if (screen === "form") {
     return (
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, isWeb && styles.containerWeb]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={[styles.container, isWeb && styles.scrollViewWeb]}
+        contentContainerStyle={[styles.content, isWeb && styles.contentWeb]}
+        showsVerticalScrollIndicator={true}
+      >
         <View style={styles.topBar}>
           <View>
             <Text style={styles.brandTitle}>FitNourish.AI</Text>
@@ -685,6 +691,9 @@ const styles = StyleSheet.create({
   fullScreen: { flex: 1 },
 
   container: { backgroundColor: BG, minHeight: "100%" },
+  containerWeb: { height: "100vh" as unknown as number },
+  scrollViewWeb: { flex: 1, maxHeight: "100vh" as unknown as number },
+  contentWeb: { flexGrow: 1, paddingBottom: 32 },
   content: { padding: 16 },
 
   topBar: {
