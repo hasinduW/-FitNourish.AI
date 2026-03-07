@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+dataset/dish_images.pkl
+dataset/dish_metadata.pkl
+ml-models/*
 .Python
 build/
 develop-eggs/
