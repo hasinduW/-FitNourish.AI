@@ -1,5 +1,5 @@
 import { Settings } from "lucide-react-native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -105,6 +105,12 @@ export function MealPlanGeneratorScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // When daily calorie target changes (e.g. fetched from API), clear the plan so user must regenerate
+  useEffect(() => {
+    setMealPlan(null);
+    setError(null);
+  }, [dailyCalorieTarget]);
+
   const fetchMealPlan = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -162,16 +168,6 @@ export function MealPlanGeneratorScreen({
         <Text style={styles.dailyBannerText}>
           Daily Calorie Target – {dailyCalorieTarget}
         </Text>
-        <Pressable
-          onPress={onSettingsPress}
-          style={({ pressed }) => [
-            styles.dailyBannerEditBtn,
-            pressed && styles.dailyBannerEditBtnPressed,
-          ]}
-          hitSlop={8}
-        >
-          <Text style={styles.dailyBannerEditBtnText}>Edit</Text>
-        </Pressable>
       </View>
 
       {loading ? (
@@ -446,9 +442,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(46, 163, 122, 0.12)",
   },
   dailyBanner: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     width: "100%",
     backgroundColor: SAGE_GREEN,
     paddingVertical: 14,
@@ -460,20 +455,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#fff",
-  },
-  dailyBannerEditBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.25)",
-  },
-  dailyBannerEditBtnPressed: {
-    backgroundColor: "rgba(255,255,255,0.4)",
-  },
-  dailyBannerEditBtnText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#fff",
+    textAlign: "center",
   },
   mealPlanResults: {},
   sectionTitle: {

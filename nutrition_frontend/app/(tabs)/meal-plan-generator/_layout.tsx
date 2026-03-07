@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, SetStateAction, useContext, useState } from "react";
 
 export type MealPlanSettings = {
   dailyCalorieTarget: number;
@@ -9,8 +9,10 @@ export type MealPlanSettings = {
   preferredIngredients: string[];
 };
 
+export const DEFAULT_DAILY_CALORIE_TARGET = 2500;
+
 const DEFAULT_SETTINGS: MealPlanSettings = {
-  dailyCalorieTarget: 2500,
+  dailyCalorieTarget: DEFAULT_DAILY_CALORIE_TARGET,
   mealsPerDay: 3,
   calorieDistributionRatios: [0.25, 0.4, 0.35],
   targetMacroRatios: { fat: 0.3, carb: 0.45, protein: 0.25 },
@@ -19,7 +21,7 @@ const DEFAULT_SETTINGS: MealPlanSettings = {
 
 const MealPlanSettingsContext = createContext<{
   settings: MealPlanSettings;
-  setSettings: (s: MealPlanSettings) => void;
+  setSettings: React.Dispatch<SetStateAction<MealPlanSettings>>;
 }>({
   settings: DEFAULT_SETTINGS,
   setSettings: () => {},
