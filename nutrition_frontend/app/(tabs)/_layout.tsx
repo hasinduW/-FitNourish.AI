@@ -36,7 +36,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="index"
-        options={{ href: null }}
+        options={{
+          title: "Health Connect",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="fitness-center" size={26} color={color} />
+          ),
+        }}
       />
       <Tabs.Screen
         name="food-analyzer"

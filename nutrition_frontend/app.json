@@ -35,13 +35,19 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to take photos of your food for nutrition analysis.",
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to analyze food.",
           "microphonePermission": false
-        },
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 36,
-            "targetSdkVersion": 36,
-            "minSdkVersion": 26
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 26,
+            "buildToolsVersion": "35.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
           }
         }
       ],
