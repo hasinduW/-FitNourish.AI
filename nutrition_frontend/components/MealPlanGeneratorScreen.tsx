@@ -220,7 +220,7 @@ export function MealPlanGeneratorScreen({
           ) : null}
         </>
       ) : (
-        <>
+        <View style={styles.mealPlanResults}>
           {/* Section title + divider */}
           <Text style={[styles.sectionTitle, { fontFamily: Fonts.serif }]}>
             Suggested meal plan
@@ -238,75 +238,75 @@ export function MealPlanGeneratorScreen({
 
           {/* Meal cards */}
           {(mealPlan ?? []).map((meal: MealPlanItem, index: number) => (
-        <View key={index} style={styles.card}>
-          {/* Card header: background image + meal name overlay */}
-          <View style={styles.cardImageWrapper}>
-            <ImageBackground
-              source={{ uri: meal.imageUri }}
-              style={styles.cardImage}
-              resizeMode="cover"
-            >
-              <View style={styles.cardImageOverlay} />
-              <Text style={[styles.cardMealName, { zIndex: 1 }]}>{meal.mealName}</Text>
-            </ImageBackground>
-          </View>
+            <View key={index} style={styles.card}>
+              {/* Card header: background image + meal name overlay */}
+              <View style={styles.cardImageWrapper}>
+                <ImageBackground
+                  source={{ uri: meal.imageUri }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                >
+                  <View style={styles.cardImageOverlay} />
+                  <Text style={[styles.cardMealName, { zIndex: 1 }]}>{meal.mealName}</Text>
+                </ImageBackground>
+              </View>
 
-          {/* Ingredients list: max 10, preferred first, 2 columns of 5 */}
-          <View style={styles.ingredientsSection}>
-            <Text style={styles.ingredientsLabel}>Ingredients</Text>
-            <View style={styles.ingredientsTwoCol}>
-              {(() => {
-                const displayed = orderIngredientsWithPreferredFirst(meal.ingredients, preferredIngredients);
-                const col1 = displayed.slice(0, INGREDIENTS_PER_COLUMN);
-                const col2 = displayed.slice(INGREDIENTS_PER_COLUMN, MAX_INGREDIENTS);
-                return (
-                  <>
-                    <View style={styles.ingredientsColumn}>
-                      {col1.map((ing, i) => (
-                        <View key={i} style={styles.bulletRow}>
-                          <Text style={styles.bullet}>•</Text>
-                          <Text style={styles.bulletText}>{ing}</Text>
+              {/* Ingredients list: max 10, preferred first, 2 columns of 5 */}
+              <View style={styles.ingredientsSection}>
+                <Text style={styles.ingredientsLabel}>Ingredients</Text>
+                <View style={styles.ingredientsTwoCol}>
+                  {(() => {
+                    const displayed = orderIngredientsWithPreferredFirst(meal.ingredients, preferredIngredients);
+                    const col1 = displayed.slice(0, INGREDIENTS_PER_COLUMN);
+                    const col2 = displayed.slice(INGREDIENTS_PER_COLUMN, MAX_INGREDIENTS);
+                    return (
+                      <>
+                        <View style={styles.ingredientsColumn}>
+                          {col1.map((ing, i) => (
+                            <View key={i} style={styles.bulletRow}>
+                              <Text style={styles.bullet}>•</Text>
+                              <Text style={styles.bulletText}>{ing}</Text>
+                            </View>
+                          ))}
                         </View>
-                      ))}
-                    </View>
-                    <View style={styles.ingredientsColumn}>
-                      {col2.map((ing, i) => (
-                        <View key={INGREDIENTS_PER_COLUMN + i} style={styles.bulletRow}>
-                          <Text style={styles.bullet}>•</Text>
-                          <Text style={styles.bulletText}>{ing}</Text>
+                        <View style={styles.ingredientsColumn}>
+                          {col2.map((ing, i) => (
+                            <View key={INGREDIENTS_PER_COLUMN + i} style={styles.bulletRow}>
+                              <Text style={styles.bullet}>•</Text>
+                              <Text style={styles.bulletText}>{ing}</Text>
+                            </View>
+                          ))}
                         </View>
-                      ))}
-                    </View>
-                  </>
-                );
-              })()}
-            </View>
-          </View>
+                      </>
+                    );
+                  })()}
+                </View>
+              </View>
 
-          {/* Nutrients grid: Fat, Protein, Carbs */}
-          <View style={styles.nutrientsGrid}>
-            <View style={styles.nutrientBox}>
-              <Text style={styles.nutrientLabel}>Fat</Text>
-              <Text style={styles.nutrientValue}>{meal.nutrients.fat}g</Text>
-            </View>
-            <View style={styles.nutrientBox}>
-              <Text style={styles.nutrientLabel}>Protein</Text>
-              <Text style={styles.nutrientValue}>{meal.nutrients.protein}g</Text>
-            </View>
-            <View style={styles.nutrientBox}>
-              <Text style={styles.nutrientLabel}>Carbs</Text>
-              <Text style={styles.nutrientValue}>{meal.nutrients.carbs}g</Text>
-            </View>
-          </View>
+              {/* Nutrients grid: Fat, Protein, Carbs */}
+              <View style={styles.nutrientsGrid}>
+                <View style={styles.nutrientBox}>
+                  <Text style={styles.nutrientLabel}>Fat</Text>
+                  <Text style={styles.nutrientValue}>{meal.nutrients.fat}g</Text>
+                </View>
+                <View style={styles.nutrientBox}>
+                  <Text style={styles.nutrientLabel}>Protein</Text>
+                  <Text style={styles.nutrientValue}>{meal.nutrients.protein}g</Text>
+                </View>
+                <View style={styles.nutrientBox}>
+                  <Text style={styles.nutrientLabel}>Carbs</Text>
+                  <Text style={styles.nutrientValue}>{meal.nutrients.carbs}g</Text>
+                </View>
+              </View>
 
-          {/* Footer: Total Calories */}
-          <View style={styles.cardFooter}>
-            <Text style={styles.cardFooterLabel}>Total Calories</Text>
-            <Text style={styles.cardFooterValue}>{meal.totalCalories} kcal</Text>
-          </View>
-        </View>
+              {/* Footer: Total Calories */}
+              <View style={styles.cardFooter}>
+                <Text style={styles.cardFooterLabel}>Total Calories</Text>
+                <Text style={styles.cardFooterValue}>{meal.totalCalories} kcal</Text>
+              </View>
+            </View>
           ))}
-        </>
+        </View>
       )}
 
       <View style={styles.bottomSpacer} />
@@ -475,6 +475,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
   },
+  mealPlanResults: {},
   sectionTitle: {
     fontSize: 20,
     fontWeight: "600",
