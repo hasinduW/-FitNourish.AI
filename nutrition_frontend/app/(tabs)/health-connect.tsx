@@ -1,4 +1,4 @@
-// app/(tabs)/index.tsx
+// app/(tabs)/health-connect.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -113,124 +113,116 @@ export default function IndexTab() {
     setForm((prev) => ({ ...prev, goal: g }));
   }
 
-  // ✅ ONE call: connect + permissions + fetch + autofill
-async function onSmartwatchSyncReal() {
-  if (Platform.OS !== "android") {
-    Alert.alert("Not Supported", "Health Connect works on Android only.");
-    return;
+  /**
+   * onSmartwatchSyncReal — Health Connect sync for Android
+   *
+   * 1. Guards: Android only; skips if already syncing.
+   * 2. Fetches today’s data from Health Connect (steps, active mins, height, weight,
+   *    calories burned, resting/avg heart rate) via hcConnectAndFetchToday(800).
+   * 3. Builds "finalData": uses real values where present; fills missing fields with
+   *    plausible dummy values (age and stress_score are left for the user to edit).
+   * 4. Writes only the HC-related fields into the form state (steps, active_minutes,
+   *    calories_burned_active, height_cm, weight_kg, resting_heart_rate, avg_heart_rate).
+   * 5. Shows success or failure alert; always clears loading and syncing ref in finally.
+   */
+  async function onSmartwatchSyncReal() {
+    if (Platform.OS !== "android") {
+      console.log("[HC Sync] Skipped: not Android");
+      Alert.alert("Not Supported", "Health Connect works on Android only.");
+      return;
+    }
+    if (syncingRef.current) {
+      console.log("[HC Sync] Skipped: sync already in progress");
+      return;
+    }
+
+    syncingRef.current = true;
+    setLoading(true);
+    console.log("[HC Sync] Started");
+
+    try {
+      // 1) REAL data from Health Connect
+      const data = await hcConnectAndFetchToday(800);
+      console.log("[HC Sync] Raw data from Health Connect:", data);
+
+      const has = (v: any) => v !== null && v !== undefined && String(v).trim() !== "" && !Number.isNaN(Number(v));
+      const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+      const randInt = (min: number, max: number) =>
+        Math.floor(Math.random() * (max - min + 1)) + min;
+
+      // 2) finalData = real values + dummy for missing (age, stress_score untouched)
+      const finalData: any = { ...data };
+      const weight = has(finalData.weight_kg) ? Number(finalData.weight_kg) : null;
+
+      if (!has(finalData.steps_per_day)) {
+        finalData.steps_per_day = randInt(2000, 8000);
+        console.log("[HC Sync] Filled steps_per_day (dummy):", finalData.steps_per_day);
+      }
+      if (!has(finalData.active_minutes)) {
+        const steps = Number(finalData.steps_per_day);
+        finalData.active_minutes = clamp(Math.round(steps / 120), 20, 120);
+        console.log("[HC Sync] Filled active_minutes (dummy):", finalData.active_minutes);
+      }
+      if (!has(finalData.height_cm)) {
+        finalData.height_cm = randInt(150, 175);
+        console.log("[HC Sync] Filled height_cm (dummy):", finalData.height_cm);
+      }
+      if (!has(finalData.weight_kg)) {
+        finalData.weight_kg = randInt(45, 85);
+        console.log("[HC Sync] Filled weight_kg (dummy):", finalData.weight_kg);
+      }
+      if (!has(finalData.calories_burned_active)) {
+        const steps = Number(finalData.steps_per_day);
+        const mins = Number(finalData.active_minutes);
+        const w = weight ?? Number(finalData.weight_kg);
+        const base = clamp(Math.round(1200 + w * 12), 1600, 2600);
+        const activityAdd = clamp(Math.round(steps * 0.04 + mins * 4), 200, 900);
+        finalData.calories_burned_active = clamp(base + activityAdd, 1700, 3200);
+        console.log("[HC Sync] Filled calories_burned_active (dummy):", finalData.calories_burned_active);
+      }
+      if (!has(finalData.resting_heart_rate)) {
+        finalData.resting_heart_rate = randInt(55, 85);
+        console.log("[HC Sync] Filled resting_heart_rate (dummy):", finalData.resting_heart_rate);
+      }
+      if (!has(finalData.avg_heart_rate)) {
+        const rhr = Number(finalData.resting_heart_rate);
+        finalData.avg_heart_rate = clamp(rhr + randInt(10, 35), 70, 140);
+        console.log("[HC Sync] Filled avg_heart_rate (dummy):", finalData.avg_heart_rate);
+      }
+
+      console.log("[HC Sync] Final data (real + dummy):", finalData);
+
+      // 3) Apply to form (only HC fields; do not touch age, stress_score)
+      setForm((prev) => {
+        const next = { ...prev };
+        const setIfPresent = (key: keyof typeof prev, value: any) => {
+          if (value === null || value === undefined) return;
+          const str = String(value);
+          if (str.trim() === "") return;
+          (next as any)[key] = str;
+        };
+        setIfPresent("steps_per_day", finalData.steps_per_day);
+        setIfPresent("calories_burned_active", finalData.calories_burned_active);
+        setIfPresent("active_minutes", finalData.active_minutes);
+        setIfPresent("height_cm", finalData.height_cm);
+        setIfPresent("weight_kg", finalData.weight_kg);
+        setIfPresent("resting_heart_rate", finalData.resting_heart_rate);
+        setIfPresent("avg_heart_rate", finalData.avg_heart_rate);
+        console.log("[HC Sync] Form updated with keys: steps, active_minutes, calories_burned_active, height_cm, weight_kg, resting_heart_rate, avg_heart_rate");
+        return next;
+      });
+
+      console.log("[HC Sync] Success");
+      Alert.alert("Synced ✅", "Health data updated successfully.");
+    } catch (e: any) {
+      console.warn("[HC Sync] Error:", e?.message ?? e);
+      Alert.alert("Sync Failed", e?.message || "Health Connect sync failed");
+    } finally {
+      setLoading(false);
+      syncingRef.current = false;
+      console.log("[HC Sync] Finished (loading cleared)");
+    }
   }
-  if (syncingRef.current) return;
-
-  syncingRef.current = true;
-  setLoading(true);
-
-  try {
-    // 1) REAL data from Health Connect
-    const data = await hcConnectAndFetchToday(800);
-    console.log("HC data to UI (REAL):", data);
-
-    // helpers
-    const has = (v: any) => v !== null && v !== undefined && String(v).trim() !== "" && !Number.isNaN(Number(v));
-
-    const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
-    const randInt = (min: number, max: number) =>
-      Math.floor(Math.random() * (max - min + 1)) + min;
-
-    /**
-     * 2) Build "finalData" = real values + only missing fields filled with dummy
-     *    ✅ age and stress_score are NOT touched
-     */
-    const finalData: any = { ...data };
-
-    // If weight exists, use it to make calories more realistic
-    const weight = has(finalData.weight_kg) ? Number(finalData.weight_kg) : null;
-
-    // Steps
-    if (!has(finalData.steps_per_day)) {
-      finalData.steps_per_day = randInt(2000, 8000);
-    }
-
-    // Active minutes
-    if (!has(finalData.active_minutes)) {
-      // correlate with steps a bit
-      const steps = Number(finalData.steps_per_day);
-      finalData.active_minutes = clamp(Math.round(steps / 120), 20, 120); // ~ steps/120 mins
-    }
-
-    // Height
-    if (!has(finalData.height_cm)) {
-      finalData.height_cm = randInt(150, 175);
-    }
-
-    // Weight
-    if (!has(finalData.weight_kg)) {
-      finalData.weight_kg = randInt(45, 85);
-    }
-
-    // ✅ calories_burned_active = TOTAL calories demo
-    if (!has(finalData.calories_burned_active)) {
-      const steps = Number(finalData.steps_per_day);
-      const mins = Number(finalData.active_minutes);
-
-      // base daily burn depends on weight a bit
-      const w = weight ?? Number(finalData.weight_kg);
-      const base = clamp(Math.round(1200 + w * 12), 1600, 2600);
-
-      // activity add-on from steps + minutes
-      const activityAdd = clamp(Math.round(steps * 0.04 + mins * 4), 200, 900);
-
-      finalData.calories_burned_active = clamp(base + activityAdd, 1700, 3200);
-    }
-
-    // Resting HR (prefer real)
-    if (!has(finalData.resting_heart_rate)) {
-      finalData.resting_heart_rate = randInt(55, 85);
-    }
-
-    // Avg HR (if missing)
-    if (!has(finalData.avg_heart_rate)) {
-      const rhr = Number(finalData.resting_heart_rate);
-      finalData.avg_heart_rate = clamp(rhr + randInt(10, 35), 70, 140);
-    }
-
-    console.log("HC data to UI (FINAL real+dummy):", finalData);
-
-    // 3) Apply to form (only these fields)
-    setForm((prev) => {
-      const next = { ...prev };
-
-      const setIfPresent = (key: keyof typeof prev, value: any) => {
-        if (value === null || value === undefined) return;
-        const str = String(value);
-        if (str.trim() === "") return;
-        (next as any)[key] = str;
-      };
-
-      // ✅ DO NOT touch: age, stress_score (manual)
-      setIfPresent("steps_per_day", finalData.steps_per_day);
-      setIfPresent("calories_burned_active", finalData.calories_burned_active); // total calories demo
-      setIfPresent("active_minutes", finalData.active_minutes);
-      setIfPresent("height_cm", finalData.height_cm);
-      setIfPresent("weight_kg", finalData.weight_kg);
-
-      // heart: fill resting only (as you want)
-      setIfPresent("resting_heart_rate", finalData.resting_heart_rate);
-
-      // optional: you can keep avg_heart_rate fill too (looks nicer in demo)
-      setIfPresent("avg_heart_rate", finalData.avg_heart_rate);
-
-      return next;
-    });
-
-    Alert.alert("Synced ✅", "Health data updated successfully.");
-  } catch (e: any) {
-    console.log("HC error", e);
-    Alert.alert("Sync Failed", e?.message || "Health Connect sync failed");
-  } finally {
-    setLoading(false);
-    syncingRef.current = false;
-  }
-}
 
   function toPayload() {
     const num = (v: string) => (v && String(v).trim() !== "" ? Number(v) : 0);
