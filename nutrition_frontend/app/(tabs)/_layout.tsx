@@ -35,7 +35,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="index"
+        name="health-connect"
         options={{
           title: "Health Connect",
           tabBarIcon: ({ color }) => (
