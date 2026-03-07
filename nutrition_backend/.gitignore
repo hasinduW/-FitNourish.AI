@@ -31,13 +31,12 @@ env.bak/
 venv.bak/
 
 # Dataset files
-dataset/
+dataset/images
 
 
 
 
 # ML Models
-ml-models/
 model/
 models/*.keras
 
