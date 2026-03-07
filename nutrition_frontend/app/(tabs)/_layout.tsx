@@ -2,15 +2,19 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs } from "expo-router";
 import React from "react";
 
-import { HapticTab } from "@/components/haptic-tab";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { HapticTab } from "../../components/haptic-tab";
+import { Colors } from "../../constants/theme";
+import { useColorScheme } from "../../hooks/use-color-scheme";
 
 const PRIMARY_GREEN = "#2EA37A";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const tint = PRIMARY_GREEN;
+
+  // ✅ Ensure TypeScript knows this is only "light" or "dark"
+  const theme: "light" | "dark" =
+    colorScheme === "dark" ? "dark" : "light";
 
   return (
     <Tabs

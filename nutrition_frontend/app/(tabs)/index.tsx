@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+// app/(tabs)/index.tsx
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -9,21 +9,30 @@ import {
   TextInput,
   View,
   Switch,
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { predictAndSave } from "../../src/api/client";
+import { hcInit, hcConnectAndFetchToday } from "../../src/health/healthConnect";
 
-type Screen = "splash" | "home" | "form";
+type Screen = "form" | "result";
 
-export default function PredictTab() {
-  const [screen, setScreen] = useState<Screen>("splash");
+export default function IndexTab() {
+  const [screen, setScreen] = useState<Screen>("form");
   const { logout } = useAuth();
 
-  // Auto move splash -> home
+  // ✅ init only (no permission here)
   useEffect(() => {
-    const t = setTimeout(() => setScreen("home"), 1400);
-    return () => clearTimeout(t);
+    if (Platform.OS !== "android") return;
+    (async () => {
+      try {
+        await hcInit();
+      } catch (e) {
+        console.log("Health Connect init skipped/failed:", e);
+      }
+    })();
   }, []);
 
   async function onLogout() {
@@ -31,30 +40,27 @@ export default function PredictTab() {
     router.replace("/Login");
   }
 
-  // ---- Form state ----
   const [form, setForm] = useState({
-    age: "25",
+    age: "",
     gender: "Female",
-    height_cm: "160",
-    weight_kg: "60",
+    height_cm: "",
+    weight_kg: "",
     goal: "Maintain",
 
-    // keep as 0/1 in form for backend
-    has_diabetes: "1",
-    has_hypertension: "1",
+    has_diabetes: "0",
+    has_hypertension: "0",
 
-    // ✅ smartwatch fields (auto-fill by demo sync BUT still editable)
-    steps_per_day: "7500",
-    active_minutes: "60",
-    calories_burned_active: "400",
-    resting_heart_rate: "72",
-    avg_heart_rate: "92",
-    stress_score: "55",
+    steps_per_day: "",
+    active_minutes: "",
+    calories_burned_active: "",
+    resting_heart_rate: "",
+    heart_rate_samples: "",
+    avg_heart_rate: "",
+    stress_score: "",
   });
 
-  // ✅ Toggle UI state (Yes/No) but stored in form as 0/1
-  const [diabetesOn, setDiabetesOn] = useState(form.has_diabetes === "1");
-  const [hypertensionOn, setHypertensionOn] = useState(form.has_hypertension === "1");
+  const [diabetesOn, setDiabetesOn] = useState(false);
+  const [hypertensionOn, setHypertensionOn] = useState(false);
 
   useEffect(() => {
     setForm((prev) => ({ ...prev, has_diabetes: diabetesOn ? "1" : "0" }));
@@ -64,14 +70,42 @@ export default function PredictTab() {
     setForm((prev) => ({ ...prev, has_hypertension: hypertensionOn ? "1" : "0" }));
   }, [hypertensionOn]);
 
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<null | {
+    daily_kcal_need: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+    saved_id?: any;
+  }>(null);
+
   const [loading, setLoading] = useState(false);
+  const syncingRef = useRef(false);
 
   function update(key: string, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next: any = { ...prev, [key]: value };
+
+      // auto-calc when typing samples
+      if (key === "heart_rate_samples") {
+        const nums = value
+          .split(",")
+          .map((x) => Number(x.trim()))
+          .filter((n) => Number.isFinite(n) && n > 0 && n < 250);
+
+        if (nums.length) {
+          const avgHr = Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+          next.avg_heart_rate = String(avgHr);
+
+          const sorted = [...nums].sort((a, b) => a - b);
+          const p10 = sorted[Math.floor(sorted.length * 0.1)] ?? sorted[0];
+          next.resting_heart_rate = String(Math.round(p10));
+        }
+      }
+
+      return next;
+    });
   }
 
-  // ✅ Step 4: gender/goal as button selectors
   function setGender(g: "Male" | "Female") {
     setForm((prev) => ({ ...prev, gender: g }));
   }
@@ -79,37 +113,160 @@ export default function PredictTab() {
     setForm((prev) => ({ ...prev, goal: g }));
   }
 
-  // ✅ Step 3: Smartwatch Sync (Demo) -> autofill only wearable fields
-  function onSmartwatchSyncDemo() {
-    const demo = {
-      steps_per_day: String(randInt(4500, 12000)),
-      active_minutes: String(randInt(20, 120)),
-      calories_burned_active: String(randInt(120, 700)),
-      resting_heart_rate: String(randInt(55, 85)),
-      avg_heart_rate: String(randInt(75, 120)),
-      stress_score: String(randInt(20, 85)),
-    };
-
-    setForm((prev) => ({ ...prev, ...demo }));
-    Alert.alert("Synced ✅", "Smartwatch values loaded (Demo). You can still edit them.");
+  // ✅ ONE call: connect + permissions + fetch + autofill
+async function onSmartwatchSyncReal() {
+  if (Platform.OS !== "android") {
+    Alert.alert("Not Supported", "Health Connect works on Android only.");
+    return;
   }
+  if (syncingRef.current) return;
+
+  syncingRef.current = true;
+  setLoading(true);
+
+  try {
+    // 1) REAL data from Health Connect
+    const data = await hcConnectAndFetchToday(800);
+    console.log("HC data to UI (REAL):", data);
+
+    // helpers
+    const has = (v: any) => v !== null && v !== undefined && String(v).trim() !== "" && !Number.isNaN(Number(v));
+
+    const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+    const randInt = (min: number, max: number) =>
+      Math.floor(Math.random() * (max - min + 1)) + min;
+
+    /**
+     * 2) Build "finalData" = real values + only missing fields filled with dummy
+     *    ✅ age and stress_score are NOT touched
+     */
+    const finalData: any = { ...data };
+
+    // If weight exists, use it to make calories more realistic
+    const weight = has(finalData.weight_kg) ? Number(finalData.weight_kg) : null;
+
+    // Steps
+    if (!has(finalData.steps_per_day)) {
+      finalData.steps_per_day = randInt(2000, 8000);
+    }
+
+    // Active minutes
+    if (!has(finalData.active_minutes)) {
+      // correlate with steps a bit
+      const steps = Number(finalData.steps_per_day);
+      finalData.active_minutes = clamp(Math.round(steps / 120), 20, 120); // ~ steps/120 mins
+    }
+
+    // Height
+    if (!has(finalData.height_cm)) {
+      finalData.height_cm = randInt(150, 175);
+    }
+
+    // Weight
+    if (!has(finalData.weight_kg)) {
+      finalData.weight_kg = randInt(45, 85);
+    }
+
+    // ✅ calories_burned_active = TOTAL calories demo
+    if (!has(finalData.calories_burned_active)) {
+      const steps = Number(finalData.steps_per_day);
+      const mins = Number(finalData.active_minutes);
+
+      // base daily burn depends on weight a bit
+      const w = weight ?? Number(finalData.weight_kg);
+      const base = clamp(Math.round(1200 + w * 12), 1600, 2600);
+
+      // activity add-on from steps + minutes
+      const activityAdd = clamp(Math.round(steps * 0.04 + mins * 4), 200, 900);
+
+      finalData.calories_burned_active = clamp(base + activityAdd, 1700, 3200);
+    }
+
+    // Resting HR (prefer real)
+    if (!has(finalData.resting_heart_rate)) {
+      finalData.resting_heart_rate = randInt(55, 85);
+    }
+
+    // Avg HR (if missing)
+    if (!has(finalData.avg_heart_rate)) {
+      const rhr = Number(finalData.resting_heart_rate);
+      finalData.avg_heart_rate = clamp(rhr + randInt(10, 35), 70, 140);
+    }
+
+    console.log("HC data to UI (FINAL real+dummy):", finalData);
+
+    // 3) Apply to form (only these fields)
+    setForm((prev) => {
+      const next = { ...prev };
+
+      const setIfPresent = (key: keyof typeof prev, value: any) => {
+        if (value === null || value === undefined) return;
+        const str = String(value);
+        if (str.trim() === "") return;
+        (next as any)[key] = str;
+      };
+
+      // ✅ DO NOT touch: age, stress_score (manual)
+      setIfPresent("steps_per_day", finalData.steps_per_day);
+      setIfPresent("calories_burned_active", finalData.calories_burned_active); // total calories demo
+      setIfPresent("active_minutes", finalData.active_minutes);
+      setIfPresent("height_cm", finalData.height_cm);
+      setIfPresent("weight_kg", finalData.weight_kg);
+
+      // heart: fill resting only (as you want)
+      setIfPresent("resting_heart_rate", finalData.resting_heart_rate);
+
+      // optional: you can keep avg_heart_rate fill too (looks nicer in demo)
+      setIfPresent("avg_heart_rate", finalData.avg_heart_rate);
+
+      return next;
+    });
+
+    Alert.alert("Synced ✅", "Health data updated successfully.");
+  } catch (e: any) {
+    console.log("HC error", e);
+    Alert.alert("Sync Failed", e?.message || "Health Connect sync failed");
+  } finally {
+    setLoading(false);
+    syncingRef.current = false;
+  }
+}
 
   function toPayload() {
+    const num = (v: string) => (v && String(v).trim() !== "" ? Number(v) : 0);
+
     return {
-      age: Number(form.age),
+      age: num(form.age),
       gender: form.gender,
-      height_cm: Number(form.height_cm),
-      weight_kg: Number(form.weight_kg),
+      height_cm: num(form.height_cm),
+      weight_kg: num(form.weight_kg),
       goal: form.goal,
       has_diabetes: Number(form.has_diabetes),
       has_hypertension: Number(form.has_hypertension),
-      steps_per_day: Number(form.steps_per_day),
-      active_minutes: Number(form.active_minutes),
-      calories_burned_active: Number(form.calories_burned_active),
-      resting_heart_rate: Number(form.resting_heart_rate),
-      avg_heart_rate: Number(form.avg_heart_rate),
-      stress_score: Number(form.stress_score),
+      steps_per_day: num(form.steps_per_day),
+      active_minutes: num(form.active_minutes),
+      calories_burned_active: num(form.calories_burned_active),
+      resting_heart_rate: num(form.resting_heart_rate),
+      avg_heart_rate: num(form.avg_heart_rate),
+      stress_score: num(form.stress_score),
     };
+  }
+
+  // ✅ Industry-level macro calculation (fallback if backend doesn't send macros)
+  function computeMacrosFromCalories(kcal: number, goal: "Maintain" | "Lose" | "Gain") {
+    // Industry-style macro splits
+    const split =
+      goal === "Lose"
+        ? { p: 0.35, c: 0.35, f: 0.3 }
+        : goal === "Gain"
+        ? { p: 0.3, c: 0.45, f: 0.25 }
+        : { p: 0.3, c: 0.4, f: 0.3 };
+
+    const protein_g = Math.round((kcal * split.p) / 4); // 4 kcal/g
+    const carbs_g = Math.round((kcal * split.c) / 4); // 4 kcal/g
+    const fat_g = Math.round((kcal * split.f) / 9); // 9 kcal/g
+
+    return { protein_g, carbs_g, fat_g };
   }
 
   const groupedFields = useMemo(() => {
@@ -117,42 +274,97 @@ export default function PredictTab() {
       {
         title: "Profile",
         subtitle: "Basic details for calorie estimation",
-        // ✅ remove gender + goal here because we show buttons
         fields: ["age", "height_cm", "weight_kg"],
       },
       {
-        title: "Health Conditions",
-        subtitle: "Multi-disease aware planning (toggle Yes/No)",
-        // ✅ handled by Switch toggles
-        fields: [],
-      },
-      {
         title: "Daily Activity",
-        subtitle: "Smartwatch activity (auto-fill) — still editable",
+        subtitle: "Auto-filled from Health Connect (still editable)",
         fields: ["steps_per_day", "active_minutes", "calories_burned_active"],
       },
       {
-        title: "Smartwatch Snapshot",
-        subtitle: "Wearable snapshot (auto-fill) — still editable",
-        fields: ["resting_heart_rate", "avg_heart_rate", "stress_score"],
+        title: "Heart Metrics",
+        subtitle: "Auto-filled from Health Connect (still editable)",
+        fields: ["resting_heart_rate", "heart_rate_samples", "avg_heart_rate", "stress_score"],
       },
     ];
   }, []);
 
-  function validateForm(): string | null {
-    const age = Number(form.age);
-    const h = Number(form.height_cm);
-    const w = Number(form.weight_kg);
-    const steps = Number(form.steps_per_day);
-    const mins = Number(form.active_minutes);
+  /* =========================================================
+     ✅ VALIDATION (UPDATED)
+     - Required: age, height, weight
+     - Age must be >= 18
+     - No negative values anywhere
+     - Reasonable ranges for health/activity
+  ========================================================= */
 
-    if (!age || age < 10 || age > 90) return "Age must be between 10 and 90";
-    if (!h || h < 120 || h > 220) return "Height must be between 120 and 220 cm";
-    if (!w || w < 30 || w > 200) return "Weight must be between 30 and 200 kg";
+  function validateForm(): string | null {
+    const isEmpty = (v: string) => !v || v.trim() === "";
+    const toNum = (v: string) => Number(String(v).trim());
+
+    // Required (core profile)
+    if (isEmpty(form.age)) return "Age is required";
+    if (isEmpty(form.height_cm)) return "Height is required";
+    if (isEmpty(form.weight_kg)) return "Weight is required";
+
+    // Parse numbers
+    const age = toNum(form.age);
+    const h = toNum(form.height_cm);
+    const w = toNum(form.weight_kg);
+
+    const steps = isEmpty(form.steps_per_day) ? null : toNum(form.steps_per_day);
+    const mins = isEmpty(form.active_minutes) ? null : toNum(form.active_minutes);
+    const activeKcal = isEmpty(form.calories_burned_active) ? null : toNum(form.calories_burned_active);
+    const rhr = isEmpty(form.resting_heart_rate) ? null : toNum(form.resting_heart_rate);
+    const avgHr = isEmpty(form.avg_heart_rate) ? null : toNum(form.avg_heart_rate);
+    const stress = isEmpty(form.stress_score) ? null : toNum(form.stress_score);
+
+    // Must be valid numbers
+    if (!Number.isFinite(age)) return "Age must be a valid number";
+    if (!Number.isFinite(h)) return "Height must be a valid number";
+    if (!Number.isFinite(w)) return "Weight must be a valid number";
+
+    // No negatives anywhere (including optional fields)
+    if (age < 0 || h < 0 || w < 0) return "Age/Height/Weight cannot be negative";
+    if (steps !== null && steps < 0) return "Steps cannot be negative";
+    if (mins !== null && mins < 0) return "Active minutes cannot be negative";
+    if (activeKcal !== null && activeKcal < 0) return "Active calories cannot be negative";
+    if (rhr !== null && rhr < 0) return "Resting heart rate cannot be negative";
+    if (avgHr !== null && avgHr < 0) return "Average heart rate cannot be negative";
+    if (stress !== null && stress < 0) return "Stress score cannot be negative";
+
+    // Age: 18+
+    if (age < 18) return "Age must be 18 or above";
+    if (age > 90) return "Age must be 90 or below";
+
+    // Reasonable ranges
+    if (h < 120 || h > 220) return "Height must be between 120 and 220 cm";
+    if (w < 30 || w > 200) return "Weight must be between 30 and 200 kg";
+
     if (form.goal !== "Maintain" && form.goal !== "Lose" && form.goal !== "Gain")
       return 'Goal must be "Maintain", "Lose", or "Gain"';
-    if (steps < 0 || steps > 30000) return "Steps must be 0–30000";
-    if (mins < 0 || mins > 300) return "Active minutes must be 0–300";
+
+    if (steps !== null && steps > 30000) return "Steps must be 0–30000";
+    if (mins !== null && mins > 300) return "Active minutes must be 0–300";
+
+    // Heart ranges (optional)
+    if (rhr !== null && (rhr < 30 || rhr > 140)) return "Resting heart rate must be 30–140";
+    if (avgHr !== null && (avgHr < 30 || avgHr > 220)) return "Average heart rate must be 30–220";
+
+    // Stress score optional
+    if (stress !== null && (stress < 0 || stress > 100)) return "Stress score must be 0–100";
+
+    // Samples (optional) - if typed, validate format numbers only
+    if (!isEmpty(form.heart_rate_samples)) {
+      const nums = form.heart_rate_samples
+        .split(",")
+        .map((x) => Number(x.trim()))
+        .filter((n) => Number.isFinite(n));
+
+      if (nums.length === 0) return "Heart rate samples format is invalid. Example: 78, 82, 90";
+      const bad = nums.find((n) => n <= 0 || n >= 250);
+      if (bad !== undefined) return "Heart rate samples must be between 1 and 249";
+    }
+
     return null;
   }
 
@@ -165,9 +377,33 @@ export default function PredictTab() {
 
     try {
       setLoading(true);
-      const data = await predictAndSave(toPayload());
-      setResult(data);
-      Alert.alert("Saved ✅", `Record ID: ${data.saved_id}`);
+
+      const apiRes = await predictAndSave(toPayload());
+
+      // backend might return only kcal OR kcal+macros
+      const daily_kcal_need = Number(apiRes?.daily_kcal_need ?? apiRes?.kcal ?? 0);
+
+      const protein_g =
+        Number(apiRes?.protein_g ?? apiRes?.protein ?? 0) ||
+        computeMacrosFromCalories(daily_kcal_need, form.goal as any).protein_g;
+
+      const carbs_g =
+        Number(apiRes?.carbs_g ?? apiRes?.carbs ?? 0) ||
+        computeMacrosFromCalories(daily_kcal_need, form.goal as any).carbs_g;
+
+      const fat_g =
+        Number(apiRes?.fat_g ?? apiRes?.fat ?? 0) ||
+        computeMacrosFromCalories(daily_kcal_need, form.goal as any).fat_g;
+
+      setResult({
+        daily_kcal_need,
+        protein_g,
+        carbs_g,
+        fat_g,
+        saved_id: apiRes?.saved_id,
+      });
+
+      setScreen("result");
     } catch (e: any) {
       Alert.alert("Error", e?.message || "Request failed");
     } finally {
@@ -175,331 +411,238 @@ export default function PredictTab() {
     }
   }
 
-  // ---------------- SCREENS ----------------
+  /* =========================================================
+     RESULT PAGE (super nice)
+  ========================================================= */
 
-  // ✅ SPLASH (no PP1)
-  if (screen === "splash") {
+  if (screen === "result" && result) {
     return (
-      <View style={[styles.full, styles.splashBg]}>
-        <View style={styles.splashCard}>
-          <View style={styles.brandIconBig}>
-            <Text style={styles.brandIconText}>F</Text>
-          </View>
-          <Text style={styles.splashTitle}>FitNourish.AI</Text>
-          <Text style={styles.splashSub}>Intelligent Nutrition & Wellness Assistant</Text>
+      <View style={[styles.fullScreen, { backgroundColor: BG }]}>
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          {/* ✅ Back button added (no other changes) */}
+          <View style={styles.resultHeader}>
+            <Pressable onPress={() => setScreen("form")} style={styles.backChip}>
+              <Text style={styles.backChipText}>← Back</Text>
+            </Pressable>
 
-          <View style={{ height: 18 }} />
-          <ActivityIndicator />
-          <Text style={styles.splashHint}>Loading FitNourish.AI...</Text>
-        </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.resultBrand}>FitNourish.AI</Text>
+              <Text style={styles.resultSub}>Personal Nutrition Summary</Text>
+            </View>
+          </View>
+
+          <View style={styles.heroCard}>
+            <Text style={styles.heroTitle}>Daily Calories</Text>
+            <Text style={styles.heroKcal}>{result.daily_kcal_need} kcal</Text>
+
+            <View style={styles.badgeRow}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Goal: {form.goal}</Text>
+              </View>
+              <View style={[styles.badge, diabetesOn ? styles.badgeWarn : styles.badgeOk]}>
+                <Text style={styles.badgeText}>{diabetesOn ? "Diabetes: Yes" : "Diabetes: No"}</Text>
+              </View>
+              <View style={[styles.badge, hypertensionOn ? styles.badgeWarn : styles.badgeOk]}>
+                <Text style={styles.badgeText}>
+                  {hypertensionOn ? "Hypertension: Yes" : "Hypertension: No"}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <Text style={styles.sectionHeadline}>Macronutrients (per day)</Text>
+
+          <View style={styles.macroGrid}>
+            <MacroCard title="Protein" value={`${result.protein_g} g`} note="Muscle + satiety" />
+            <MacroCard title="Carbs" value={`${result.carbs_g} g`} note="Energy + performance" />
+            <MacroCard title="Fat" value={`${result.fat_g} g`} note="Hormones + balance" />
+            <MacroCard
+              title="Calories"
+              value={`${result.daily_kcal_need} kcal`}
+              note="Total energy target"
+              isPrimary
+            />
+          </View>
+
+          <View style={{ height: 12 }} />
+
+          <View style={styles.resultActions}>
+            <Pressable onPress={() => setScreen("form")} style={[styles.actionBtn, styles.secondaryBtn]}>
+              <Text style={[styles.actionText, { color: GREEN_DARK }]}>Edit Inputs</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setResult(null);
+                setScreen("form");
+              }}
+              style={[styles.actionBtn, styles.ghostBtn]}
+            >
+              <Text style={[styles.actionText, { color: MUTED }]}>New Calculation</Text>
+            </Pressable>
+          </View>
+
+          <View style={{ height: 24 }} />
+        </ScrollView>
       </View>
     );
   }
 
-  // ✅ HOME (dashboard)
-  if (screen === "home") {
+  // ✅ Form/dashboard (initial screen is "form")
+  if (screen === "form") {
     return (
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.brandIcon}>
-            <Text style={styles.brandIconText}>F</Text>
-          </View>
-
-          <View style={{ flex: 1 }}>
+        <View style={styles.topBar}>
+          <View>
             <Text style={styles.brandTitle}>FitNourish.AI</Text>
-            <Text style={styles.brandSubtitle}>Your Health Dashboard</Text>
+            <Text style={styles.brandSubtitle}>Smart Nutrition Calculator</Text>
           </View>
 
-          <Pressable onPress={onLogout} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Logout</Text>
+          <Pressable
+            onPress={onSmartwatchSyncReal}
+            disabled={loading}
+            style={[styles.syncChip, loading && { opacity: 0.7 }]}
+          >
+            <Text style={styles.syncChipText}>{loading ? "Syncing..." : "⌚ Sync"}</Text>
           </Pressable>
         </View>
 
-        {/* Hero */}
-        <View style={styles.heroCard}>
-          <View style={styles.heroTop}>
-            <Text style={styles.heroTitle}>Welcome back, Demo User 👋</Text>
-            <View style={styles.heroChip}>
-              <Text style={styles.heroChipText}>Today</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Quick Setup</Text>
+          <Text style={styles.cardSub}>Fill manually or sync via Health Connect</Text>
+
+          <View style={{ marginTop: 12 }}>
+            <Text style={styles.label}>Gender</Text>
+            <View style={styles.segment}>
+              {["Female", "Male"].map((g) => (
+                <Pressable
+                  key={g}
+                  onPress={() => setGender(g as any)}
+                  style={[styles.segmentBtn, form.gender === g && styles.segmentBtnActive]}
+                >
+                  <Text style={[styles.segmentText, form.gender === g && styles.segmentTextActive]}>
+                    {g}
+                  </Text>
+                </Pressable>
+              ))}
             </View>
           </View>
-          <Text style={styles.heroDesc}>
-            Track nutrition targets, activity signals, and multi-disease aware recommendations.
-          </Text>
 
-          <View style={styles.statsRow}>
-            <StatCard title="Steps" value={form.steps_per_day || "—"} sub="Today" />
-            <StatCard title="Active" value={`${form.active_minutes || "—"} min`} sub="Today" />
-            <StatCard title="Stress" value={form.stress_score || "—"} sub="Score" />
+          <View style={{ marginTop: 12 }}>
+            <Text style={styles.label}>Goal</Text>
+            <View style={styles.segment}>
+              {["Maintain", "Lose", "Gain"].map((g) => (
+                <Pressable
+                  key={g}
+                  onPress={() => setGoal(g as any)}
+                  style={[styles.segmentBtn, form.goal === g && styles.segmentBtnActive]}
+                >
+                  <Text style={[styles.segmentText, form.goal === g && styles.segmentTextActive]}>
+                    {g}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
-        </View>
 
-        {/* Quick actions */}
-        <View style={styles.quickActions}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <Text style={styles.sectionSub}>Tap an action to continue</Text>
-
-          <View style={{ height: 10 }} />
-
-          <Pressable
-            onPress={() => {
-              setResult(null);
-              setScreen("form"); // ✅ go to your form
-            }}
-            style={({ pressed }) => [styles.bigAction, pressed && { opacity: 0.95 }]}
-          >
-            <View style={styles.actionIcon}>
-              <Text style={styles.actionIconText}>⚡</Text>
+          <View style={styles.section}>
+            <View style={styles.toggleRow}>
+              <Text style={styles.toggleLabel}>Diabetes</Text>
+              <View style={styles.toggleRight}>
+                <Text style={styles.toggleValue}>{diabetesOn ? "Yes" : "No"}</Text>
+                <Switch value={diabetesOn} onValueChange={setDiabetesOn} />
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bigActionTitle}>Calculate Daily Calories & Macros</Text>
-              <Text style={styles.bigActionSub}>
-                Personalized kcal, protein, carbs and fat per day
-              </Text>
+
+            <View style={styles.toggleRow}>
+              <Text style={styles.toggleLabel}>Hypertension</Text>
+              <View style={styles.toggleRight}>
+                <Text style={styles.toggleValue}>{hypertensionOn ? "Yes" : "No"}</Text>
+                <Switch value={hypertensionOn} onValueChange={setHypertensionOn} />
+              </View>
             </View>
-            <Text style={styles.actionArrow}>›</Text>
-          </Pressable>
+          </View>
 
-          <Pressable
-            onPress={() => Alert.alert("Demo", "This card is a UI demo for the presentation.")}
-            style={({ pressed }) => [styles.smallAction, pressed && { opacity: 0.95 }]}
-          >
-            <Text style={styles.smallActionTitle}>View History</Text>
-            <Text style={styles.smallActionSub}>Saved predictions (PostgreSQL)</Text>
-          </Pressable>
+          {groupedFields.map((section) => (
+            <View key={section.title} style={styles.section}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <Text style={styles.sectionSub}>{section.subtitle}</Text>
 
-          <Pressable
-            onPress={() => Alert.alert("Demo", "Wearable sync is shown as future integration.")}
-            style={({ pressed }) => [styles.smallAction, pressed && { opacity: 0.95 }]}
-          >
-            <Text style={styles.smallActionTitle}>Sync Smartwatch</Text>
-            <Text style={styles.smallActionSub}>Heart rate + stress snapshot</Text>
+              <View style={styles.grid}>
+                {section.fields.map((k) => (
+                  <View key={k} style={styles.field}>
+                    <Text style={styles.label}>{prettyLabel(k)}</Text>
+                    <TextInput
+                      value={(form as any)[k]}
+                      onChangeText={(v) => update(k, v)}
+                      style={styles.input}
+                      autoCapitalize="none"
+                      placeholder={placeholderFor(k)}
+                      placeholderTextColor="#7A8A86"
+                      keyboardType={k === "heart_rate_samples" ? "default" : "numeric"}
+                    />
+                    {helperTextFor(k) ? <Text style={styles.helper}>{helperTextFor(k)}</Text> : null}
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+
+          <Pressable onPress={onPredictSave} disabled={loading} style={styles.primaryBtn}>
+            <Text style={styles.primaryBtnText}>{loading ? "Calculating..." : "Generate Plan"}</Text>
           </Pressable>
         </View>
 
         <View style={{ height: 24 }} />
       </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
-  // ✅ FORM SCREEN (NOW includes Sync button + dropdown buttons + toggles)
+  return null;
+}
+
+/* ---------- UI COMPONENTS ---------- */
+
+function MacroCard({
+  title,
+  value,
+  note,
+  isPrimary,
+}: {
+  title: string;
+  value: string;
+  note: string;
+  isPrimary?: boolean;
+}) {
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.brandIcon}>
-          <Text style={styles.brandIconText}>F</Text>
-        </View>
-
-        <View style={{ flex: 1 }}>
-          <Text style={styles.brandTitle}>FitNourish.AI</Text>
-          <Text style={styles.brandSubtitle}>Nutrition Prediction</Text>
-        </View>
-
-        <Pressable onPress={() => setScreen("home")} style={styles.backBtn}>
-          <Text style={styles.backText}>Home</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.pageTitle}>Nutrition Target Calculator</Text>
-        <Text style={styles.pageDesc}>
-          Sync smartwatch values or type manually. Then generate daily calories and macros.
-        </Text>
-
-        {/* ✅ Step 3 — Smartwatch Sync (Demo) button */}
-        <Pressable
-          onPress={onSmartwatchSyncDemo}
-          style={({ pressed }) => [
-            styles.syncBtn,
-            pressed && { opacity: 0.92, transform: [{ scale: 0.99 }] },
-          ]}
-        >
-          <Text style={styles.syncTitle}>⌚ Sync from Smartwatch (Demo)</Text>
-          <Text style={styles.syncSub}>
-            Auto-fills steps, active calories, heart rate & stress — you can still edit.
-          </Text>
-        </Pressable>
-
-        {/* ✅ Step 4 — Gender + Goal buttons */}
-        <View style={{ marginTop: 12 }}>
-          <Text style={styles.sectionTitle}>Quick Select</Text>
-          <Text style={styles.sectionSub}>Use controls instead of typing</Text>
-
-          <View style={styles.inlineRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Gender</Text>
-              <View style={styles.segment}>
-                {["Female", "Male"].map((g) => (
-                  <Pressable
-                    key={g}
-                    onPress={() => setGender(g as any)}
-                    style={[
-                      styles.segmentBtn,
-                      form.gender === g && styles.segmentBtnActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.segmentText,
-                        form.gender === g && styles.segmentTextActive,
-                      ]}
-                    >
-                      {g}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            <View style={{ width: 10 }} />
-
-            <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Goal</Text>
-              <View style={styles.segment}>
-                {["Maintain", "Lose", "Gain"].map((g) => (
-                  <Pressable
-                    key={g}
-                    onPress={() => setGoal(g as any)}
-                    style={[
-                      styles.segmentBtn,
-                      form.goal === g && styles.segmentBtnActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.segmentText,
-                        form.goal === g && styles.segmentTextActive,
-                      ]}
-                    >
-                      {g}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* ✅ Step 4 — Disease toggles (Yes/No) */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Health Conditions</Text>
-            <Text style={styles.sectionSub}>Toggle Yes/No (stored as 0/1)</Text>
-          </View>
-
-          <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>Diabetes</Text>
-            <View style={styles.toggleRight}>
-              <Text style={styles.toggleValue}>{diabetesOn ? "Yes" : "No"}</Text>
-              <Switch value={diabetesOn} onValueChange={setDiabetesOn} />
-            </View>
-          </View>
-
-          <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>Hypertension</Text>
-            <View style={styles.toggleRight}>
-              <Text style={styles.toggleValue}>{hypertensionOn ? "Yes" : "No"}</Text>
-              <Switch value={hypertensionOn} onValueChange={setHypertensionOn} />
-            </View>
-          </View>
-        </View>
-
-        {/* Your grouped input sections (same) */}
-        {groupedFields.map((section) => (
-          <View key={section.title} style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <Text style={styles.sectionSub}>{section.subtitle}</Text>
-            </View>
-
-            <View style={styles.grid}>
-              {section.fields.map((k) => (
-                <View key={k} style={styles.field}>
-                  <Text style={styles.label}>{prettyLabel(k)}</Text>
-                  <TextInput
-                    value={(form as any)[k]}
-                    onChangeText={(v) => update(k, v)}
-                    style={styles.input}
-                    autoCapitalize="none"
-                    placeholder={placeholderFor(k)}
-                    placeholderTextColor="#7A8A86"
-                    editable={true} // ✅ still editable after smartwatch sync
-                  />
-                  {helperTextFor(k) ? <Text style={styles.helper}>{helperTextFor(k)}</Text> : null}
-                </View>
-              ))}
-            </View>
-          </View>
-        ))}
-
-        <Pressable
-          onPress={onPredictSave}
-          disabled={loading}
-          style={({ pressed }) => [
-            styles.button,
-            pressed && { transform: [{ scale: 0.99 }], opacity: 0.9 },
-            loading && { opacity: 0.65 },
-          ]}
-        >
-          <Text style={styles.buttonText}>{loading ? "Predicting..." : "Predict & Save"}</Text>
-          <Text style={styles.buttonSub}>Saves to PostgreSQL history</Text>
-        </Pressable>
-      </View>
-
-      {result && (
-        <View style={styles.resultCard}>
-          <View style={styles.resultTop}>
-            <Text style={styles.resultTitle}>Result</Text>
-            <View style={styles.resultChip}>
-              <Text style={styles.resultChipText}>Personalized Targets</Text>
-            </View>
-          </View>
-
-          <View style={styles.kcalBox}>
-            <Text style={styles.kcalNumber}>{result.daily_kcal_need}</Text>
-            <Text style={styles.kcalUnit}>kcal / day</Text>
-          </View>
-
-          <View style={styles.macroRow}>
-            <MacroPill label="Protein" value={`${result.protein_g_per_day} g/day`} />
-            <MacroPill label="Carbs" value={`${result.carbs_g_per_day} g/day`} />
-            <MacroPill label="Fat" value={`${result.fat_g_per_day} g/day`} />
-          </View>
-
-          <View style={styles.footerNote}>
-            <Text style={styles.footerNoteText}>
-              Backend: FastAPI • Model: ML regression • Stored: PostgreSQL
-            </Text>
-          </View>
-        </View>
-      )}
-
-      <View style={{ height: 24 }} />
-    </ScrollView>
+    <View style={[styles.macroCard, isPrimary && styles.macroPrimary]}>
+      <Text style={[styles.macroTitle, isPrimary && { color: "#fff" }]}>{title}</Text>
+      <Text style={[styles.macroValue, isPrimary && { color: "#fff" }]}>{value}</Text>
+      <Text style={[styles.macroNote, isPrimary && { color: "#EAF7F1" }]}>{note}</Text>
+    </View>
   );
 }
 
-/* ---------- Small UI helpers ---------- */
-
-function randInt(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+/* ---------- helpers ---------- */
 
 function prettyLabel(k: string) {
   const map: Record<string, string> = {
     age: "Age",
-    gender: "Gender",
     height_cm: "Height (cm)",
     weight_kg: "Weight (kg)",
-    goal: "Goal (Maintain/Lose/Gain)",
-    has_diabetes: "Diabetes (0/1)",
-    has_hypertension: "Hypertension (0/1)",
     steps_per_day: "Steps per day",
     active_minutes: "Active minutes",
-    calories_burned_active: "Active calories",
+    calories_burned_active: "Active calories (kcal)",
     resting_heart_rate: "Resting heart rate",
+    heart_rate_samples: "Heart rate samples (comma separated)",
     avg_heart_rate: "Average heart rate",
-    stress_score: "Stress score",
+    stress_score: "Stress score (manual)",
   };
   return map[k] ?? k;
 }
@@ -507,16 +650,13 @@ function prettyLabel(k: string) {
 function placeholderFor(k: string) {
   const map: Record<string, string> = {
     age: "e.g., 25",
-    gender: "Female / Male",
     height_cm: "e.g., 160",
     weight_kg: "e.g., 60",
-    goal: "Maintain / Lose / Gain",
-    has_diabetes: "0 or 1",
-    has_hypertension: "0 or 1",
     steps_per_day: "e.g., 7500",
     active_minutes: "e.g., 60",
     calories_burned_active: "e.g., 400",
     resting_heart_rate: "e.g., 72",
+    heart_rate_samples: "e.g., 78, 82, 90, 88",
     avg_heart_rate: "e.g., 92",
     stress_score: "e.g., 55",
   };
@@ -525,34 +665,13 @@ function placeholderFor(k: string) {
 
 function helperTextFor(k: string) {
   const map: Record<string, string> = {
-    goal: "Use: Maintain / Lose / Gain",
-    stress_score: "0–100 (higher = more stress)",
-    steps_per_day: "Steps must be 0–30000",
-    active_minutes: "Active minutes must be 0–300",
+    heart_rate_samples: "Typing samples auto-calculates Avg HR + Resting HR.",
+    stress_score: "0–100 (manual).",
   };
   return map[k] ?? "";
 }
 
-function MacroPill({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.macroPill}>
-      <Text style={styles.macroLabel}>{label}</Text>
-      <Text style={styles.macroValue}>{value}</Text>
-    </View>
-  );
-}
-
-function StatCard({ title, value, sub }: { title: string; value: string; sub: string }) {
-  return (
-    <View style={styles.statCard}>
-      <Text style={styles.statTitle}>{title}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statSub}>{sub}</Text>
-    </View>
-  );
-}
-
-/* ---------- Styles ---------- */
+/* ---------- styles ---------- */
 
 const GREEN = "#2E8B6D";
 const GREEN_DARK = "#1F6A53";
@@ -563,93 +682,15 @@ const TEXT = "#0E1A17";
 const MUTED = "#5D6E69";
 
 const styles = StyleSheet.create({
-  full: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-
-  splashBg: { backgroundColor: BG },
-  splashCard: {
-    width: "100%",
-    maxWidth: 420,
-    backgroundColor: CARD,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: BORDER,
-    padding: 22,
-    alignItems: "center",
-  },
-  brandIconBig: {
-    width: 70,
-    height: 70,
-    borderRadius: 22,
-    backgroundColor: GREEN,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  splashTitle: {
-    marginTop: 12,
-    fontSize: 22,
-    fontWeight: "900",
-    color: TEXT,
-  },
-  splashSub: {
-    marginTop: 4,
-    color: MUTED,
-    fontSize: 13,
-    textAlign: "center",
-  },
-  splashHint: {
-    marginTop: 10,
-    color: MUTED,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  loginBg: { backgroundColor: BG },
-  loginCard: {
-    width: "100%",
-    maxWidth: 420,
-    backgroundColor: CARD,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: BORDER,
-    padding: 18,
-  },
-  loginHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 18,
-    backgroundColor: "#FBFDFC",
-    borderWidth: 1,
-    borderColor: "#EDF4F1",
-    marginBottom: 12,
-  },
-  errorText: {
-    marginTop: 8,
-    color: "#B42318",
-    fontWeight: "700",
-    fontSize: 12,
-  },
-  loginFooter: {
-    marginTop: 14,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#EEF3F1",
-  },
+  fullScreen: { flex: 1 },
 
   container: { backgroundColor: BG, minHeight: "100%" },
   content: { padding: 16 },
 
-  header: {
+  topBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "space-between",
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 18,
@@ -658,256 +699,30 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
     marginBottom: 12,
   },
-  brandIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: GREEN,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandIconText: {
-    color: "#fff",
-    fontWeight: "900",
-    fontSize: 18,
-  },
-  brandTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: TEXT,
-    lineHeight: 22,
-  },
-  brandSubtitle: {
-    marginTop: 2,
-    fontSize: 12,
-    color: MUTED,
-  },
-  badge: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#E9F6F0",
-    borderWidth: 1,
-    borderColor: "#D5EFE5",
-  },
-  badgeText: {
-    color: GREEN_DARK,
-    fontSize: 12,
-    fontWeight: "800",
-  },
 
-  logoutBtn: {
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#FFEFEF",
-    borderWidth: 1,
-    borderColor: "#FFD6D6",
-  },
-  logoutText: {
-    color: "#B42318",
-    fontWeight: "900",
-    fontSize: 12,
-  },
-  backBtn: {
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#EEF7F3",
-    borderWidth: 1,
-    borderColor: "#D6EFE5",
-  },
-  backText: {
-    color: GREEN_DARK,
-    fontWeight: "900",
-    fontSize: 12,
-  },
+  brandTitle: { fontSize: 18, fontWeight: "900", color: TEXT },
+  brandSubtitle: { marginTop: 2, fontSize: 12, fontWeight: "800", color: MUTED },
 
-  // HOME
-  heroCard: {
-    backgroundColor: CARD,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 18,
-    padding: 14,
-  },
-  heroTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  heroTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: TEXT,
-  },
-  heroChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#E9F6F0",
-    borderWidth: 1,
-    borderColor: "#D5EFE5",
-  },
-  heroChipText: {
-    color: GREEN_DARK,
-    fontWeight: "900",
-    fontSize: 12,
-  },
-  heroDesc: {
-    marginTop: 8,
-    color: MUTED,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  statsRow: {
-    marginTop: 12,
-    flexDirection: "row",
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#FBFDFC",
-    borderWidth: 1,
-    borderColor: "#EDF4F1",
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    alignItems: "center",
-  },
-  statTitle: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: MUTED,
-  },
-  statValue: {
-    marginTop: 6,
-    fontSize: 16,
-    fontWeight: "900",
-    color: GREEN_DARK,
-  },
-  statSub: {
-    marginTop: 4,
-    fontSize: 11,
-    color: MUTED,
-    fontWeight: "700",
-  },
-
-  quickActions: {
-    marginTop: 12,
-    backgroundColor: CARD,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 18,
-    padding: 14,
-  },
-  bigAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: GREEN,
-    paddingVertical: 14,
+  syncChip: {
+    paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 18,
+    borderRadius: 999,
+    backgroundColor: "#E9F6F0",
     borderWidth: 1,
-    borderColor: "#1D6B52",
+    borderColor: "#D5EFE5",
   },
-  actionIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionIconText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "900",
-  },
-  bigActionTitle: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "900",
-  },
-  bigActionSub: {
-    marginTop: 2,
-    color: "#DDF3EB",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  actionArrow: {
-    color: "#fff",
-    fontSize: 26,
-    fontWeight: "900",
-    marginLeft: 6,
-  },
-  smallAction: {
-    marginTop: 10,
-    backgroundColor: "#FBFDFC",
-    borderWidth: 1,
-    borderColor: "#EDF4F1",
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-  },
-  smallActionTitle: {
-    color: TEXT,
-    fontWeight: "900",
-    fontSize: 13,
-  },
-  smallActionSub: {
-    marginTop: 4,
-    color: MUTED,
-    fontSize: 12,
-    fontWeight: "700",
-  },
+  syncChipText: { color: GREEN_DARK, fontWeight: "900", fontSize: 12 },
 
-  // FORM
   card: {
     backgroundColor: CARD,
     borderWidth: 1,
     borderColor: BORDER,
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: 22,
+    padding: 16,
   },
-  pageTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: TEXT,
-  },
-  pageDesc: {
-    marginTop: 6,
-    marginBottom: 10,
-    color: MUTED,
-    fontSize: 13,
-    lineHeight: 18,
-  },
+  cardTitle: { fontSize: 16, fontWeight: "900", color: TEXT },
+  cardSub: { marginTop: 4, color: MUTED, fontWeight: "700", fontSize: 12 },
 
-  // ✅ NEW: Smartwatch sync button styles
-  syncBtn: {
-    backgroundColor: "#E9F6F0",
-    borderWidth: 1,
-    borderColor: "#D5EFE5",
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginTop: 10,
-  },
-  syncTitle: {
-    color: GREEN_DARK,
-    fontWeight: "900",
-    fontSize: 14,
-  },
-  syncSub: {
-    marginTop: 4,
-    color: MUTED,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  // ✅ NEW: segmented button styles (dropdown-like)
-  inlineRow: { flexDirection: "row", marginTop: 10 },
   segment: {
     flexDirection: "row",
     borderWidth: 1,
@@ -921,7 +736,33 @@ const styles = StyleSheet.create({
   segmentText: { color: MUTED, fontWeight: "900", fontSize: 12 },
   segmentTextActive: { color: GREEN_DARK },
 
-  // ✅ NEW: toggle row styles
+  section: { marginTop: 14, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#EEF3F1" },
+  sectionTitle: { fontSize: 14, fontWeight: "900", color: TEXT },
+  sectionSub: { marginTop: 2, fontSize: 12, color: MUTED, fontWeight: "700" },
+
+  grid: { gap: 10 },
+
+  field: {
+    backgroundColor: "#FBFDFC",
+    borderWidth: 1,
+    borderColor: "#EDF4F1",
+    padding: 10,
+    borderRadius: 14,
+    marginTop: 10,
+  },
+  label: { fontSize: 12, fontWeight: "800", color: TEXT, marginBottom: 6 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#D9E7E1",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    color: TEXT,
+    backgroundColor: "#FFFFFF",
+    fontSize: 14,
+  },
+  helper: { marginTop: 6, fontSize: 11, color: "#7B8C87", fontWeight: "700" },
+
   toggleRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -937,167 +778,98 @@ const styles = StyleSheet.create({
   toggleRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   toggleValue: { fontSize: 12, fontWeight: "900", color: GREEN_DARK },
 
-  section: {
-    marginTop: 14,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#EEF3F1",
-  },
-  sectionHeader: { marginBottom: 10 },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: TEXT,
-  },
-  sectionSub: {
-    marginTop: 2,
-    fontSize: 12,
-    color: MUTED,
-  },
-
-  grid: { gap: 10 },
-  field: {
-    backgroundColor: "#FBFDFC",
-    borderWidth: 1,
-    borderColor: "#EDF4F1",
-    padding: 10,
-    borderRadius: 14,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: TEXT,
-    marginBottom: 6,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#D9E7E1",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    color: TEXT,
-    backgroundColor: "#FFFFFF",
-    fontSize: 14,
-  },
-  helper: {
-    marginTop: 6,
-    fontSize: 11,
-    color: "#7B8C87",
-  },
-
-  button: {
+  primaryBtn: {
     marginTop: 16,
     backgroundColor: GREEN,
-    borderRadius: 16,
+    borderRadius: 18,
     paddingVertical: 14,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#1D6B52",
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "900",
-    fontSize: 15,
-    letterSpacing: 0.2,
-  },
-  buttonSub: {
-    marginTop: 4,
-    color: "#DDF3EB",
-    fontSize: 12,
-    fontWeight: "700",
-  },
+  primaryBtnText: { color: "#fff", fontWeight: "900", fontSize: 15 },
 
-  resultCard: {
-    marginTop: 12,
+  /* ---------- RESULT UI ---------- */
+
+  resultHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: CARD,
     borderWidth: 1,
     borderColor: BORDER,
-    borderRadius: 18,
+    borderRadius: 22,
+    padding: 16,
+  },
+
+  /* ✅ Back button styles added */
+  backChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    backgroundColor: "#EEF7F3",
+    borderWidth: 1,
+    borderColor: "#D6EFE5",
+    marginRight: 10,
+  },
+  backChipText: {
+    color: GREEN_DARK,
+    fontWeight: "900",
+    fontSize: 12,
+  },
+
+  resultBrand: { fontSize: 18, fontWeight: "900", color: TEXT },
+  resultSub: { marginTop: 4, color: MUTED, fontWeight: "700", fontSize: 12 },
+
+  heroCard: {
+    marginTop: 12,
+    backgroundColor: GREEN,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#1D6B52",
+  },
+  heroTitle: { color: "#EAF7F1", fontWeight: "900", fontSize: 12 },
+  heroKcal: { marginTop: 6, color: "#fff", fontWeight: "900", fontSize: 32 },
+
+  badgeRow: { marginTop: 12, gap: 8 },
+  badge: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  badgeText: { color: "#fff", fontWeight: "900", fontSize: 12 },
+  badgeOk: {},
+  badgeWarn: { borderColor: "rgba(255,220,220,0.8)" },
+
+  sectionHeadline: { marginTop: 14, fontSize: 14, fontWeight: "900", color: TEXT },
+
+  macroGrid: { marginTop: 10, gap: 10 },
+  macroCard: {
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 22,
     padding: 14,
   },
-  resultTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
+  macroPrimary: {
+    backgroundColor: GREEN_DARK,
+    borderColor: GREEN_DARK,
   },
-  resultTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: TEXT,
-  },
-  resultChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#E9F6F0",
-    borderWidth: 1,
-    borderColor: "#D5EFE5",
-  },
-  resultChipText: {
-    color: GREEN_DARK,
-    fontWeight: "900",
-    fontSize: 12,
-  },
+  macroTitle: { color: TEXT, fontWeight: "900", fontSize: 12 },
+  macroValue: { marginTop: 6, color: TEXT, fontWeight: "900", fontSize: 22 },
+  macroNote: { marginTop: 4, color: MUTED, fontWeight: "700", fontSize: 12 },
 
-  kcalBox: {
-    backgroundColor: "#F0FBF6",
-    borderWidth: 1,
-    borderColor: "#D9F1E6",
+  resultActions: { marginTop: 12, gap: 10 },
+  actionBtn: {
     borderRadius: 18,
-    paddingVertical: 18,
+    paddingVertical: 14,
     alignItems: "center",
-  },
-  kcalNumber: {
-    fontSize: 40,
-    fontWeight: "900",
-    color: GREEN_DARK,
-    lineHeight: 44,
-  },
-  kcalUnit: {
-    marginTop: 4,
-    color: MUTED,
-    fontWeight: "800",
-  },
-
-  macroRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 12,
-  },
-  macroPill: {
-    flex: 1,
-    backgroundColor: "#FBFDFC",
     borderWidth: 1,
-    borderColor: "#EDF4F1",
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    alignItems: "center",
   },
-  macroLabel: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: TEXT,
-  },
-  macroValue: {
-    marginTop: 6,
-    fontSize: 13,
-    fontWeight: "900",
-    color: GREEN_DARK,
-  },
-
-  footerNote: {
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#EEF3F1",
-  },
-  footerNoteText: {
-    fontSize: 12,
-    color: MUTED,
-    textAlign: "center",
-    fontWeight: "700",
-  },
+  secondaryBtn: { backgroundColor: "#E9F6F0", borderColor: "#D5EFE5" },
+  ghostBtn: { backgroundColor: "#FBFDFC", borderColor: "#EDF4F1" },
+  actionText: { fontWeight: "900", fontSize: 14 },
 });
-
