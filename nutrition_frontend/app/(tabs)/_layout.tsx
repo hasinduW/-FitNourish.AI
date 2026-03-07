@@ -26,13 +26,17 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="dashboard"
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="home" size={26} color={color} />
           ),
         }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{ href: null }}
       />
       <Tabs.Screen
         name="food-analyzer"
@@ -57,12 +61,17 @@ export default function TabLayout() {
         options={{ href: null }}
       />
       <Tabs.Screen
+        name="explore"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="person" size={26} color={color} />
-          ),
+          // title: "Profile",
+          // tabBarIcon: ({ color }) => (
+          //   <MaterialIcons name="person" size={26} color={color} />
+          // ),
+          href: null,
         }}
       />
     </Tabs>

@@ -1,3 +1,11 @@
+import { View } from "react-native";
+
+// Explore tab disabled – original implementation commented out below.
+export default function TabTwoScreen() {
+  return <View />;
+}
+
+/*
 import { Image } from "expo-image";
 import { Platform, StyleSheet } from "react-native";
 
@@ -125,3 +133,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 });
+*/

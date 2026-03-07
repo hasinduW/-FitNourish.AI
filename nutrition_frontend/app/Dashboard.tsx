@@ -44,7 +44,7 @@ export default function Dashboard() {
         {/* Meal Generation Card */}
         <TouchableOpacity
           style={[styles.bigCard, styles.mealCard]}
-          onPress={() => router.push("/(tabs)")}
+          onPress={() => router.push("/(tabs)/meal-plan-generator")}
           activeOpacity={0.85}
         >
           <View style={styles.bigCardIcon}>
@@ -74,6 +74,26 @@ export default function Dashboard() {
             </Text>
             <Text style={[styles.bigCardDesc, styles.healthCardDesc]}>
               Assessments, analytics and health profile management
+            </Text>
+          </View>
+          <Text style={[styles.bigCardArrow, { color: "#059669" }]}>→</Text>
+        </TouchableOpacity>
+
+        {/* Food Analyzer Card */}
+        <TouchableOpacity
+          style={[styles.bigCard, styles.healthCard]}
+          onPress={() => router.push("/(tabs)/food-analyzer")}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.bigCardIcon, styles.healthIcon]}>
+            <Text style={styles.bigCardEmoji}>📷</Text>
+          </View>
+          <View style={styles.bigCardContent}>
+            <Text style={[styles.bigCardTitle, styles.healthCardTitle]}>
+              Food Analyzer
+            </Text>
+            <Text style={[styles.bigCardDesc, styles.healthCardDesc]}>
+              Scan or upload food images for instant nutrition analysis
             </Text>
           </View>
           <Text style={[styles.bigCardArrow, { color: "#059669" }]}>→</Text>
