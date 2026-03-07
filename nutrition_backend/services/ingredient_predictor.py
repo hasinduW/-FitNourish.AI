@@ -10,8 +10,10 @@ import numpy as np
 from pathlib import Path
 import tempfile
 
-# Force CPU before importing TensorFlow to avoid predict() hanging in main process
+# TensorFlow env before import (CPU only, reduce log noise on Windows/Mac)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
 import tensorflow as tf
 tf.config.set_visible_devices([], "GPU")
 try:
