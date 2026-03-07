@@ -99,10 +99,10 @@ export default function Dashboard() {
           <Text style={[styles.bigCardArrow, { color: "#059669" }]}>→</Text>
         </TouchableOpacity>
 
-        {/* Health Connect Card */}
+        {/* Health Connect Card — navigates to Health Connect tab (app/(tabs)/health-connect.tsx) */}
         <TouchableOpacity
           style={[styles.bigCard, styles.healthCard]}
-          onPress={() => router.push("/(tabs)/index")}
+          onPress={() => router.push("/(tabs)/health-connect" as any)}
           activeOpacity={0.85}
         >
           <View style={[styles.bigCardIcon, styles.healthIcon]}>
