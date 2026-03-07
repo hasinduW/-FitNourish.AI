@@ -253,20 +253,28 @@ def select_dish_for_meal(target_calories, available_dishes, target_macro_profile
         target_percentage = target_ratio * 100
         available_dishes['macro_deviation'] += abs(available_dishes[f'{macro}_pc'] - target_percentage)
 
-    # 4. Optional: bonus for dishes containing preferred ingredients (lower score = better)
+    # 4. Preferred ingredients: when set, prefer (or restrict to) dishes that contain at least one
+    preferred_set = None
     if preferred_ingredients and dish_ingr_names is not None and len(preferred_ingredients) > 0:
         preferred_set = {str(s).strip().lower() for s in preferred_ingredients if s}
         bonus_map = {}
         for did in available_dishes['dish'].unique():
             ingr_names = dish_ingr_names.get(did, [])
-            # Match: exact (ing in preferred_set) or partial (preferred substring of dish ingredient)
             has_match = any(ing in preferred_set for ing in ingr_names) or any(
                 any(pref in ing for ing in ingr_names) for pref in preferred_set
             )
-            bonus_map[did] = -50.0 if has_match else 0.0
+            # Strong bonus so preferred-ingredient dishes win unless calorie/macro fit is very bad
+            bonus_map[did] = -400.0 if has_match else 0.0
         available_dishes['preferred_bonus'] = available_dishes['dish'].map(bonus_map).fillna(0)
     else:
         available_dishes['preferred_bonus'] = 0.0
+
+    # 4b. When preferred_ingredients is set: if any dishes contain at least one, restrict to those
+    #     so we guarantee using preferred ingredients (e.g. 2 meals both can use carrot/chicken)
+    if preferred_set is not None:
+        matching_mask = available_dishes['preferred_bonus'] < 0
+        if matching_mask.any():
+            available_dishes = available_dishes[matching_mask].copy()
 
     # 5. Combined score: lower is better
     available_dishes['combined_score'] = (

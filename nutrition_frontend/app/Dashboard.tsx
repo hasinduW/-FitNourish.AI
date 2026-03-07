@@ -99,6 +99,26 @@ export default function Dashboard() {
           <Text style={[styles.bigCardArrow, { color: "#059669" }]}>→</Text>
         </TouchableOpacity>
 
+        {/* Health Connect Card */}
+        <TouchableOpacity
+          style={[styles.bigCard, styles.healthCard]}
+          onPress={() => router.push("/(tabs)/index")}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.bigCardIcon, styles.healthIcon]}>
+            <Text style={styles.bigCardEmoji}>⌚</Text>
+          </View>
+          <View style={styles.bigCardContent}>
+            <Text style={[styles.bigCardTitle, styles.healthCardTitle]}>
+              Health Connect
+            </Text>
+            <Text style={[styles.bigCardDesc, styles.healthCardDesc]}>
+              Sync steps, heart rate & calories from your watch or Health Connect
+            </Text>
+          </View>
+          <Text style={[styles.bigCardArrow, { color: "#059669" }]}>→</Text>
+        </TouchableOpacity>
+
         {/* Quick Stats Row */}
         <Text style={[styles.sectionLabel, { marginTop: 8 }]}>
           QUICK ACCESS
