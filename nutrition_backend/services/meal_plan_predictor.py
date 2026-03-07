@@ -298,6 +298,7 @@ def save_meal_plan_to_db(
     num_meals: int,
     calorie_distribution_ratios: list,
     target_macro_ratios: dict,
+    user_id: str = None,
 ):
     """
     Save a meal plan to MongoDB. Returns the meal_plan document _id (as string).
@@ -319,6 +320,7 @@ def save_meal_plan_to_db(
             "ingredients": ingredients_str,
         })
     doc = {
+        "user_id": user_id,
         "daily_calorie_target": daily_calorie_target,
         "num_meals": num_meals,
         "calorie_distribution_ratios": calorie_distribution_ratios,
@@ -336,7 +338,7 @@ def save_meal_plan_to_db(
         raise
 
 
-def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distribution_ratios=None, target_macro_ratios=None, preferred_ingredients=None, save_to_db: bool = True) -> list:
+def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distribution_ratios=None, target_macro_ratios=None, preferred_ingredients=None, save_to_db: bool = True, user_id: str = None) -> list:
     daily_calorie_target = total_calories
     num_meals = meals_per_day
     
@@ -489,6 +491,7 @@ def generate_meal_plan(total_calories: float, meals_per_day: int, calorie_distri
                 num_meals=num_meals,
                 calorie_distribution_ratios=calorie_distribution_ratios,
                 target_macro_ratios=target_macro_ratios,
+                user_id=user_id,
             )
             print(f"\n✅ Meal plan saved to database (id={meal_plan_id})")
         except Exception as e:

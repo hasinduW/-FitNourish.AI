@@ -1,7 +1,9 @@
-# Limit TensorFlow threads before any TF import (avoids predict() hanging)
+# TensorFlow env (set before any TF import): threads, logging, oneDNN
 import os
 os.environ["TF_NUM_INTEROP_THREADS"] = "1"
 os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"   # 0=all, 1=no INFO, 2=no WARNING, 3=errors only
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # Reduces oneDNN messages on Windows
 
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -77,6 +79,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:8081",
         "http://127.0.0.1:8081",
+        "http://localhost:8082",
+        "http://127.0.0.1:8082",
         "http://localhost:5173",  # Vite default port
         "http://localhost:3000",  # React default port
         "http://127.0.0.1:5173",
@@ -376,6 +380,7 @@ async def suggest_meals(request: MealSuggestionRequest, user_id: str = Depends(g
             calorie_distribution_ratios,
             target_macro_ratios,
             preferred_ingredients=preferred_ingredients if preferred_ingredients else None,
+            user_id=user_id,
         )
         
         # Get meal names and times
