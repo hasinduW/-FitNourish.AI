@@ -39,44 +39,65 @@ type FoodAnalyzerScreenProps = {
 export function FoodAnalyzerScreen({ onProceed: onProceedProp }: FoodAnalyzerScreenProps = {}) {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pickerBusy, setPickerBusy] = useState(false);
 
   async function openCamera() {
+    if (pickerBusy) return;
+    setPickerBusy(true);
     try {
       const { status } = await requestCameraPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permission needed", "Camera access is required to take photos.");
+        Alert.alert(
+          "Permission needed",
+          "Camera access is required to take photos. Please enable it in your device settings.",
+          [{ text: "OK" }]
+        );
         return;
       }
       const result = await launchCameraAsync({
         mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [4, 3],
+        allowsEditing: false,
+        quality: 0.85,
       });
-      if (!result.canceled) {
+      if (!result.canceled && result.assets?.[0]?.uri) {
         setImageUri(result.assets[0].uri);
       }
     } catch (e) {
-      Alert.alert("Error", (e as Error).message || "Failed to open camera.");
+      const msg = (e as Error).message || "Failed to open camera.";
+      Alert.alert("Error", msg);
+      if (__DEV__) console.warn("openCamera error:", e);
+    } finally {
+      setPickerBusy(false);
     }
   }
 
   async function openGallery() {
+    if (pickerBusy) return;
+    setPickerBusy(true);
     try {
       const { status } = await requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permission needed", "Gallery access is required to upload photos.");
+        Alert.alert(
+          "Permission needed",
+          "Gallery access is required to upload photos. Please enable it in your device settings.",
+          [{ text: "OK" }]
+        );
         return;
       }
       const result = await launchImageLibraryAsync({
         mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [4, 3],
+        allowsEditing: false,
+        quality: 0.85,
       });
-      if (!result.canceled) {
+      if (!result.canceled && result.assets?.[0]?.uri) {
         setImageUri(result.assets[0].uri);
       }
     } catch (e) {
-      Alert.alert("Error", (e as Error).message || "Failed to open gallery.");
+      const msg = (e as Error).message || "Failed to open gallery.";
+      Alert.alert("Error", msg);
+      if (__DEV__) console.warn("openGallery error:", e);
+    } finally {
+      setPickerBusy(false);
     }
   }
 
@@ -162,13 +183,21 @@ export function FoodAnalyzerScreen({ onProceed: onProceedProp }: FoodAnalyzerScr
             </Text>
             <Pressable
               onPress={openCamera}
+              disabled={pickerBusy}
               style={({ pressed }) => [
                 styles.primaryBtn,
                 pressed && styles.primaryBtnPressed,
+                pickerBusy && styles.btnDisabled,
               ]}
             >
-              <Camera size={20} color="#fff" strokeWidth={2} />
-              <Text style={styles.primaryBtnText}>Open Camera</Text>
+              {pickerBusy ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Camera size={20} color="#fff" strokeWidth={2} />
+                  <Text style={styles.primaryBtnText}>Open Camera</Text>
+                </>
+              )}
             </Pressable>
           </>
         )}
@@ -188,13 +217,21 @@ export function FoodAnalyzerScreen({ onProceed: onProceedProp }: FoodAnalyzerScr
       ) : (
         <Pressable
           onPress={openGallery}
+          disabled={pickerBusy}
           style={({ pressed }) => [
             styles.secondaryBtn,
             pressed && styles.secondaryBtnPressed,
+            pickerBusy && styles.btnDisabled,
           ]}
         >
-          <FolderOpen size={20} color={GRAY_TEXT} strokeWidth={1.5} />
-          <Text style={styles.secondaryBtnText}>Upload from Gallery</Text>
+          {pickerBusy ? (
+            <ActivityIndicator size="small" color={GRAY_TEXT} />
+          ) : (
+            <>
+              <FolderOpen size={20} color={GRAY_TEXT} strokeWidth={1.5} />
+              <Text style={styles.secondaryBtnText}>Upload from Gallery</Text>
+            </>
+          )}
         </Pressable>
       )}
     </ScrollView>
@@ -328,6 +365,9 @@ const styles = StyleSheet.create({
   },
   primaryBtnPressed: {
     backgroundColor: PRIMARY_GREEN_DARK,
+  },
+  btnDisabled: {
+    opacity: 0.7,
   },
   primaryBtnText: {
     color: "#fff",
