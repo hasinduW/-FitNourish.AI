@@ -14,7 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from typing import List
 import joblib
 import pandas as pd
@@ -30,7 +30,7 @@ from db import get_db, get_database
 from database_models import PREDICTIONS
 from services.nutrients_predictor import predict_nutrients_from_image, predict_nutrients_from_image_bytes
 from services.ingredient_predictor import predict_ingredients_from_image, predict_ingredients_from_image_bytes
-from services.meal_plan_predictor import generate_meal_plan
+from services.meal_plan_predictor import generate_meal_plan, get_dish_image_bytes
 from models import (  # Pydantic models
     UserInput,
     MealSuggestionRequest,
@@ -337,8 +337,27 @@ async def analyze_meal(request: Request, image: UploadFile = File(...), user_id:
         )
 
 
+@app.get(
+    "/api/dish-image/{dish_id}",
+    response_class=Response,
+    summary="Get dish image",
+    description="Returns the image for a dish from the dataset (dataset/images/<dish_id>.pkl). Used by meal plan to display dish images.",
+    responses={200: {"content": {"image/jpeg": {}}, "description": "JPEG image"}, 404: {"description": "Dish or image not found"}},
+)
+def get_dish_image(dish_id: str):
+    """Serve dish image from dataset. No auth required so the frontend can use the URL in Image components."""
+    image_bytes = get_dish_image_bytes(dish_id)
+    if not image_bytes:
+        raise HTTPException(status_code=404, detail="Dish image not found")
+    return Response(content=image_bytes, media_type="image/jpeg")
+
+
 @app.post("/api/suggest-meals", response_model=List[MealSuggestion])
-async def suggest_meals(request: MealSuggestionRequest, user_id: str = Depends(get_current_user_id)):
+async def suggest_meals(
+    request: MealSuggestionRequest,
+    req: Request,
+    user_id: str = Depends(get_current_user_id),
+):
     """
     Suggest meals based on total daily calories and number of meals per day.
     Uses ML model to generate personalized meal plans.
@@ -430,12 +449,18 @@ async def suggest_meals(request: MealSuggestionRequest, user_id: str = Depends(g
             # Backend visibility: which preferred ingredients (if any) this meal was selected for
             matched_preferred = meal_detail.get('matched_preferred_ingredients') or []
 
+            # URL to fetch dish image from API (frontend uses this so meal.imageUri is from DB/dataset)
+            dish_id = meal_detail.get('dish', '')
+            base_url = str(req.base_url).rstrip('/')
+            image_url = f"{base_url}/api/dish-image/{dish_id}" if dish_id else None
+
             suggestions.append({
                 "meal_name": meal_template["meal_name"],
                 "calories": round(meal_detail.get('total_calories', 0), 1),
                 "time": meal_template["time"],
                 "description": description,
                 "image": image_data_url,
+                "image_url": image_url,
                 "ingredients": ingredients_list,
                 "nutrients": nutrients,
                 "mass": round(meal_detail.get('total_mass', 0), 1),

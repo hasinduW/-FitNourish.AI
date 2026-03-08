@@ -79,7 +79,8 @@ class MealSuggestion(BaseModel):
     calories: float
     time: str
     description: str
-    image: str  # Base64 encoded image
+    image: str  # Base64 encoded image (fallback)
+    image_url: Optional[str] = None  # URL to fetch dish image from API (GET /api/dish-image/{dish_id})
     ingredients: List[str]
     nutrients: List[MealNutrient]
     mass: float  # Total mass in grams
