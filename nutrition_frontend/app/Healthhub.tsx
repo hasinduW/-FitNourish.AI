@@ -42,15 +42,15 @@ interface HealthOption {
 }
 
 const OPTIONS: HealthOption[] = [
-  {
-    emoji: "👤",
-    title: "Health Profile",
-    desc: "Set up your basic info — age, gender, profession, lifestyle habits",
-    route: "/Patientprofilescreen",
-    color: "#065f46",
-    bgColor: "#ecfdf5",
-    border: "#6ee7b7",
-  },
+  // {
+  //   emoji: "👤",
+  //   title: "Health Profile",
+  //   desc: "Set up your basic info — age, gender, profession, lifestyle habits",
+  //   route: "/Patientprofilescreen",
+  //   color: "#065f46",
+  //   bgColor: "#ecfdf5",
+  //   border: "#6ee7b7",
+  // },
   {
     emoji: "⚡",
     title: "Health Assessment",
@@ -264,9 +264,8 @@ export default function HealthHub() {
           <Text style={styles.tipTitle}>💡 Recommended flow</Text>
           <View style={styles.tipSteps}>
             {[
-              "1. Complete your Health Profile first",
-              "2. Run a Health Assessment",
-              "3. Track progress in Analytics",
+              "1. Run a Health Assessment",
+              "2. Track progress in Analytics",
             ].map((step, i) => (
               <Text key={i} style={styles.tipStep}>
                 {step}

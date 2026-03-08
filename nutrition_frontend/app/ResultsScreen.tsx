@@ -16,8 +16,7 @@ import {
   scheduleTestNotifications,
   cancelAllDietNotifications,
 } from "../services/notificationService";
-
-const USER_ID = 1;
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   results: AssessmentResults;
@@ -25,6 +24,10 @@ interface Props {
 }
 
 export default function ResultsScreen({ results, onBack }: Props) {
+  const { user } = useAuth();
+
+  const USER_ID = user?.user_id;
+
   const risk = results.health_risk.risk_info;
   const diet = results.diet_recommendation;
   const overall = results.overall_assessment;
@@ -141,9 +144,8 @@ export default function ResultsScreen({ results, onBack }: Props) {
 
       {/* Risk */}
       <View style={[styles.card, styles.riskCard]}>
-        <Text style={styles.cardTitle}>
-          {risk.icon} {risk.level}
-        </Text>
+        <Text style={styles.cardTitle}>{risk.icon} Health Risk Status</Text>
+        <Text style={styles.riskText}>You have : {risk.level}</Text>
         <Text style={styles.riskMessage}>{risk.message}</Text>
         <View style={styles.alertBox}>
           {alerts.length === 0 ? (
@@ -174,22 +176,9 @@ export default function ResultsScreen({ results, onBack }: Props) {
 
       {/* Diet */}
       <View style={[styles.card, styles.dietCard]}>
-        <Text style={styles.dietTitle}>🥗 {diet.recommended_diet}</Text>
+        <Text style={styles.cardTitle}>🥗 AI Recommended Diet Plan</Text>
+        <Text style={styles.dietTitle}>{diet.recommended_diet} Diet</Text>
         <Text style={styles.dietDesc}>{diet.diet_info?.description}</Text>
-        {/* <View style={styles.confidenceRow}>
-          <Text style={styles.confidenceLabel}>Confidence</Text>
-          <Text style={styles.confidenceValue}>
-            {diet.confidence?.toFixed(0)}%
-          </Text>
-        </View>
-        <View style={styles.confidenceBar}>
-          <View
-            style={[
-              styles.confidenceFill,
-              { width: `${diet.confidence}%` as any },
-            ]}
-          />
-        </View> */}
 
         {/* Principles with numbered index */}
         <View style={styles.infoBox}>
@@ -359,8 +348,15 @@ const styles = StyleSheet.create({
   riskCard: { borderLeftWidth: 6, borderLeftColor: "#f97316" },
   dietCard: { borderWidth: 1, borderColor: "#bbf7d0" },
 
-  cardTitle: {
+  riskText: {
     fontSize: 20,
+    fontWeight: "800",
+    color: "#06a87a",
+    marginBottom: 10,
+  },
+
+  cardTitle: {
+    fontSize: 18,
     fontWeight: "800",
     color: "#065f46",
     marginBottom: 10,

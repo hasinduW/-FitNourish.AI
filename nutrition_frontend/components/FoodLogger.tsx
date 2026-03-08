@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   Alert,
 } from "react-native";
 import { FoodDatabase, FoodItem, Meals, MealType } from "../types";
-import { FOOD_DATABASE, MEAL_ICONS } from "../types/constants";
+import { FOOD_DATABASE, MEAL_ICONS, API_URL } from "../types/constants";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   meals: Meals;
@@ -18,15 +19,39 @@ interface Props {
 }
 
 export default function FoodLogger({ meals, onMealsChange }: Props) {
+  const { user } = useAuth();
+
+  const USER_ID = user?.user_id;
+
   const [currentMeal, setCurrentMeal] = useState<MealType>("breakfast");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodDatabase | null>(null);
   const [amount, setAmount] = useState("");
+  const [calorieTarget, setCalorieTarget] = useState<number | null>(null);
 
   const filteredFoods = FOOD_DATABASE.filter((food) =>
     food.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  // Fetch the user's latest calorie target on mount
+  useEffect(() => {
+    if (!USER_ID) return;
+    const fetchCalorieTarget = async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/patient/profile/all/${USER_ID}`,
+        );
+        const data = await res.json();
+        if (data.success && data.data?.daily_kcal_need) {
+          setCalorieTarget(data.data.daily_kcal_need);
+        }
+      } catch (e) {
+        console.error("Error fetching calorie target:", e);
+      }
+    };
+    fetchCalorieTarget();
+  }, [USER_ID]);
 
   const calculateNutrition = (food: FoodDatabase, grams: number) => {
     const multiplier = grams / 100;
@@ -92,6 +117,11 @@ export default function FoodLogger({ meals, onMealsChange }: Props) {
   };
 
   const totals = getDailyTotals();
+
+  const calorieDiff =
+    calorieTarget !== null ? totals.calories - calorieTarget : null;
+  const isOverTarget = calorieDiff !== null && calorieDiff > 0;
+  const isUnderTarget = calorieDiff !== null && calorieDiff < 0;
 
   return (
     <View style={styles.container}>
@@ -243,6 +273,43 @@ export default function FoodLogger({ meals, onMealsChange }: Props) {
           </View>
         </View>
       </View>
+
+      {calorieTarget !== null && (
+        <View style={styles.totalsCard}>
+          <Text style={styles.totalsTitle}>Your Target</Text>
+          <View style={styles.totalsRow}>
+            <View>
+              {/* Target line */}
+              {calorieTarget !== null && (
+                <Text style={styles.targetLabel}>
+                  Target: {calorieTarget} kcal
+                </Text>
+              )}
+            </View>
+            <View>
+              {/* Over / under / on-target badge */}
+              {calorieDiff !== null && calorieDiff !== 0 && (
+                <View
+                  style={[
+                    styles.diffBadge,
+                    isOverTarget ? styles.diffBadgeOver : styles.diffBadgeUnder,
+                  ]}
+                >
+                  <Text style={styles.diffBadgeText}>
+                    {isOverTarget ? "▲" : "▼"} {Math.abs(calorieDiff)} kcal{" "}
+                    {isOverTarget ? "over" : "under"} target
+                  </Text>
+                </View>
+              )}
+              {calorieDiff === 0 && (
+                <View style={styles.diffBadgeOnTarget}>
+                  <Text style={styles.diffBadgeText}>✓ On target!</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -390,4 +457,31 @@ const styles = StyleSheet.create({
   totalsLabel: { color: "#d1fae5", fontSize: 13, marginBottom: 4 },
   totalsValue: { color: "#fff", fontSize: 36, fontWeight: "800" },
   totalsUnit: { color: "#a7f3d0", fontSize: 12, marginTop: 2 },
+
+  targetLabel: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  diffBadge: {
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: "flex-start",
+  },
+  diffBadgeOver: { backgroundColor: "#ef4444" },
+  diffBadgeUnder: { backgroundColor: "#f59e0b" },
+  diffBadgeOnTarget: {
+    marginTop: 6,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: "flex-start",
+    backgroundColor: "#34d399",
+  },
+  diffBadgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
+  },
 });
