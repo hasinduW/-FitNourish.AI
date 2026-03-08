@@ -7,8 +7,7 @@ from pymongo.database import Database
 
 # MongoDB Atlas connection string (use env in production)
 MONGODB_URI = (
-    "mongodb+srv://root:RwCFOMO855XlnMuu@cluster0.s3lzr7.mongodb.net/fitnourish-ai"
-    "?retryWrites=true&w=majority"
+    "mongodb+srv://root:RwCFOMO855XlnMuu@cluster0.s3lzr7.mongodb.net/fitnourish-ai?retryWrites=true&w=majority"
 )
 DB_NAME = "fitnourish-ai"
 
