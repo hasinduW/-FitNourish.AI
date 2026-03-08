@@ -164,6 +164,7 @@ export default function PatientProfileScreen() {
       Alert.alert("Missing Fields", `Please fill: ${missing.join(", ")}`);
       return false;
     }
+    // validation
     if (isNaN(Number(profile.age)) || Number(profile.age) <= 0) {
       Alert.alert("Invalid Age", "Please enter a valid age.");
       return false;
@@ -185,8 +186,8 @@ export default function PatientProfileScreen() {
       if (data.success) {
         Alert.alert("✅ Saved!", "Your profile has been saved successfully.", [
           {
-            text: "Go to Assessment",
-            onPress: () => router.push("/AssessmentScreen" as any),
+            text: "Done",
+            onPress: () => router.push("/Healthhub" as any),
           },
         ]);
       } else {

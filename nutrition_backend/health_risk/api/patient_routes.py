@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from models.patient_profile import doc_to_dict
-from database_models import PATIENT_PROFILES
+from database_models import PATIENT_PROFILES, MEAL_PLANS
 from db import get_db
 
 router = APIRouter(prefix="/api/patient", tags=["Patient Profile"])
@@ -80,5 +80,37 @@ def get_patient_profile(user_id: str, db=Depends(get_db)):
                 content={"success": False, "error": "Profile not found"}
             )
         return {"success": True, "data": doc_to_dict(profile)}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+    
+# integration end point for taking daily calory target
+@router.get("/calorie-target/{user_id}")
+def get_latest_calorie_target(user_id: str, db=Depends(get_db)):
+    """Get the user's latest daily calorie target from their meal plan."""
+    try:
+        coll = db[MEAL_PLANS]
+        
+        # Handle both string and int user_id (same pattern as your profile endpoint)
+        meal_plan = (
+            coll.find_one({"user_id": user_id}, sort=[("created_at", -1)])
+            or coll.find_one({"user_id": int(user_id) if user_id.isdigit() else None}, sort=[("created_at", -1)])
+        )
+
+        if not meal_plan:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "No meal plan found for this user"}
+            )
+
+        return {
+            "success": True,
+            "data": {
+                "daily_calorie_target": meal_plan.get("daily_calorie_target"),
+                "num_meals": meal_plan.get("num_meals"),
+                "calorie_distribution_ratios": meal_plan.get("calorie_distribution_ratios"),
+                "target_macro_ratios": meal_plan.get("target_macro_ratios"),
+                "created_at": meal_plan.get("created_at").isoformat() if meal_plan.get("created_at") else None,
+            }
+        }
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
