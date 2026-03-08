@@ -40,11 +40,11 @@ export default function FoodLogger({ meals, onMealsChange }: Props) {
     const fetchCalorieTarget = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/api/patient/calorie-target/${USER_ID}`,
+          `${API_URL}/api/patient/profile/all/${USER_ID}`,
         );
         const data = await res.json();
-        if (data.success && data.data?.daily_calorie_target) {
-          setCalorieTarget(data.data.daily_calorie_target);
+        if (data.success && data.data?.daily_kcal_need) {
+          setCalorieTarget(data.data.daily_kcal_need);
         }
       } catch (e) {
         console.error("Error fetching calorie target:", e);

@@ -140,13 +140,13 @@ export default function Dashboard() {
             <Text style={styles.quickLabel}>Analytics{"\n"}Dashboard</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.quickCard}
             onPress={() => router.push("/Patientprofilescreen" as any)}
           >
             <Text style={styles.quickEmoji}>👤</Text>
             <Text style={styles.quickLabel}>My{"\n"}Profile</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <View style={{ height: 32 }} />

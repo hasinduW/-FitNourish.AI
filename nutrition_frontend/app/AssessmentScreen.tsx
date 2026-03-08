@@ -119,17 +119,17 @@ export default function AssessmentScreen() {
 
   const initialUserData: UserData = {
     userId: USER_ID,
-    age: "",
-    gender: "",
-    weight: "",
-    height: "",
+    age: "25",
+    gender: "Male",
+    weight: "70",
+    height: "170",
     exercise: "low",
     sleep: "",
     sugar_intake: "medium",
     smoking: "",
     alcohol: "",
-    married: "",
-    profession: "",
+    married: "no",
+    profession: "office_worker",
     disease_type: "None",
     severity: "Mild",
     cholesterol: "",
@@ -163,18 +163,17 @@ export default function AssessmentScreen() {
   const loadPatientProfile = async () => {
     setProfileLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/patient/profile/${USER_ID}`);
+      const res = await fetch(`${API_URL}/api/patient/profile/all/${USER_ID}`);
       const data = await res.json();
       if (data.success) {
         setHasProfile(true);
+
         setUserData((prev) => ({
           ...prev,
           age: String(data.data.age),
           gender: data.data.gender,
-          married: data.data.married,
-          profession: data.data.profession,
-          smoking: data.data.smoking,
-          alcohol: data.data.alcohol,
+          weight: data.data.weight_kg,
+          height: data.data.height_cm,
         }));
       } else {
         setHasProfile(false);
@@ -258,8 +257,8 @@ export default function AssessmentScreen() {
     const required = [
       "age",
       "gender",
-      "weight",
-      "height",
+      // "weight",
+      // "height",
       "exercise",
       "sleep",
       "sugar_intake",
@@ -267,6 +266,7 @@ export default function AssessmentScreen() {
       "alcohol",
       "married",
       "profession",
+      "blood_pressure",
     ];
     const missing = required.filter((f) => !userData[f as keyof UserData]);
     if (missing.length) {
@@ -371,10 +371,10 @@ export default function AssessmentScreen() {
               {[
                 `🎂 ${userData.age} yrs`,
                 `⚧ ${userData.gender}`,
-                `💍 ${userData.married}`,
-                `💼 ${userData.profession}`,
-                `🚬 ${userData.smoking}`,
-                `🍺 ${userData.alcohol}`,
+                `⚖️ ${userData.weight} kg`,
+                `📏 ${userData.height} cm`,
+                // `🚬 ${userData.smoking}`,
+                // `🍺 ${userData.alcohol}`,
               ].map((chip) => (
                 <View key={chip} style={styles.profileChip}>
                   <Text style={styles.profileChipText}>{chip}</Text>
@@ -385,7 +385,7 @@ export default function AssessmentScreen() {
         )}
 
         {/* ── BODY METRICS ── */}
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <SectionHeader emoji="📏" title="Body Metrics" />
           <View style={styles.row}>
             <View style={styles.halfCol}>
@@ -407,7 +407,7 @@ export default function AssessmentScreen() {
               />
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* ── LIFESTYLE ── */}
         <View style={styles.card}>
@@ -426,6 +426,21 @@ export default function AssessmentScreen() {
             options={["low", "medium", "high"]}
             selected={userData.exercise}
             onSelect={() => {}}
+          />
+
+          <Label text="Did you Smoke today? *" />
+          <OptionGroup
+            options={["no", "yes"]}
+            selected={userData.smoking}
+            onSelect={(v) => handleChange("smoking", v)}
+          />
+
+          {/* Alcohol */}
+          <Label text="Did you use Alcohol today? *" />
+          <OptionGroup
+            options={["no", "yes"]}
+            selected={userData.alcohol}
+            onSelect={(v) => handleChange("alcohol", v)}
           />
 
           <View style={styles.divider} />
