@@ -83,7 +83,7 @@ def get_patient_profile(user_id: str, db=Depends(get_db)):
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
     
-
+# integration end point for taking daily calory target
 @router.get("/calorie-target/{user_id}")
 def get_latest_calorie_target(user_id: str, db=Depends(get_db)):
     """Get the user's latest daily calorie target from their meal plan."""

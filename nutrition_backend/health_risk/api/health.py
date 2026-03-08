@@ -79,7 +79,8 @@ def assess_health(body: AssessRequest, db=Depends(get_db)):
         if not diet_result or not risk_result:
             return JSONResponse(status_code=500, content={"success": False, "error": "Model prediction failed"})
 
-        store_health_assessment(db, user_data, risk_result, diet_result)
+        # call data_store_function
+        store_health_assessment(db, user_data, risk_result, diet_result) 
 
         response = {
             "success": True,
