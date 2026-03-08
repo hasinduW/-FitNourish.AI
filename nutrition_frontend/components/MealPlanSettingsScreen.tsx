@@ -46,7 +46,8 @@ type Props = {
     calorieDistributionRatios: number[];
     targetMacroRatios: { fat: number; carb: number; protein: number };
     preferredIngredients: string[];
-  }) => void;
+  }) => void | Promise<void>;
+  saving?: boolean;
 };
 
 export function MealPlanSettingsScreen({
@@ -56,6 +57,7 @@ export function MealPlanSettingsScreen({
   initialMacroRatios = DEFAULT_MACRO_RATIOS,
   initialPreferredIngredients = [],
   onSave,
+  saving = false,
 }: Props) {
   const [dailyCalorieTarget, setDailyCalorieTarget] = useState(
     String(initialDailyCalorieTarget)
@@ -159,13 +161,13 @@ export function MealPlanSettingsScreen({
     setCalorieRatios(next);
   }
 
-  function handleSave() {
+  async function handleSave() {
     const calValues = calorieRatios.slice(0, calorieInputsCount).map((s) => parseFloat(s) || 0);
     const calSum = sumRatios(calValues);
     const calorieDistributionRatios =
       calSum > 0 ? calValues.map((v) => v / calSum) : Array(calorieInputsCount).fill(1 / calorieInputsCount);
     const macroSum = fatNum + carbNum + proteinNum;
-    onSave?.({
+    await onSave?.({
       dailyCalorieTarget: dailyCalorieTargetNum,
       mealsPerDay: mealsPerDayNum,
       calorieDistributionRatios,
@@ -417,16 +419,21 @@ export function MealPlanSettingsScreen({
         <View style={styles.footerSpacer} />
       </ScrollView>
 
-      {/* Fixed Save button */}
+      {/* Fixed Save button – saves settings and triggers suggestMeals to generate plan */}
       <View style={styles.footer}>
         <Pressable
           onPress={handleSave}
+          disabled={saving}
           style={({ pressed }) => [
             styles.saveBtn,
             pressed && styles.saveBtnPressed,
+            saving && { opacity: 0.7 },
           ]}
         >
-          <Text style={styles.saveBtnText}>Save</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            {saving ? <ActivityIndicator size="small" color="#fff" /> : null}
+            <Text style={styles.saveBtnText}>{saving ? "Generating plan…" : "Save & Generate Plan"}</Text>
+          </View>
         </Pressable>
       </View>
     </KeyboardAvoidingView>

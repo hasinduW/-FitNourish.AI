@@ -10,7 +10,7 @@ import { useMealPlanSettings } from "./_layout";
 
 export default function MealPlanGeneratorTab() {
   const router = useRouter();
-  const { settings, setSettings } = useMealPlanSettings();
+  const { settings, setSettings, mealPlan, setMealPlan } = useMealPlanSettings();
   const { user } = useAuth();
 
   // Every time user opens this tab, fetch latest daily_kcal_need from GET /history/{user_id}
@@ -45,6 +45,8 @@ export default function MealPlanGeneratorTab() {
         calorieDistributionRatios={settings.calorieDistributionRatios}
         targetMacroRatios={settings.targetMacroRatios}
         preferredIngredients={settings.preferredIngredients}
+        mealPlan={mealPlan}
+        setMealPlan={setMealPlan}
       />
     </SafeAreaView>
   );

@@ -64,10 +64,12 @@ export type MealPlanItem = {
   totalCalories: number;
 };
 
-function mapApiMealToItem(api: {
+/** Map API suggestion to MealPlanItem. Exported so settings can use it after calling suggestMeals on Save. */
+export function mapApiMealToItem(api: {
   meal_name: string;
   calories: number;
   image: string;
+  image_url?: string | null;
   ingredients: string[];
   nutrients: { name: string; amount: number; unit: string }[];
 }): MealPlanItem {
@@ -75,9 +77,16 @@ function mapApiMealToItem(api: {
   const protein = api.nutrients.find((n) => n.name === "Protein")?.amount ?? 0;
   const carbs =
     api.nutrients.find((n) => n.name === "Carbohydrates")?.amount ?? 0;
+  // Prefer image_url (fetch from API/DB); else inline data URL; else placeholder
+  const imageUri =
+    api.image_url && api.image_url.trim() !== ""
+      ? api.image_url
+      : api.image && api.image.trim() !== ""
+        ? api.image
+        : PLACEHOLDER_IMAGE;
   return {
     mealName: api.meal_name,
-    imageUri: api.image && api.image.startsWith("data:") ? api.image : PLACEHOLDER_IMAGE,
+    imageUri: imageUri ? imageUri : PLACEHOLDER_IMAGE,
     ingredients: api.ingredients ?? [],
     nutrients: { fat, protein, carbs },
     totalCalories: api.calories ?? 0,
@@ -91,6 +100,9 @@ type Props = {
   calorieDistributionRatios?: number[];
   targetMacroRatios?: { fat: number; carb: number; protein: number };
   preferredIngredients?: string[];
+  /** When provided (e.g. from layout context), use these instead of internal state – e.g. after Save in settings triggers suggestMeals */
+  mealPlan?: MealPlanItem[] | null;
+  setMealPlan?: React.Dispatch<React.SetStateAction<MealPlanItem[] | null>>;
 };
 
 export function MealPlanGeneratorScreen({
@@ -100,16 +112,28 @@ export function MealPlanGeneratorScreen({
   calorieDistributionRatios,
   targetMacroRatios,
   preferredIngredients,
+  mealPlan: mealPlanProp,
+  setMealPlan: setMealPlanProp,
 }: Props) {
-  const [mealPlan, setMealPlan] = useState<MealPlanItem[] | null>(null);
+  const [mealPlanLocal, setMealPlanLocal] = useState<MealPlanItem[] | null>(null);
+  const mealPlan = mealPlanProp !== undefined ? mealPlanProp : mealPlanLocal;
+  const setMealPlan = setMealPlanProp ?? setMealPlanLocal;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Indices of meal cards whose image failed to load (404 etc.) – show placeholder for those */
+  const [imageLoadFailedIndices, setImageLoadFailedIndices] = useState<Set<number>>(new Set());
 
   // When daily calorie target changes (e.g. fetched from API), clear the plan so user must regenerate
   useEffect(() => {
     setMealPlan(null);
     setError(null);
-  }, [dailyCalorieTarget]);
+    setImageLoadFailedIndices(new Set());
+  }, [dailyCalorieTarget, setMealPlan]);
+
+  // Reset failed-image set when meal plan is replaced (e.g. after regenerate)
+  useEffect(() => {
+    setImageLoadFailedIndices(new Set());
+  }, [mealPlan]);
 
   const fetchMealPlan = useCallback(async () => {
     setLoading(true);
@@ -127,7 +151,7 @@ export function MealPlanGeneratorScreen({
     } finally {
       setLoading(false);
     }
-  }, [dailyCalorieTarget, mealsPerDay, calorieDistributionRatios, targetMacroRatios, preferredIngredients]);
+  }, [dailyCalorieTarget, mealsPerDay, calorieDistributionRatios, targetMacroRatios, preferredIngredients, setMealPlan]);
 
   const { width } = Dimensions.get("window");
   const contentMaxWidth = isWeb ? Math.min(width, MAX_WIDTH_WEB) : width;
@@ -233,14 +257,20 @@ export function MealPlanGeneratorScreen({
           ) : null}
 
           {/* Meal cards */}
-          {(mealPlan ?? []).map((meal: MealPlanItem, index: number) => (
+          {(mealPlan ?? []).map((meal: MealPlanItem, index: number) => {
+            const imageUri =
+              imageLoadFailedIndices.has(index) ? PLACEHOLDER_IMAGE : meal.imageUri;
+            return (
             <View key={index} style={styles.card}>
               {/* Card header: background image + meal name overlay */}
               <View style={styles.cardImageWrapper}>
                 <ImageBackground
-                  source={{ uri: meal.imageUri }}
+                  source={{ uri: imageUri }}
                   style={styles.cardImage}
                   resizeMode="cover"
+                  onError={() => {
+                    setImageLoadFailedIndices((prev) => new Set(prev).add(index));
+                  }}
                 >
                   <View style={styles.cardImageOverlay} />
                   <Text style={[styles.cardMealName, { zIndex: 1 }]}>{meal.mealName}</Text>
@@ -301,7 +331,8 @@ export function MealPlanGeneratorScreen({
                 <Text style={styles.cardFooterValue}>{meal.totalCalories} kcal</Text>
               </View>
             </View>
-          ))}
+            );
+          })}
         </View>
       )}
 
