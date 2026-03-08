@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from models.patient_profile import doc_to_dict
-from database_models import PATIENT_PROFILES, MEAL_PLANS
+from database_models import PATIENT_PROFILES, MEAL_PLANS, PREDICTIONS
 from db import get_db
 
 router = APIRouter(prefix="/api/patient", tags=["Patient Profile"])
@@ -83,7 +83,37 @@ def get_patient_profile(user_id: str, db=Depends(get_db)):
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
     
-# integration end point for taking daily calory target
+
+@router.get("/profile/all/{user_id}")
+def get_prediction_profile(user_id: str, db=Depends(get_db)):
+    """Get latest age, gender, weight, height from PREDICTIONS collection."""
+    try:
+        coll = db[PREDICTIONS]
+        profile = (
+            coll.find_one({"user_id": user_id}, sort=[("created_at", -1)])
+            or coll.find_one({"user_id": int(user_id) if user_id.isdigit() else None}, sort=[("created_at", -1)])
+        )
+
+        if not profile:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "No prediction profile found"}
+            )
+
+        return {
+            "success": True,
+            "data": {
+                "age": profile.get("age"),
+                "gender": profile.get("gender"),
+                "weight_kg": profile.get("weight_kg"),
+                "height_cm": profile.get("height_cm"),
+                "daily_kcal_need": profile.get("daily_kcal_need"),
+            }
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+    
+
 @router.get("/calorie-target/{user_id}")
 def get_latest_calorie_target(user_id: str, db=Depends(get_db)):
     """Get the user's latest daily calorie target from their meal plan."""
