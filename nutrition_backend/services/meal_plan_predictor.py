@@ -119,6 +119,15 @@ def get_dataset_cache():
     return _dataset_cache
 
 
+def get_dish_image_bytes(dish_id: str) -> bytes:
+    """Load image bytes for a dish from the dataset (dataset/images/<dish_id>.pkl). Returns empty bytes if not found."""
+    cache = get_dataset_cache()
+    images_dir = cache.get("_images_dir")
+    if images_dir is None:
+        return b""
+    return _load_image_for_dish(dish_id, images_dir)
+
+
 def data_preparation(daily_calorie_target, num_meals, calorie_distribution_ratios, target_macro_ratios):
     """Build request data: use cached dataset and only compute meal_calorie_targets per request."""
     try:
