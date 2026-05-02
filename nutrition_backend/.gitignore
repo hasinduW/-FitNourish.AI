@@ -132,3 +132,4 @@ celerybeat.pid
 .idea/
 *.sublime-project
 *.sublime-workspace
+api/google-cloud-vision-api/*

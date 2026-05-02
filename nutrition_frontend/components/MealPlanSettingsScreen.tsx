@@ -3,7 +3,6 @@ import { getIngredients } from "@/src/api/client";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -27,6 +26,13 @@ const DEFAULT_CALORIE_RATIOS = [0.25, 0.4, 0.35];
 const DEFAULT_MACRO_RATIOS = { fat: 0.3, carb: 0.45, protein: 0.25 };
 const MIN_DAILY_CALORIES = 500;
 const MAX_DAILY_CALORIES = 5000;
+
+const MEALS_OPTIONS = [2, 3, 4];
+const DEFAULT_RATIOS_BY_MEALS: Record<number, number[]> = {
+  2: [0.4, 0.6],
+  3: [0.25, 0.4, 0.35],
+  4: [0.2, 0.3, 0.3, 0.2],
+};
 
 const isWeb = Platform.OS === "web";
 
@@ -62,7 +68,9 @@ export function MealPlanSettingsScreen({
   const [dailyCalorieTarget, setDailyCalorieTarget] = useState(
     String(initialDailyCalorieTarget)
   );
-  const [mealsPerDay, setMealsPerDay] = useState(String(initialMealsPerDay));
+  const [mealsPerDay, setMealsPerDay] = useState<number>(
+    MEALS_OPTIONS.includes(initialMealsPerDay) ? initialMealsPerDay : DEFAULT_MEALS_PER_DAY
+  );
   const [calorieRatios, setCalorieRatios] = useState<string[]>(
     initialCalorieRatios.map((r) => String(r))
   );
@@ -106,8 +114,7 @@ export function MealPlanSettingsScreen({
     MIN_DAILY_CALORIES,
     Math.min(MAX_DAILY_CALORIES, parseInt(dailyCalorieTarget, 10) || DEFAULT_DAILY_CALORIE_TARGET)
   );
-  const mealsPerDayNum = Math.max(1, Math.min(10, parseInt(mealsPerDay, 10) || 1));
-  const calorieInputsCount = Math.max(1, Math.min(10, mealsPerDayNum));
+  const calorieInputsCount = mealsPerDay;
   const calorieValues = calorieRatios
     .slice(0, calorieInputsCount)
     .map((s) => parseFloat(s) || 0);
@@ -124,8 +131,9 @@ export function MealPlanSettingsScreen({
     setDailyCalorieTarget(String(DEFAULT_DAILY_CALORIE_TARGET));
   }
 
-  function handleResetMeals() {
-    setMealsPerDay(String(DEFAULT_MEALS_PER_DAY));
+  function handleMealsChange(n: number) {
+    setMealsPerDay(n);
+    setCalorieRatios((DEFAULT_RATIOS_BY_MEALS[n] ?? DEFAULT_CALORIE_RATIOS).map(String));
   }
 
   function handleResetCalorieRatios() {
@@ -169,7 +177,7 @@ export function MealPlanSettingsScreen({
     const macroSum = fatNum + carbNum + proteinNum;
     await onSave?.({
       dailyCalorieTarget: dailyCalorieTargetNum,
-      mealsPerDay: mealsPerDayNum,
+      mealsPerDay: mealsPerDay,
       calorieDistributionRatios,
       targetMacroRatios: {
         fat: macroSum > 0 ? fatNum / macroSum : fatNum,
@@ -224,23 +232,27 @@ export function MealPlanSettingsScreen({
         {/* Section 1: No of Meals */}
         <Text style={styles.sectionLabel}>No of Meals</Text>
         <Text style={styles.sublabel}>Set the number of meals per day.</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={styles.input}
-            value={mealsPerDay}
-            onChangeText={setMealsPerDay}
-            keyboardType="number-pad"
-            placeholder="3"
-          />
-          <Pressable
-            onPress={handleResetMeals}
-            style={({ pressed }) => [
-              styles.resetBtn,
-              pressed && styles.resetBtnPressed,
-            ]}
-          >
-            <Text style={styles.resetBtnText}>Reset to Defaults</Text>
-          </Pressable>
+        <View style={[styles.row, styles.mealsRow]}>
+          {MEALS_OPTIONS.map((n) => (
+            <Pressable
+              key={n}
+              onPress={() => handleMealsChange(n)}
+              style={({ pressed }) => [
+                styles.mealOptionBtn,
+                mealsPerDay === n && styles.mealOptionBtnActive,
+                pressed && styles.mealOptionBtnPressed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.mealOptionText,
+                  mealsPerDay === n && styles.mealOptionTextActive,
+                ]}
+              >
+                {n}
+              </Text>
+            </Pressable>
+          ))}
         </View>
 
         {/* Section 2: Calorie Distribution Ratios */}
@@ -353,16 +365,16 @@ export function MealPlanSettingsScreen({
         </View>
         {ingredientDropdownVisible && filteredIngredients.length > 0 ? (
           <View style={styles.dropdownContainer}>
-            <FlatList
-              data={filteredIngredients}
-              keyExtractor={(item) => item}
+            <ScrollView
+              style={styles.dropdownList}
               keyboardShouldPersistTaps="handled"
               nestedScrollEnabled
-              style={styles.dropdownList}
-              renderItem={({ item }) => {
+            >
+              {filteredIngredients.map((item) => {
                 const selected = selectedIngredients.includes(item);
                 return (
                   <Pressable
+                    key={item}
                     onPress={() => addIngredient(item)}
                     style={({ pressed }) => [
                       styles.dropdownItem,
@@ -381,8 +393,8 @@ export function MealPlanSettingsScreen({
                     </Text>
                   </Pressable>
                 );
-              }}
-            />
+              })}
+            </ScrollView>
           </View>
         ) : null}
         {selectedIngredients.length > 0 ? (
@@ -421,18 +433,28 @@ export function MealPlanSettingsScreen({
 
       {/* Fixed Save button – saves settings and triggers suggestMeals to generate plan */}
       <View style={styles.footer}>
+        {!calorieTotalValid && (
+          <Text style={styles.saveValidationMsg}>
+            Calorie distribution must total 100% before saving (currently {(calorieTotal * 100).toFixed(1)}%).
+          </Text>
+        )}
+        {!macroTotalValid && (
+          <Text style={styles.saveValidationMsg}>
+            Macronutrient ratios must total 100% before saving (currently {(macroTotal * 100).toFixed(1)}%).
+          </Text>
+        )}
         <Pressable
           onPress={handleSave}
-          disabled={saving}
+          disabled={saving || !calorieTotalValid || !macroTotalValid}
           style={({ pressed }) => [
             styles.saveBtn,
-            pressed && styles.saveBtnPressed,
-            saving && { opacity: 0.7 },
+            pressed && calorieTotalValid && macroTotalValid && styles.saveBtnPressed,
+            (saving || !calorieTotalValid || !macroTotalValid) && styles.saveBtnDisabled,
           ]}
         >
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
             {saving ? <ActivityIndicator size="small" color="#fff" /> : null}
-            <Text style={styles.saveBtnText}>{saving ? "Generating plan…" : "Save & Generate Plan"}</Text>
+            <Text style={[styles.saveBtnText, (!calorieTotalValid || !macroTotalValid) && !saving && styles.saveBtnTextDisabled]}>{saving ? "Generating plan…" : "Save & Generate Plan"}</Text>
           </View>
         </Pressable>
       </View>
@@ -656,5 +678,46 @@ const styles = StyleSheet.create({
   },
   resetBtnPreferred: {
     marginBottom: 28,
+  },
+  mealsRow: {
+    gap: 12,
+    marginBottom: 28,
+  },
+  mealOptionBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: GRAY_BORDER,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  mealOptionBtnActive: {
+    backgroundColor: SAGE_GREEN,
+    borderColor: SAGE_GREEN,
+  },
+  mealOptionBtnPressed: {
+    opacity: 0.8,
+  },
+  mealOptionText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: GRAY_TEXT,
+  },
+  mealOptionTextActive: {
+    color: "#fff",
+  },
+  saveValidationMsg: {
+    fontSize: 13,
+    color: ERROR_RED,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  saveBtnDisabled: {
+    backgroundColor: GRAY_LIGHT,
+  },
+  saveBtnTextDisabled: {
+    color: GRAY_TEXT,
   },
 });

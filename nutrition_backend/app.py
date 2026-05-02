@@ -1,5 +1,7 @@
 # TensorFlow env (set before any TF import): threads, logging, oneDNN
 import os
+from dotenv import load_dotenv
+load_dotenv()
 os.environ["TF_NUM_INTEROP_THREADS"] = "1"
 os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"   # 0=all, 1=no INFO, 2=no WARNING, 3=errors only
@@ -27,10 +29,11 @@ from fastapi import Depends
 
 from api.auth import get_current_user_id
 from db import get_db, get_database
-from database_models import PREDICTIONS
+from database_models import PREDICTIONS, CONFIGS
 from services.nutrients_predictor import predict_nutrients_from_image, predict_nutrients_from_image_bytes
 from services.ingredient_predictor import predict_ingredients_from_image, predict_ingredients_from_image_bytes
 from services.meal_plan_predictor import generate_meal_plan, get_dish_image_bytes
+from services.image_validation import is_food_image
 from models import (  # Pydantic models
     UserInput,
     MealSuggestionRequest,
@@ -97,12 +100,14 @@ from health_risk.api.analytics import router as analytics_router
 from health_risk.api.patient_routes import router as patient_router
 from health_risk.api.diet_principles import router as diet_principles_router
 from api.auth import router as auth_router
+from api.config import router as config_router
 
 app.include_router(health_router)
 app.include_router(analytics_router)
 app.include_router(patient_router)
 app.include_router(diet_principles_router)
 app.include_router(auth_router)
+app.include_router(config_router)
 
 
 # Load nutrition model once when server starts (if exists)
@@ -204,52 +209,75 @@ def get_history(user_id: str, db=Depends(get_db), current_user_id: str = Depends
 # ============================================================================
 
 @app.post("/api/analyze-meal", response_model=MealAnalysisResponse)
-async def analyze_meal(request: Request, image: UploadFile = File(...), user_id: str = Depends(get_current_user_id)):
+async def analyze_meal(request: Request, image: UploadFile = File(...), user_id: str = Depends(get_current_user_id), db=Depends(get_db)):
     """
     Analyze uploaded meal image and return ingredients, nutrients, and calories.
     Uses ML models to predict both ingredients and nutrients from the image.
+    Food validation via Gemini runs only when validationEnabled=true in the user's config.
     """
+    import traceback
+    print(f"[analyze-meal] REQUEST  user={user_id} filename={image.filename!r} content_type={image.content_type!r}")
     try:
         # Read image bytes once
         image_bytes = await image.read()
+        print(f"[analyze-meal] image read  bytes={len(image_bytes)}")
         await image.seek(0)
 
+        # Check user config — only call Gemini when validation is explicitly enabled
+        config_doc = db[CONFIGS].find_one({"user_id": user_id})
+        validation_enabled = config_doc.get("validation_enabled", False) if config_doc else False
+        print(f"[analyze-meal] validation_enabled={validation_enabled}")
+
+        if validation_enabled:
+            print("[analyze-meal] calling Gemini food validation...")
+            food, reason = is_food_image(image_bytes)
+            print(f"[analyze-meal] Gemini result  is_food={food}  reason={reason!r}")
+            if not food:
+                raise HTTPException(status_code=400, detail=reason)
+        else:
+            print("[analyze-meal] food validation skipped (disabled in user config)")
+
         # Run both ML inferences in a separate process so model.predict() does not hang
+        print("[analyze-meal] starting nutrients inference...")
         loop = asyncio.get_event_loop()
         pool = request.app.state.meal_analysis_pool
         nutrients_output = await loop.run_in_executor(
             pool, functools.partial(predict_nutrients_from_image_bytes, image_bytes)
         )
+        print(f"[analyze-meal] nutrients done  output={nutrients_output}")
+
+        print("[analyze-meal] starting ingredients inference...")
         ingredients_output = await loop.run_in_executor(
             pool, functools.partial(predict_ingredients_from_image_bytes, image_bytes)
         )
-        
+        print(f"[analyze-meal] ingredients done  predictions={ingredients_output.get('predictions', [])[:5]}")
+
         # Extract values from nutrients ML prediction (per 100g)
         protein = nutrients_output.get('protein', 0)
         fat = nutrients_output.get('fat', 0)
         carbs = nutrients_output.get('carbs', 0)
         calories_per_100g = nutrients_output.get('calories', 0)
-        
+
         # Extract ingredient predictions
         ingredient_names = ingredients_output.get('predictions', [])
         ingredient_probabilities = ingredients_output.get('probabilities', [])
-        
+
         # Calculate total macronutrients for percentage calculations
         total_macros = protein + carbs + fat
         total_calories = protein * 4 + carbs * 4 + fat * 9
-        
+
         # Calculate percentages (based on typical daily values)
         # Daily reference values: Protein ~50g, Carbs ~300g, Fat ~65g
         protein_percentage = (protein / 50) * 100 if protein > 0 else 0
         carbs_percentage = (carbs / 300) * 100 if carbs > 0 else 0
         fat_percentage = (fat / 65) * 100 if fat > 0 else 0
-        
+
         # Build ingredients list from ML predictions
         # Since we don't have exact amounts, we'll estimate based on probabilities
         # and distribute 100g across detected ingredients proportionally
         ingredients = []
         total_probability = sum(ingredient_probabilities) if ingredient_probabilities else 1
-        
+
         for i, (ingredient_name, probability) in enumerate(zip(ingredient_names, ingredient_probabilities)):
             # Calculate estimated amount based on probability (proportional to confidence)
             # Distribute 100g total across ingredients weighted by their probabilities
@@ -257,16 +285,16 @@ async def analyze_meal(request: Request, image: UploadFile = File(...), user_id:
                 estimated_amount = (probability / total_probability) * 100
             else:
                 estimated_amount = 100 / len(ingredient_names) if ingredient_names else 100
-            
+
             # Only include ingredients with reasonable confidence (>10%)
             if probability >= 5.0:
                 ingredients.append({
-                    "name": ingredient_name.title(),  # Capitalize ingredient names
+                    "name": ingredient_name.title(),
                     "amount": round(estimated_amount, 1),
                     "unit": "g",
                     "possibility": round(probability, 1)
                 })
-        
+
         # If no ingredients meet the threshold, include top prediction anyway
         if not ingredients and ingredient_names:
             ingredients.append({
@@ -275,10 +303,10 @@ async def analyze_meal(request: Request, image: UploadFile = File(...), user_id:
                 "unit": "g",
                 "possibility": round(ingredient_probabilities[0], 1) if ingredient_probabilities else 50.0
             })
-        
+
         # Build nutrients list from ML predictions
         nutrients = []
-        
+
         if protein > 0:
             nutrients.append({
                 "name": "Protein",
@@ -286,7 +314,7 @@ async def analyze_meal(request: Request, image: UploadFile = File(...), user_id:
                 "unit": "g",
                 "percentage": round(protein_percentage, 1)
             })
-        
+
         if carbs > 0:
             nutrients.append({
                 "name": "Carbohydrates",
@@ -294,7 +322,7 @@ async def analyze_meal(request: Request, image: UploadFile = File(...), user_id:
                 "unit": "g",
                 "percentage": round(carbs_percentage, 1)
             })
-        
+
         if fat > 0:
             nutrients.append({
                 "name": "Fat",
@@ -302,34 +330,36 @@ async def analyze_meal(request: Request, image: UploadFile = File(...), user_id:
                 "unit": "g",
                 "percentage": round(fat_percentage, 1)
             })
-        
+
         # Build response in expected format
         response = {
             "ingredients": ingredients,
             "nutrients": nutrients,
             "calories_per_100g": round(calories_per_100g, 2)
         }
-        
+
+        print(f"[analyze-meal] RESPONSE  ingredients={len(ingredients)}  nutrients={len(nutrients)}  calories_per_100g={response['calories_per_100g']}")
         return response
-        
+
+    except HTTPException:
+        raise
     except FileNotFoundError as e:
+        print(f"[analyze-meal] ERROR FileNotFoundError: {e}")
         raise HTTPException(
             status_code=503,
             detail=f"ML model not available: {str(e)}. Please ensure the model file is in the correct location."
         )
     except ValueError as e:
-        import traceback
         error_detail = f"Error processing image: {str(e)}"
-        print(f"ValueError in analyze_meal: {error_detail}")
+        print(f"[analyze-meal] ERROR ValueError: {error_detail}")
         print(traceback.format_exc())
         raise HTTPException(
             status_code=400,
             detail=error_detail
         )
     except Exception as e:
-        import traceback
         error_detail = f"Internal server error: {str(e)}"
-        print(f"Exception in analyze_meal: {error_detail}")
+        print(f"[analyze-meal] ERROR Exception: {error_detail}")
         print(traceback.format_exc())
         raise HTTPException(
             status_code=500,
