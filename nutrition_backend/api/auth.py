@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from db import get_db
-from database_models import USERS
+from database_models import USERS, CONFIGS
 from models.user import LoginRequest, SignupRequest, TokenResponse, UserResponse
 from services.auth_service import (
     authenticate_user,
@@ -32,6 +32,10 @@ def signup(data: SignupRequest, db=Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     user_id = str(user["_id"])
+
+    # Create default config for the new user
+    db[CONFIGS].insert_one({"user_id": user_id, "validation_enabled": False})
+
     token = create_access_token(data={"sub": user_id, "username": user["username"]})
     return TokenResponse(
         access_token=token,
